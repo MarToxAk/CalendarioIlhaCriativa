@@ -1,0 +1,52 @@
+/*
+ * This is a manifest file that'll be compiled into application.css.
+ *
+ * With Propshaft, assets are served efficiently without preprocessing steps. You can still include
+ * application-wide styles in this file, but keep in mind that CSS precedence will follow the standard
+ * cascading order, meaning styles declared later in the document or manifest will override earlier ones,
+ * depending on specificity.
+ *
+ * Consider organizing styles into separate files for maintainability.
+ */
+
+/* === CSS CUSTOM PROPERTIES — Ilha Criativa Design System === */
+:root {
+  /* Marca */
+  --color-brand-dark:   #0F7949;
+  --color-brand-mid:    #14A958;
+  --color-brand-yellow: #FAED23;
+  --color-brand-coral:  #EE3537;
+
+  /* Ação */
+  --color-accent:       #EA580C;
+  --color-accent-hover: #C2410C;
+  --color-accent-light: #FFF7ED;
+
+  /* Neutros */
+  --color-bg:           #F9FAFB;
+  --color-surface:      #FFFFFF;
+  --color-border:       #E5E7EB;
+  --color-border-focus: #0F7949;
+
+  /* Texto */
+  --color-text-primary:   #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-muted:     #94A3B8;
+  --color-text-inverse:   #FFFFFF;
+
+  /* Semânticas */
+  --color-success:    #14A958;
+  --color-success-bg: #F0FDF4;
+  --color-warning:    #F59E0B;
+  --color-warning-bg: #FFFBEB;
+  --color-error:      #EE3537;
+  --color-error-bg:   #FEF2F2;
+}
+
+/* === ACESSIBILIDADE === */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

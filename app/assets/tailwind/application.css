@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+/* === DESIGN TOKENS — Ilha Criativa / Bom Custo === */
+
+@theme {
+  /* Marca */
+  --color-brand-dark:   #0F7949;
+  --color-brand-mid:    #14A958;
+  --color-brand-yellow: #FAED23;
+  --color-brand-coral:  #EE3537;
+
+  /* Ação */
+  --color-accent:       #EA580C;
+  --color-accent-hover: #C2410C;
+  --color-accent-light: #FFF7ED;
+
+  /* Neutros */
+  --color-bg:           #F9FAFB;
+  --color-surface:      #FFFFFF;
+  --color-border:       #E5E7EB;
+  --color-border-focus: #0F7949;
+
+  /* Texto */
+  --color-text-primary:   #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-muted:     #94A3B8;
+  --color-text-inverse:   #FFFFFF;
+
+  /* Semânticas */
+  --color-success:      #14A958;
+  --color-success-bg:   #F0FDF4;
+  --color-warning:      #F59E0B;
+  --color-warning-bg:   #FFFBEB;
+  --color-error:        #EE3537;
+  --color-error-bg:     #FEF2F2;
+
+  /* Admin Sidebar */
+  --color-sidebar-bg:          #0F7949;
+  --color-sidebar-text:        #FFFFFF;
+  --color-sidebar-text-muted:  rgba(255,255,255,0.65);
+  --color-sidebar-item-hover:  rgba(255,255,255,0.10);
+  --color-sidebar-item-active: #14A958;
+  --color-sidebar-border:      rgba(255,255,255,0.15);
+
+  /* Tipografia */
+  --font-sans: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+
+  /* Espaçamento */
+  --spacing-1:  0.25rem;
+  --spacing-2:  0.5rem;
+  --spacing-4:  1rem;
+  --spacing-6:  1.5rem;
+  --spacing-8:  2rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+
+  /* Bordas */
+  --radius-sm:  0.25rem;
+  --radius-md:  0.5rem;
+  --radius-lg:  0.75rem;
+  --radius-xl:  1rem;
+  --radius-full: 9999px;
+
+  /* Sombras */
+  --shadow-sm:   0 1px 2px 0 rgba(0,0,0,0.05);
+  --shadow-md:   0 4px 6px -1px rgba(0,0,0,0.10), 0 2px 4px -2px rgba(0,0,0,0.10);
+  --shadow-lg:   0 10px 15px -3px rgba(0,0,0,0.10), 0 4px 6px -4px rgba(0,0,0,0.10);
+  --shadow-card: 0 1px 3px 0 rgba(0,0,0,0.08), 0 1px 2px -1px rgba(0,0,0,0.05);
+
+  /* Transições */
+  --transition-fast:   150ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow:   300ms ease-in-out;
+}
+
+/* === CSS CUSTOM PROPERTIES (compatibilidade) === */
+
+@layer base {
+  :root {
+    --color-brand-dark:   #0F7949;
+    --color-brand-mid:    #14A958;
+    --color-brand-yellow: #FAED23;
+    --color-brand-coral:  #EE3537;
+
+    --color-accent:       #EA580C;
+    --color-accent-hover: #C2410C;
+    --color-accent-light: #FFF7ED;
+
+    --color-bg:           #F9FAFB;
+    --color-surface:      #FFFFFF;
+    --color-border:       #E5E7EB;
+    --color-border-focus: #0F7949;
+
+    --color-text-primary:   #0F172A;
+    --color-text-secondary: #475569;
+    --color-text-muted:     #94A3B8;
+    --color-text-inverse:   #FFFFFF;
+
+    --color-success:    #14A958;
+    --color-success-bg: #F0FDF4;
+    --color-warning:    #F59E0B;
+    --color-warning-bg: #FFFBEB;
+    --color-error:      #EE3537;
+    --color-error-bg:   #FEF2F2;
+
+    --color-sidebar-bg:          #0F7949;
+    --color-sidebar-text:        #FFFFFF;
+    --color-sidebar-text-muted:  rgba(255,255,255,0.65);
+    --color-sidebar-item-hover:  rgba(255,255,255,0.10);
+    --color-sidebar-item-active: #14A958;
+    --color-sidebar-border:      rgba(255,255,255,0.15);
+  }
+
+  html {
+    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  /* Focus rings */
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(15, 121, 73, 0.30);
+  }
+}
+
+/* === ANIMAÇÕES === */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.form-card  { animation: fadeInUp 250ms ease; }
+.input-error { animation: shake 400ms ease; }
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 600ms linear infinite;
+}
+
+/* === ACESSIBILIDADE === */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
