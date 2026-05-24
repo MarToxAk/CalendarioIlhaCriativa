@@ -391,75 +391,67 @@ gap: 4px;                  /* space-1 */
 
 ### 4.2 Formulário de Acesso — Cliente (via Link)
 
-**Contexto:** Rota `/aprovacao/[token]` ou `/c/[slug]` — cliente recebe link por WhatsApp/e-mail.
+**Contexto:** Rota `/c/:token` — cliente recebe link único por WhatsApp.
 
-**Filosofia:** O cliente NÃO tem login com senha complexa. Acessa via link mágico (magic link) ou PIN de 6 dígitos enviado por e-mail/WhatsApp. Interface máximo amigável.
+**Filosofia:** O cliente acessa pelo link único + senha simples definida pelo admin. Uma tela, sem e-mail necessário.
 
-**Fluxo primário — PIN por e-mail:**
+**Fluxo — senha simples:**
 
-**Tela 1: Identificação**
+**Tela única: Inserir senha**
 ```
 ┌──────────────────────────────────────────────┐  ← bg-white min-h-screen
-│  [Header: Ilha Criativa · Bom Custo]         │
+│  [Header: Ilha Criativa]                     │
 ├──────────────────────────────────────────────┤
 │                                              │
 │         ┌──────────────────────────────┐     │
 │         │                              │     │  ← card max-w-sm
 │         │   Bem-vindo(a)! 👋           │     │
-│         │   Para ver seus conteúdos,   │     │
-│         │   confirme seu e-mail:       │     │
+│         │   Digite sua senha para      │     │
+│         │   acessar o calendário.      │     │
 │         │                              │     │
+│         │   Senha de acesso            │     │
 │         │   ┌──────────────────────┐   │     │
-│         │   │ seu@email.com        │   │     │
+│         │   │ ••••••••         👁  │   │     │  ← senha + toggle
 │         │   └──────────────────────┘   │     │
 │         │                              │     │
 │         │   ┌──────────────────────┐   │     │
-│         │   │   Enviar código →    │   │     │  ← coral #EA580C
+│         │   │  Acessar calendário  │   │     │  ← coral #EA580C
 │         │   └──────────────────────┘   │     │
 │         │                              │     │
-│         │   Você receberá um código    │     │
-│         │   de 6 dígitos por e-mail.   │     │
 │         └──────────────────────────────┘     │
 └──────────────────────────────────────────────┘
 ```
 
-**Tela 2: Inserir PIN**
-```
-│         ┌──────────────────────────────┐     │
-│         │                              │     │
-│         │   Código enviado! ✉️         │     │
-│         │   Verifique seu@email.com    │     │
-│         │                              │     │
-│         │   [_][_][_]  [_][_][_]       │     │  ← 6 inputs PIN
-│         │                              │     │
-│         │   ┌──────────────────────┐   │     │
-│         │   │    Confirmar acesso  │   │     │  ← coral
-│         │   └──────────────────────┘   │     │
-│         │                              │     │
-│         │   Não recebeu? [Reenviar]    │     │  ← link após 60s
-│         │   (disponível em 00:45)      │     │
-│         └──────────────────────────────┘     │
-```
-
 **Copywriting (PT-BR) — tom acolhedor:**
-- Tela 1 título: "Bem-vindo(a)!"
-- Tela 1 corpo: "Para ver os conteúdos preparados para você, confirme seu e-mail abaixo."
-- Label: "Seu e-mail"
-- Placeholder: "nome@empresa.com.br"
-- Botão tela 1: "Enviar código de acesso"
-- Dica: "Você receberá um código de 6 dígitos. Verifique também a caixa de spam."
-- Tela 2 título: "Código enviado!"
-- Tela 2 corpo: "Enviamos um código para **{email}**. Digite abaixo para acessar."
-- Label PIN: "Código de 6 dígitos"
-- Botão tela 2: "Confirmar acesso"
-- Reenvio: "Não recebeu o código? Reenviar" (ativo após 60s)
-- Timer: "Reenviar disponível em 00:{ss}"
-- Erro PIN: "Código incorreto. Verifique e tente novamente."
-- Expirado: "Este código expirou. Solicite um novo."
+- Título: "Bem-vindo(a)!"
+- Corpo: "Digite sua senha para acessar os conteúdos preparados para você."
+- Label: "Senha de acesso"
+- Placeholder: "••••••••"
+- Botão: "Acessar calendário"
+- Erro credencial: "Senha incorreta. Tente novamente."
+- Erro bloqueio: "Muitas tentativas. Aguarde alguns instantes antes de tentar novamente."
 
-**Estilos do botão de ação cliente:**
+**Estilos do formulário cliente:**
 ```css
-/* Botão coral — ação principal do cliente */
+/* Campo de senha */
+height: 44px;
+border: 2px solid #E5E7EB;
+border-radius: 8px;
+font-size: 14px;        /* text-sm */
+padding: 0 40px 0 16px; /* espaço para ícone olho */
+width: 100%;
+
+/* Focus */
+border-color: #EA580C;  /* coral — contexto cliente */
+box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
+
+/* Erro */
+border-color: #EE3537;
+animation: shake 400ms ease;
+```
+
+**Botão de ação cliente:**
+```css
 background: #EA580C;
 color: white;
 font-weight: 600;      /* font-semibold */
@@ -471,37 +463,6 @@ transition: background 150ms ease;
 /* Hover */
 background: #C2410C;
 ```
-
-**Inputs PIN (6 dígitos):**
-```css
-/* 6 inputs individuais de 44x52px */
-width: 44px;
-height: 52px;
-border: 2px solid #E5E7EB;
-border-radius: 8px;
-font-size: 24px;       /* text-2xl */
-font-weight: 600;      /* font-semibold */
-text-align: center;
-color: #0F172A;
-
-/* Focus */
-border-color: #EA580C;  /* coral — contexto cliente */
-box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
-
-/* Preenchido */
-border-color: #0F7949;
-background: #F0FDF4;
-
-/* Erro */
-border-color: #EE3537;
-animation: shake 400ms ease;
-```
-
-**Agrupamento PIN:**
-- 3 inputs + espaço/hífen visual + 3 inputs
-- Auto-avança ao digitar um dígito
-- Auto-retrocede ao pressionar Backspace com campo vazio
-- Suporte a paste do código completo
 
 ---
 
@@ -651,13 +612,22 @@ transform: translateY(-1px);
 </button>
 ```
 
-**Inputs PIN:**
+**Formulário de acesso cliente:**
 ```html
-<fieldset>
-  <legend>Código de 6 dígitos</legend>
-  <input aria-label="Dígito 1 de 6" maxlength="1" inputmode="numeric" />
-  <!-- ... -->
-</fieldset>
+<form aria-label="Acesso ao calendário">
+  <label for="senha-cliente">Senha de acesso</label>
+  <input
+    id="senha-cliente"
+    type="password"
+    autocomplete="current-password"
+    aria-required="true"
+    aria-describedby="senha-cliente-error"
+  />
+  <button type="button" aria-label="Mostrar senha" aria-pressed="false">
+    <!-- ícone olho -->
+  </button>
+  <span id="senha-cliente-error" role="alert" aria-live="polite"></span>
+</form>
 ```
 
 ### 6.3 Comportamentos Acessíveis
@@ -707,7 +677,7 @@ transform: translateY(-1px);
 - Header: logo centralizado, saudação oculta
 - Content: `px-4 py-6`
 - Botões: full-width
-- PIN inputs: `42x48px` (levemente menor)
+- Campo senha: `height: 48px` (área de toque maior)
 - Cards: sem borda arredondada extrema, `rounded-lg`
 
 **Tablet+ (≥ 640px):**
@@ -722,10 +692,9 @@ transform: translateY(-1px);
 - Inputs: `height: 48px` no mobile (área de toque maior)
 - Botão: sempre full-width
 
-**PIN Cliente:**
-- 6 inputs: `gap-2` (8px) no mobile, `gap-4` (16px) no tablet
-- Inputs: `40x48px` no mobile
-- Legenda clara acima do fieldset
+**Formulário Cliente:**
+- Input senha: full-width, `height: 48px` no mobile
+- Botão: full-width, `height: 48px` no mobile
 
 ---
 
@@ -741,7 +710,7 @@ transform: translateY(-1px);
 }
 .form-card { animation: fadeInUp 250ms ease; }
 
-/* PIN incorreto — shake */
+/* Senha incorreta — shake */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   20%       { transform: translateX(-6px); }
@@ -787,15 +756,12 @@ transform: translateY(-1px);
 - [ ] Link "Esqueci minha senha" com rota futura
 - [ ] Responsivo mobile/desktop
 
-### Cliente — Identificação e PIN
+### Cliente — Acesso por Senha
 - [ ] Header simples com logo "Ilha Criativa"
-- [ ] Tela 1: input e-mail + botão coral "Enviar código de acesso"
-- [ ] Tela 2: 6 inputs PIN com agrupamento 3+3
-- [ ] Auto-avanço entre inputs ao digitar
-- [ ] Suporte a colar código completo
-- [ ] Timer de reenvio (60s countdown)
-- [ ] Botão reenviar ativo após timer
-- [ ] Feedback de erro shake + mensagem
+- [ ] Tela única: input senha + toggle mostrar/ocultar
+- [ ] Botão coral "Acessar calendário" full-width
+- [ ] Feedback de erro shake + mensagem "Senha incorreta"
+- [ ] Mensagem de bloqueio por rate-limit (Rack::Attack)
 - [ ] Tom de voz acolhedor em todos os textos
 - [ ] Responsivo mobile-first
 
