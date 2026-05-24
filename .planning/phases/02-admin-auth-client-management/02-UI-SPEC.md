@@ -1,10 +1,12 @@
 ---
 phase: 2
 slug: admin-auth-client-management
-status: draft
+status: approved
+reviewed_at: 2026-05-24
 shadcn_initialized: false
 preset: none
 created: 2026-05-24
+revised: 2026-05-24
 ---
 
 # Phase 2 — UI Design Contract
@@ -37,12 +39,18 @@ This document defines only what is new or additive to Phase 1.
 
 ---
 
+## Focal Point
+
+Focal point: the client table is the primary visual anchor; "+ Novo cliente" is the primary action focal point.
+
+---
+
 ## Spacing Scale
 
 Inherited from Phase 1 — 8-point scale: 4, 8, 16, 24, 32, 48, 64px.
 
 Phase 2 exceptions:
-- Table row height: 56px (14-point — nearest valid is 56 = 4×14, acceptable for data-dense rows)
+- Table row height: 48px (h-12 — 4×12, standard 8-point multiple for data rows)
 - Copy button touch target: 32px height minimum (h-8)
 - Status badge pill: 4px vertical / 8px horizontal padding (inherited)
 
@@ -129,7 +137,7 @@ New semantic use (admin-only, no new token needed):
 ```
 Wrapper: bg-white rounded-xl border border-gray-200 shadow-card overflow-hidden
 Header row: bg-gray-50, border-b border-gray-200, py-3 px-4, text-xs font-medium text-slate-500 uppercase tracking-wide
-Body row: py-0 px-4, height 56px, border-b border-gray-100 last:border-0
+Body row: py-0 px-4, height 48px (h-12), border-b border-gray-100 last:border-0
 Row hover: bg-gray-50 transition-colors 150ms
 Row inativa (desativada): opacity-60
 ```
@@ -137,8 +145,8 @@ Row inativa (desativada): opacity-60
 **Menu de ações "…" (dropdown):**
 - Botão: h-8 w-8 rounded-md flex items-center justify-center text-slate-400 hover:bg-gray-100 hover:text-slate-600
 - Dropdown: bg-white rounded-lg shadow-md border border-gray-200 py-1 min-w-[160px]
-- Opções: "Ver detalhes" / "Editar" / "Desativar" (ou "Reativar")
-- "Desativar" / "Reativar": text-error (#EE3537) para desativar, text-success (#14A958) para reativar
+- Opções: "Ver detalhes" / "Editar cliente" / "Desativar cliente" (ou "Reativar cliente")
+- "Desativar cliente" / "Reativar cliente": text-error (#EE3537) para desativar, text-success (#14A958) para reativar
 
 **Estado vazio (nenhum cliente cadastrado):**
 ```
@@ -183,7 +191,7 @@ Row inativa (desativada): opacity-60
 │                              │  │  │  Escolha uma senha fácil de      │  │ │
 │                              │  │  │  lembrar para o cliente.         │  │ │
 │                              │  │  │                                  │  │ │
-│                              │  │  │  [Cancelar]  [Cadastrar cliente] │  │ │
+│                              │  │  │  [Voltar sem salvar]  [Cadastrar cliente] │  │ │
 │                              │  │  └──────────────────────────────────┘  │ │
 │                              │  │                                       │ │
 │                              │  └───────────────────────────────────────┘ │
@@ -214,13 +222,13 @@ Row inativa (desativada): opacity-60
 - Validação: obrigatório, mínimo 4 chars
 
 *Botões:*
-- "Cancelar": variante Secondary, h-10, px-4 — redireciona para `/admin/clients`
+- "Voltar sem salvar": variante Secondary, h-10, px-4 — redireciona para `/admin/clients`
 - "Cadastrar cliente": variante Primary Admin, h-10, px-4 — submit do form
 - Alinhamento: direita, gap-3 entre os botões
 
 *Estado loading (submit):*
 - Botão "Cadastrar cliente": spinner branco, texto "Cadastrando...", disabled
-- "Cancelar" também disabled durante submit
+- "Voltar sem salvar" também disabled durante submit
 
 ---
 
@@ -234,14 +242,14 @@ Estrutura idêntica ao formulário de novo cliente, com as seguintes diferenças
 - Campo senha: placeholder "••••••••" (deixar vazio = manter senha atual)
 - Hint abaixo do campo senha: "Deixe em branco para manter a senha atual."
 - Botão de submit: "Salvar alterações" (Primary Admin)
-- Botão secundário: "Cancelar" → redireciona para `/admin/clients/:id`
+- Botão secundário: "Voltar sem salvar" → redireciona para `/admin/clients/:id`
 
 ```
 Campo Nome:     [Loja da Maria          ]
 Campo Senha:    [                   👁  ]  ← vazio = não altera
 Hint:           Deixe em branco para manter a senha atual.
 
-[ Cancelar ]  [ Salvar alterações ]
+[ Voltar sem salvar ]  [ Salvar alterações ]
 ```
 
 ---
@@ -257,7 +265,7 @@ Hint:           Deixe em branco para manter a senha atual.
 │                              │                                            │
 │                              │  ┌─ CONTENT (px-6 py-8) ─────────────────┐ │
 │                              │  │                                       │ │
-│                              │  │  ← Clientes       [Editar]  [Desativar]│ │
+│                              │  │  ← Clientes  [Editar cliente]  [Desativar cliente]│ │
 │                              │  │                                       │ │
 │                              │  │  ┌─ CARD: Dados de acesso ──────────┐ │ │
 │                              │  │  │  Dados de acesso do portal        │ │ │
@@ -291,9 +299,9 @@ Hint:           Deixe em branco para manter a senha atual.
 
 **Barra de ações no topo da página:**
 - Link "← Clientes": Ghost, text-sm text-slate-600
-- "Editar": variante Secondary, h-9, px-3, text-sm — abre `/admin/clients/:id/edit`
-- "Desativar": variante Danger (bg #EE3537), h-9, px-3, text-sm — abre confirmação (ver Interaction Patterns)
-- Se cliente inativo: botão "Reativar" (bg #14A958 = success) no lugar de "Desativar"
+- "Editar cliente": variante Secondary, h-9, px-3, text-sm — abre `/admin/clients/:id/edit`
+- "Desativar cliente": variante Danger (bg #EE3537), h-9, px-3, text-sm — abre confirmação (ver Interaction Patterns)
+- Se cliente inativo: botão "Reativar cliente" (bg #14A958 = success) no lugar de "Desativar cliente"
 
 **Card "Dados de acesso do portal":**
 
@@ -337,7 +345,7 @@ Hint:           Deixe em branco para manter a senha atual.
 
 Estado padrão:
 ```
-h-8 inline-flex items-center gap-1.5 rounded-md px-3
+h-8 inline-flex items-center gap-2 rounded-md px-3
 text-xs font-medium text-slate-600
 bg-white border border-gray-200
 hover:bg-gray-50 hover:border-gray-300
@@ -372,7 +380,7 @@ Fallback (clipboard API não disponível):
 
 ### Padrão 2 — Desativar cliente
 
-**Trigger:** Clicar em "Desativar" no topo da tela de detalhes
+**Trigger:** Clicar em "Desativar cliente" no topo da tela de detalhes
 
 **Comportamento:**
 1. Abre um modal de confirmação (não redireciona, não usa alert() do browser)
@@ -380,7 +388,7 @@ Fallback (clipboard API não disponível):
 3. Submit do modal: POST/PATCH para `admin_client_path` com `active: false`
 4. Após sucesso: redirect para `/admin/clients/:id` com flash de sucesso
 5. Badge de status atualiza para "Inativo"
-6. Botão "Desativar" na barra de ações substitui por "Reativar" (bg success)
+6. Botão "Desativar cliente" na barra de ações substitui por "Reativar cliente" (bg success)
 
 **Modal de confirmação — Desativar:**
 ```
@@ -392,15 +400,15 @@ Fallback (clipboard API não disponível):
 │  O cliente não conseguirá acessar o         │
 │  calendário até ser reativado.              │
 │                                             │
-│              [Cancelar]  [Desativar]        │
+│    [Manter cliente ativo]  [Desativar cliente]  │
 └─────────────────────────────────────────────┘
 ```
 
-- Botão "Cancelar": Secondary — fecha o modal
-- Botão "Desativar": Danger (bg #EE3537) — executa a ação
+- Botão "Manter cliente ativo": Secondary — fecha o modal
+- Botão "Desativar cliente": Danger (bg #EE3537) — executa a ação
 
 **Comportamento — Reativar cliente:**
-- Trigger: botão "Reativar" na barra de ações
+- Trigger: botão "Reativar cliente" na barra de ações
 - Sem modal de confirmação (reativar não é destrutivo)
 - POST/PATCH direto com `active: true`
 - Flash de sucesso: "Loja da Maria reativada. O cliente pode acessar o portal novamente."
@@ -433,13 +441,13 @@ Fallback (clipboard API não disponível):
 │  Você precisará enviar o novo link          │
 │  para o cliente.                            │
 │                                             │
-│              [Cancelar]  [Rotacionar]       │
+│    [Manter link atual]  [Rotacionar token]  │
 └─────────────────────────────────────────────┘
 ```
 
 - Ícone de aviso ⚠: text-warning (#F59E0B), 20px, inline no parágrafo
-- Botão "Rotacionar": Danger (bg #EE3537) — executa a ação
-- Botão "Cancelar": Secondary — fecha o modal
+- Botão "Rotacionar token": Danger (bg #EE3537) — executa a ação
+- Botão "Manter link atual": Secondary — fecha o modal
 
 ---
 
@@ -457,10 +465,10 @@ Footer:  flex justify-end gap-3 mt-6
 ```
 
 **Teclado:**
-- `Escape` fecha o modal (Cancelar)
+- `Escape` fecha o modal (equivale ao botão de cancelar contextual)
 - `Tab` cicla apenas dentro do modal (focus trap)
 - `Enter` no botão de ação destrutiva = executa (não necessita Enter para cancelar)
-- Foco inicial: no botão "Cancelar" (para prevenir ativação acidental)
+- Foco inicial: no botão de cancelar contextual (para prevenir ativação acidental)
 
 **ARIA do modal:**
 ```html
@@ -493,6 +501,7 @@ Partial: `app/views/admin/clients/_client_row.html.erb`
 - MenuButton: ver abaixo (C3)
 
 Linha com cliente inativo: aplica `opacity-60` no `<tr>` inteiro.
+Row height: 48px (h-12).
 
 ---
 
@@ -531,15 +540,15 @@ absolute right-0 mt-1 bg-white rounded-lg shadow-md border border-gray-200 py-1 
 
 Itens do dropdown:
 ```
-"Ver detalhes"  → link_to admin_client_path
-"Editar"        → link_to edit_admin_client_path
-"Desativar"     → data-action="click->modal#open" data-modal-target="deactivate-modal"
-                   text-error (#EE3537)
+"Ver detalhes"    → link_to admin_client_path
+"Editar cliente"  → link_to edit_admin_client_path
+"Desativar cliente" → data-action="click->modal#open" data-modal-target="deactivate-modal"
+                     text-error (#EE3537)
 ```
 Se cliente inativo:
 ```
-"Reativar"      → button_to com method: :patch, confirm: false
-                   text-success (#14A958)
+"Reativar cliente" → button_to com method: :patch, confirm: false
+                     text-success (#14A958)
 ```
 
 ---
@@ -555,6 +564,8 @@ Stimulus controller `copy`:
 - `data-copy-value="<%= value %>"`
 - `data-action="click->copy#execute"`
 
+Classes: `h-8 inline-flex items-center gap-2 rounded-md px-3` (gap-2 = 8px, múltiplo de 4)
+
 Estado padrão → estado copiado (2s) → estado padrão:
 - Swap de classes Tailwind via Stimulus
 - Usa `aria-live="polite"` para anunciar "Copiado!" para leitores de tela
@@ -565,12 +576,12 @@ Estado padrão → estado copiado (2s) → estado padrão:
 
 Partial: `app/views/admin/clients/_confirm_modal.html.erb`
 
-Parâmetros: `id:`, `title:`, `body:`, `confirm_label:`, `confirm_variant:` (`danger`|`warning`), `form_action:`
+Parâmetros: `id:`, `title:`, `body:`, `confirm_label:`, `cancel_label:`, `confirm_variant:` (`danger`|`warning`), `form_action:`
 
 Stimulus controller `modal`:
 - `data-controller="modal"`
 - Abre via `data-action="click->modal#open" data-modal-id="<%= id %>"`
-- Fecha via `Escape` ou clique no overlay ou botão "Cancelar"
+- Fecha via `Escape` ou clique no overlay ou botão de cancelar contextual
 - Gerencia focus trap e `aria-modal`
 
 ---
@@ -621,16 +632,17 @@ Todas as strings são PT-BR. Tom: direto, profissional, sem jargão técnico.
 | Criar novo cliente | "+ Novo cliente" | Primary Admin |
 | Salvar novo cliente | "Cadastrar cliente" | Primary Admin |
 | Salvar edição | "Salvar alterações" | Primary Admin |
-| Cancelar form | "Cancelar" | Secondary |
-| Editar (topo detalhe) | "Editar" | Secondary |
-| Desativar cliente | "Desativar" | Danger |
-| Confirmar desativação | "Desativar" | Danger |
-| Reativar cliente | "Reativar" | Success (bg #14A958) |
+| Cancelar form (novo/editar) | "Voltar sem salvar" | Secondary |
+| Editar (topo detalhe) | "Editar cliente" | Secondary |
+| Desativar cliente | "Desativar cliente" | Danger |
+| Confirmar desativação | "Desativar cliente" | Danger |
+| Cancelar modal desativar | "Manter cliente ativo" | Secondary |
+| Reativar cliente | "Reativar cliente" | Success (bg #14A958) |
 | Copiar link | "Copiar link" | Ghost com borda |
 | Copiar senha | "Copiar senha" | Ghost com borda |
 | Rotacionar token | "Rotacionar token de acesso" | Ghost text-slate-600 |
-| Confirmar rotação | "Rotacionar" | Danger |
-| Fechar modal | "Cancelar" | Secondary |
+| Confirmar rotação | "Rotacionar token" | Danger |
+| Cancelar modal rotacionar | "Manter link atual" | Secondary |
 
 ### Labels de formulário
 
@@ -639,6 +651,18 @@ Todas as strings são PT-BR. Tom: direto, profissional, sem jargão técnico.
 | Nome | "Nome do cliente" | "Ex: Loja da Maria" | — |
 | Senha (novo) | "Senha do portal" | "Mínimo 4 caracteres" | "Escolha uma senha fácil de lembrar para o cliente." |
 | Senha (editar) | "Senha do portal" | "••••••••" | "Deixe em branco para manter a senha atual." |
+
+### Mensagens de validação inline
+
+Exibidas abaixo do campo com erro, text-xs text-error (#EE3537), após tentativa de submit ou blur.
+
+| Campo | Condição | Mensagem |
+|-------|----------|---------|
+| Nome | campo vazio | "Informe o nome do cliente." |
+| Nome | menos de 2 caracteres | "O nome precisa ter pelo menos 2 caracteres." |
+| Senha | campo vazio | "Defina uma senha para o portal do cliente." |
+| Senha | menos de 4 caracteres | "A senha precisa ter pelo menos 4 caracteres." |
+| Senha (confirmação) | não coincide | "As senhas não coincidem." |
 
 ### Labels de campos readonly (detalhe)
 
@@ -679,10 +703,14 @@ Todas as strings são PT-BR. Tom: direto, profissional, sem jargão técnico.
 **Desativar:**
 - Título: "Desativar cliente"
 - Corpo: "Desativar [Nome] bloqueará o acesso ao portal imediatamente. O cliente não conseguirá acessar o calendário até ser reativado."
+- Botão confirmar: "Desativar cliente"
+- Botão cancelar: "Manter cliente ativo"
 
 **Rotacionar token:**
 - Título: "Rotacionar token de acesso"
 - Corpo: "Ao rotacionar o token, o link atual de [Nome] para de funcionar imediatamente e qualquer sessão aberta do cliente é encerrada. Você precisará enviar o novo link para o cliente."
+- Botão confirmar: "Rotacionar token"
+- Botão cancelar: "Manter link atual"
 
 ### Copy feedback (botão copiar)
 
@@ -740,9 +768,9 @@ Todas as strings são PT-BR. Tom: direto, profissional, sem jargão técnico.
 <!-- Dropdown aberto -->
 <ul role="menu" aria-label="Opções de Loja da Maria">
   <li role="menuitem"><a href="...">Ver detalhes</a></li>
-  <li role="menuitem"><a href="...">Editar</a></li>
+  <li role="menuitem"><a href="...">Editar cliente</a></li>
   <li role="menuitem">
-    <button type="button" data-action="click->modal#open">Desativar</button>
+    <button type="button" data-action="click->modal#open">Desativar cliente</button>
   </li>
 </ul>
 ```
@@ -795,15 +823,15 @@ Todas as strings são PT-BR. Tom: direto, profissional, sem jargão técnico.
 
 ### Navegação por teclado — formulários (new/edit)
 
-- `Tab`: Nome → Senha → toggle olho → Cancelar → Submit
+- `Tab`: Nome → Senha → toggle olho → "Voltar sem salvar" → Submit
 - `Enter` em qualquer campo: submete o formulário
-- `Escape`: sem efeito (usuário usa botão Cancelar)
+- `Escape`: sem efeito (usuário usa botão "Voltar sem salvar")
 
 ### Navegação por teclado — modal
 
-- Foco inicial: botão "Cancelar" (previne ativação acidental de ação destrutiva)
+- Foco inicial: botão de cancelar contextual ("Manter cliente ativo" / "Manter link atual") — previne ativação acidental de ação destrutiva
 - `Tab`: cicla apenas entre elementos dentro do modal (focus trap)
-- `Escape`: fecha o modal = equivale a "Cancelar"
+- `Escape`: fecha o modal = equivale ao botão de cancelar contextual
 - `Enter` no botão de ação: executa
 
 ### Anúncios de live region
@@ -863,10 +891,10 @@ Botão "+ Novo cliente": full-width em mobile, abaixo do título.
 **Formulário (new/edit) em mobile:**
 - Card: sem borda arredondada extrema, `rounded-lg`, `mx-4`
 - Inputs: `height: 48px` (área de toque)
-- Botões: stacked (Cancelar acima, Submit abaixo), ambos full-width
+- Botões: stacked ("Voltar sem salvar" acima, Submit abaixo), ambos full-width
 
 **Detalhe em mobile:**
-- Barra de ações (Editar/Desativar): move para o final da página, abaixo dos cards
+- Barra de ações (Editar cliente / Desativar cliente): move para o final da página, abaixo dos cards
 - Ou: botões empilhados full-width no final
 - Card de dados de acesso: full-width
 - Input readonly URL: `overflow-hidden text-ellipsis` — URL muito longa
@@ -967,9 +995,10 @@ Nenhum componente de terceiros. Apenas Rails partials + Tailwind v4 + Heroicons 
 
 ### Lista de clientes (`/admin/clients`)
 - [ ] Tabela com colunas: Nome, Status, Criado em, Ações
+- [ ] Row height 48px (h-12)
 - [ ] Linha de cliente inativo com `opacity-60`
 - [ ] Badge Ativo (success) / Inativo (amber-800 em amber-50)
-- [ ] Menu "…" por linha com dropdown: Ver / Editar / Desativar
+- [ ] Menu "…" por linha com dropdown: Ver / Editar cliente / Desativar cliente
 - [ ] Estado vazio com ícone + copy + botão CTA
 - [ ] Mobile: cards empilhados em vez de tabela (< 768px)
 - [ ] Botão "+ Novo cliente" top-right (desktop), full-width (mobile)
@@ -978,28 +1007,30 @@ Nenhum componente de terceiros. Apenas Rails partials + Tailwind v4 + Heroicons 
 - [ ] Card max-w-lg, p-8
 - [ ] Campo Nome com placeholder "Ex: Loja da Maria"
 - [ ] Campo Senha com toggle mostrar/ocultar + hint
-- [ ] Botões Cancelar + "Cadastrar cliente" alinhados à direita
+- [ ] Botões "Voltar sem salvar" + "Cadastrar cliente" alinhados à direita
 - [ ] Loading state: spinner + "Cadastrando...", campos disabled
-- [ ] Validação inline com mensagens PT-BR
+- [ ] Validação inline com mensagens PT-BR declaradas no spec
 
 ### Formulário editar cliente (`/admin/clients/:id/edit`)
 - [ ] Campos pré-preenchidos
 - [ ] Hint de senha vazia = manter atual
 - [ ] Botão submit: "Salvar alterações"
+- [ ] Botão cancelar: "Voltar sem salvar"
 
 ### Detalhe do cliente (`/admin/clients/:id`)
-- [ ] Barra de ações: link ← Clientes + botões Editar + Desativar/Reativar
+- [ ] Barra de ações: link ← Clientes + botões "Editar cliente" + "Desativar cliente"/"Reativar cliente"
 - [ ] Card "Dados de acesso": Link (readonly, mono, copyable, external link icon) + Senha (readonly, visível, toggle ocultar, copyable)
 - [ ] Botão "Rotacionar token de acesso" (ghost) com modal de confirmação
 - [ ] Card "Informações": badge status + datas
-- [ ] Modal Desativar: foco inicial em Cancelar, focus trap, Escape fecha
+- [ ] Modal Desativar: foco inicial em "Manter cliente ativo", focus trap, Escape fecha
+- [ ] Modal Rotacionar: foco inicial em "Manter link atual", focus trap, Escape fecha
 
 ### Componentes
-- [ ] `_client_row.html.erb` partial
+- [ ] `_client_row.html.erb` partial (row height h-12)
 - [ ] `_status_badge.html.erb` partial
 - [ ] `_actions_menu.html.erb` partial com Stimulus `dropdown`
-- [ ] `_copy_button.html.erb` partial com Stimulus `copy`
-- [ ] `_confirm_modal.html.erb` partial com Stimulus `modal`
+- [ ] `_copy_button.html.erb` partial com Stimulus `copy` (gap-2 no estilo)
+- [ ] `_confirm_modal.html.erb` partial com Stimulus `modal` (aceita `cancel_label:`)
 - [ ] `_readonly_field.html.erb` partial
 
 ### Acessibilidade
@@ -1027,4 +1058,4 @@ Nenhum componente de terceiros. Apenas Rails partials + Tailwind v4 + Heroicons 
 
 ---
 
-*UI-SPEC Fase 2 — Ilha Criativa / Bom Custo — v1.0 — 2026-05-24*
+*UI-SPEC Fase 2 — Ilha Criativa / Bom Custo — v1.1 — 2026-05-24 (revision: checker fixes)*
