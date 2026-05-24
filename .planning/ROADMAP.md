@@ -29,14 +29,14 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 4. Rack::Attack está ativo e bloqueia mais de 5 tentativas de senha num intervalo de 20 segundos no endpoint do portal do cliente
 5. O admin pode rotacionar o token de um cliente e o token anterior é invalidado imediatamente
 
-**Plans:** 5 plansPlans:
+**Plans:** 2/5 plans executed
 **Wave 1**
 
 - [x] 01-01-PLAN.md — Criar projeto Rails 8.1.3 + Gemfile completo + banco PostgreSQL + timezone Brasilia + design tokens
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 01-02-PLAN.md — Rails auth generator + Admin::BaseController + Dashboard stub + formulário de login UI-SPEC + seeds
+- [x] 01-02-PLAN.md — Rails auth generator + Admin::BaseController + Dashboard stub + formulário de login UI-SPEC + seeds
 - [ ] 01-03-PLAN.md — Migrações Create Clients/Artes/ApprovalResponses + models + testes unitários
 
 **Wave 3** *(blocked on Wave 2 completion)*
@@ -133,7 +133,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Data Foundation + Security | 0/5 | Not started | - |
+| 1. Data Foundation + Security | 2/5 | In Progress|  |
 | 2. Admin Auth + Client Management | 0/? | Not started | - |
 | 3. Art Management | 0/? | Not started | - |
 | 4. Client Calendar Portal | 0/? | Not started | - |

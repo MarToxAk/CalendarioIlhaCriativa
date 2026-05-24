@@ -7,8 +7,8 @@
 
 ### Autenticação (AUTH)
 
-- [ ] **AUTH-01**: Admin pode criar conta e fazer login com email e senha
-- [ ] **AUTH-02**: Admin pode fazer logout da sessão
+- [x] **AUTH-01**: Admin pode criar conta e fazer login com email e senha
+- [x] **AUTH-02**: Admin pode fazer logout da sessão
 - [ ] **AUTH-03**: Cada cliente tem um link público único (token de 24 chars) para acessar o próprio calendário
 - [ ] **AUTH-04**: Cliente precisa digitar uma senha simples ao acessar o link pela primeira vez na sessão
 - [ ] **AUTH-05**: Admin pode rotacionar o token de um cliente (gera novo link, invalida o anterior e a sessão existente)
@@ -91,8 +91,8 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Complete |
+| AUTH-02 | Phase 1 | Complete |
 | AUTH-03 | Phase 1 | Pending |
 | AUTH-04 | Phase 1 | Pending |
 | AUTH-05 | Phase 1 | Pending |
