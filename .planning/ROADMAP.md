@@ -32,7 +32,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 **Plans:** 5 plansPlans:
 **Wave 1**
 
-- [ ] 01-01-PLAN.md — Criar projeto Rails 8.1.3 + Gemfile completo + banco PostgreSQL + timezone Brasilia + design tokens
+- [x] 01-01-PLAN.md — Criar projeto Rails 8.1.3 + Gemfile completo + banco PostgreSQL + timezone Brasilia + design tokens
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
