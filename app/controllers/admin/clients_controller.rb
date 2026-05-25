@@ -13,7 +13,11 @@ class Admin::ClientsController < Admin::BaseController
   end
 
   def create
-    @client = Client.new(client_params)
+    params_with_plain = client_params
+    if params_with_plain[:password].present?
+      params_with_plain = params_with_plain.merge(password_plain: params_with_plain[:password])
+    end
+    @client = Client.new(params_with_plain)
     if @client.save
       redirect_to admin_client_path(@client), notice: "Cliente cadastrado com sucesso."
     else
