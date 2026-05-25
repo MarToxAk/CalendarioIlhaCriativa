@@ -8,7 +8,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 
 - [ ] **Phase 1: Data Foundation + Security** - Modelos, migrações, Rack::Attack e primitivos de autenticação
 - [x] **Phase 2: Admin Auth + Client Management** - Login do admin, CRUD de clientes, exibição de link e senha (completed 2026-05-25)
-- [ ] **Phase 3: Art Management** - Criar/editar/excluir artes, upload de arquivo, link externo, plataforma/formato/prazo
+- [x] **Phase 3: Art Management** - Criar/editar/excluir artes, upload de arquivo, link externo, plataforma/formato/prazo (completed 2026-05-25)
 - [ ] **Phase 4: Client Calendar Portal** - Auth por token + senha, calendário mensal, preview de artes
 - [ ] **Phase 5: Approval Flow** - Aprovar, pedir alteração + comentário, re-aprovação após revisão, histórico
 - [ ] **Phase 6: Admin Feedback Panel** - Dashboard, filtros, marcar revisado, responder comentário, histórico do cliente
@@ -89,7 +89,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 4. Admin edita qualquer campo de uma arte existente antes de ela ser aprovada
 5. Admin exclui uma arte e ela some do sistema
 
-**Plans:** TBD
+**Plans:** 1/1 plans complete
 **UI hint:** yes
 
 ### Phase 4: Client Calendar Portal
@@ -148,7 +148,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 |-------|----------------|--------|-----------|
 | 1. Data Foundation + Security | 2/5 | In Progress|  |
 | 2. Admin Auth + Client Management | 5/5 | Complete    | 2026-05-25 |
-| 3. Art Management | 0/? | Not started | - |
+| 3. Art Management | 1/1 | Complete   | 2026-05-25 |
 | 4. Client Calendar Portal | 0/? | Not started | - |
 | 5. Approval Flow | 0/? | Not started | - |
 | 6. Admin Feedback Panel | 0/? | Not started | - |
