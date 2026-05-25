@@ -16,10 +16,10 @@
 
 ### Clientes (CLIE)
 
-- [ ] **CLIE-01**: Admin pode criar um novo cliente com nome e senha do portal
-- [ ] **CLIE-02**: Admin pode editar os dados de um cliente (nome, senha)
-- [ ] **CLIE-03**: Admin pode desativar um cliente (bloqueia acesso ao portal)
-- [ ] **CLIE-04**: Admin pode ver o link de acesso e a senha do portal de cada cliente para copiar e enviar
+- [x] **CLIE-01**: Admin pode criar um novo cliente com nome e senha do portal
+- [x] **CLIE-02**: Admin pode editar os dados de um cliente (nome, senha)
+- [x] **CLIE-03**: Admin pode desativar um cliente (bloqueia acesso ao portal)
+- [x] **CLIE-04**: Admin pode ver o link de acesso e a senha do portal de cada cliente para copiar e enviar
 - [ ] **CLIE-05**: Admin pode ver o histórico de aprovações de um cliente específico (todas as artes respondidas)
 
 ### Artes / Conteúdo (ARTE)
@@ -97,10 +97,10 @@
 | AUTH-04 | Phase 1 | Pending |
 | AUTH-05 | Phase 1 | Pending |
 | AUTH-06 | Phase 1 | Pending |
-| CLIE-01 | Phase 2 | Pending |
-| CLIE-02 | Phase 2 | Pending |
-| CLIE-03 | Phase 2 | Pending |
-| CLIE-04 | Phase 2 | Pending |
+| CLIE-01 | Phase 2 | Complete |
+| CLIE-02 | Phase 2 | Complete |
+| CLIE-03 | Phase 2 | Complete |
+| CLIE-04 | Phase 2 | Complete |
 | CLIE-05 | Phase 6 | Pending |
 | ARTE-01 | Phase 3 | Pending |
 | ARTE-02 | Phase 3 | Pending |

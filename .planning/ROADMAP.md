@@ -59,10 +59,10 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 3. Admin cria um cliente com nome e senha, edita esses dados e desativa o cliente — acesso ao portal é bloqueado após desativação
 4. Na tela de detalhes do cliente, o admin vê o link de acesso completo e a senha em texto claro prontos para copiar
 
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 **Wave 1**
 
-- [ ] 02-01-PLAN.md — Migração password_plain + layout admin + sidebar + ClientsController skeleton + index view + dropdown_controller
+- [x] 02-01-PLAN.md — Migração password_plain + layout admin + sidebar + ClientsController skeleton + index view + dropdown_controller
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -143,7 +143,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Data Foundation + Security | 2/5 | In Progress|  |
-| 2. Admin Auth + Client Management | 0/3 | Not started | - |
+| 2. Admin Auth + Client Management | 1/3 | In Progress|  |
 | 3. Art Management | 0/? | Not started | - |
 | 4. Client Calendar Portal | 0/? | Not started | - |
 | 5. Approval Flow | 0/? | Not started | - |
