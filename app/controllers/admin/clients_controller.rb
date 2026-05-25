@@ -1,0 +1,58 @@
+class Admin::ClientsController < Admin::BaseController
+  before_action :set_client, only: %i[ show edit update rotate_token ]
+
+  def index
+    @clients = Client.order(created_at: :desc)
+  end
+
+  def show
+  end
+
+  def new
+    @client = Client.new
+  end
+
+  def create
+    @client = Client.new(client_params)
+    if @client.save
+      redirect_to admin_client_path(@client), notice: "Cliente cadastrado com sucesso."
+    else
+      render :new, status: :unprocessable_entity
+    end
+  end
+
+  def edit
+  end
+
+  def update
+    was_active = @client.active
+    filtered = client_params.reject { |k, v| [ "password", "password_plain" ].include?(k) && v.blank? }
+    if @client.update(filtered)
+      if was_active && !@client.active
+        redirect_to admin_client_path(@client), notice: "#{@client.name} foi desativado. O acesso ao portal está bloqueado."
+      elsif !was_active && @client.active
+        redirect_to admin_client_path(@client), notice: "#{@client.name} foi reativado. O cliente pode acessar o portal novamente."
+      else
+        redirect_to admin_client_path(@client), notice: "Dados do cliente atualizados."
+      end
+    else
+      render :edit, status: :unprocessable_entity
+    end
+  end
+
+  def rotate_token
+    @client.regenerate_access_token
+    redirect_to admin_client_path(@client),
+      notice: "Token rotacionado. O link anterior não funciona mais. Envie o novo link para o cliente."
+  end
+
+  private
+
+  def set_client
+    @client = Client.find(params[:id])
+  end
+
+  def client_params
+    params.require(:client).permit(:name, :password, :password_plain, :active)
+  end
+end

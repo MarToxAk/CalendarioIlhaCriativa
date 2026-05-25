@@ -1,0 +1,37 @@
+<nav class="w-60 bg-[#0F7949] flex flex-col min-h-screen">
+  <%# Branding %>
+  <div class="px-4 py-5 border-b border-white/20">
+    <span class="text-white font-semibold text-sm block">Ilha Criativa</span>
+    <span class="text-white/70 text-xs">by Bom Custo</span>
+  </div>
+
+  <%# Nav items %>
+  <div class="flex-1 px-3 py-4 space-y-1">
+    <%
+      nav_items = [
+        { label: "Dashboard",     path: admin_root_path },
+        { label: "Aprovações",    path: "#" },
+        { label: "Clientes",      path: admin_clients_path },
+        { label: "Calendário",    path: "#" },
+        { label: "Configurações", path: "#" },
+      ]
+    %>
+    <% nav_items.each do |item| %>
+      <%= link_to item[:path],
+            class: "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors #{
+              current_page?(item[:path]) ?
+              'bg-white/20 text-white' :
+              'text-white/70 hover:bg-white/10 hover:text-white'
+            }" do %>
+        <%= item[:label] %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <%# Footer: Avatar + Sair %>
+  <div class="mt-auto px-3 py-4 border-t border-white/20 flex items-center justify-between">
+    <span class="text-white/80 text-sm">Admin</span>
+    <%= button_to "Sair", session_path, method: :delete,
+          class: "text-white/70 hover:text-white text-sm transition-colors bg-transparent border-0 cursor-pointer" %>
+  </div>
+</nav>

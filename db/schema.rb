@@ -10,9 +10,48 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_24_203102) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_25_052827) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "approval_responses", force: :cascade do |t|
+    t.bigint "arte_id", null: false
+    t.text "comment"
+    t.datetime "created_at", null: false
+    t.integer "decision", null: false
+    t.datetime "responded_at"
+    t.datetime "updated_at", null: false
+    t.index ["arte_id"], name: "index_approval_responses_on_arte_id", unique: true
+    t.index ["decision"], name: "index_approval_responses_on_decision"
+  end
+
+  create_table "artes", force: :cascade do |t|
+    t.date "approval_deadline"
+    t.text "caption"
+    t.bigint "client_id", null: false
+    t.datetime "created_at", null: false
+    t.string "external_url"
+    t.integer "media_type", default: 0, null: false
+    t.integer "platform", default: 0, null: false
+    t.date "scheduled_on", null: false
+    t.integer "status", default: 0, null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.index ["client_id", "scheduled_on"], name: "index_artes_on_client_id_and_scheduled_on"
+    t.index ["client_id"], name: "index_artes_on_client_id"
+    t.index ["status"], name: "index_artes_on_status"
+  end
+
+  create_table "clients", force: :cascade do |t|
+    t.string "access_token", null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "password_digest", null: false
+    t.string "password_plain"
+    t.datetime "updated_at", null: false
+    t.index ["access_token"], name: "index_clients_on_access_token", unique: true
+  end
 
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -31,5 +70,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_24_203102) do
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
+  add_foreign_key "approval_responses", "artes"
+  add_foreign_key "artes", "clients"
   add_foreign_key "sessions", "users"
 end

@@ -6,7 +6,17 @@ Rails.application.routes.draw do
   # Admin namespace
   namespace :admin do
     root to: "dashboard#index"
-    resources :clients, only: [ :index ]
+    resources :clients, only: [ :index, :show, :new, :create, :edit, :update ] do
+      member do
+        post :rotate_token
+      end
+    end
+  end
+
+  # Portal do cliente
+  scope "/c/:token", as: :client do
+    root to: "client/home#index"
+    resource :session, only: [ :new, :create, :destroy ], controller: "client/sessions"
   end
 
   # Health check
