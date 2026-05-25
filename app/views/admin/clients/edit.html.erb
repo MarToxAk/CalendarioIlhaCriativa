@@ -1,0 +1,16 @@
+<% content_for(:page_title) { "Editar cliente" } %>
+
+<div class="mb-6">
+  <%= link_to admin_client_path(@client),
+        class: "text-sm text-slate-600 hover:text-slate-900 transition-colors",
+        aria: { label: "Voltar para detalhes de #{@client.name}" } do %>
+    &larr; Voltar para <%= @client.name %>
+  <% end %>
+</div>
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-card p-8 max-w-lg">
+  <%= render "form",
+        client: @client,
+        button_label: "Salvar alterações",
+        cancel_path: admin_client_path(@client) %>
+</div>

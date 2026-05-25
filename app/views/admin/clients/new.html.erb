@@ -1,0 +1,16 @@
+<% content_for(:page_title) { "Novo cliente" } %>
+
+<div class="mb-6">
+  <%= link_to admin_clients_path,
+        class: "text-sm text-slate-600 hover:text-slate-900 transition-colors",
+        aria: { label: "Voltar para lista de clientes" } do %>
+    &larr; Voltar para Clientes
+  <% end %>
+</div>
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-card p-8 max-w-lg">
+  <%= render "form",
+        client: @client,
+        button_label: "Cadastrar cliente",
+        cancel_path: admin_clients_path %>
+</div>
