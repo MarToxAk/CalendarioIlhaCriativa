@@ -1,0 +1,42 @@
+<div data-controller="dropdown" class="relative inline-block text-left">
+  <button type="button"
+          aria-label="Ações para <%= client.name %>"
+          aria-haspopup="true"
+          aria-expanded="false"
+          data-action="click->dropdown#toggle"
+          class="h-8 w-8 rounded-md flex items-center justify-center text-slate-400 hover:bg-gray-100 hover:text-slate-600 transition-colors">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+      <circle cx="10" cy="4" r="1.5"/>
+      <circle cx="10" cy="10" r="1.5"/>
+      <circle cx="10" cy="16" r="1.5"/>
+    </svg>
+  </button>
+
+  <ul role="menu"
+      aria-label="Opções de <%= client.name %>"
+      data-dropdown-target="menu"
+      class="hidden absolute right-0 mt-1 bg-white rounded-lg shadow-md border border-gray-200 py-1 min-w-[160px] z-10">
+    <li role="menuitem">
+      <%= link_to "Ver detalhes", admin_client_path(client),
+            class: "block px-4 py-2 text-sm text-slate-700 hover:bg-gray-50 transition-colors" %>
+    </li>
+    <li role="menuitem">
+      <%= link_to "Editar cliente", edit_admin_client_path(client),
+            class: "block px-4 py-2 text-sm text-slate-700 hover:bg-gray-50 transition-colors" %>
+    </li>
+    <li role="menuitem">
+      <% if client.active %>
+        <%= link_to "#", data: { action: "click->dropdown#toggle" },
+              class: "block px-4 py-2 text-sm text-[#EE3537] hover:bg-gray-50 transition-colors" do %>
+          Desativar cliente
+        <% end %>
+      <% else %>
+        <%= button_to admin_client_path(client, client: { active: true }),
+              method: :patch,
+              class: "w-full text-left px-4 py-2 text-sm text-[#14A958] hover:bg-gray-50 transition-colors bg-transparent border-0 cursor-pointer" do %>
+          Reativar cliente
+        <% end %>
+      <% end %>
+    </li>
+  </ul>
+</div>

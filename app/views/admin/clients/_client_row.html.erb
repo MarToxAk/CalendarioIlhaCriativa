@@ -1,0 +1,15 @@
+<tr class="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors <%= client.active ? '' : 'opacity-60' %>">
+  <td class="px-4 py-0 h-12">
+    <%= link_to client.name, admin_client_path(client),
+          class: "text-sm font-medium text-slate-900 hover:text-[#0a5c37]" %>
+  </td>
+  <td class="px-4 py-0 h-12 text-center">
+    <%= render "status_badge", client: client %>
+  </td>
+  <td class="px-4 py-0 h-12">
+    <span class="text-sm text-slate-500"><%= client.created_at.strftime("%d/%m/%y") %></span>
+  </td>
+  <td class="px-4 py-0 h-12 text-center">
+    <%= render "actions_menu", client: client %>
+  </td>
+</tr>

@@ -1,0 +1,61 @@
+<% content_for :page_title, "Clientes" %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-semibold text-slate-900">Clientes</h1>
+  <%= link_to new_admin_client_path,
+        class: "h-10 px-4 bg-[#0F7949] hover:bg-[#0a5c37] active:scale-[0.99] text-white text-sm font-semibold rounded-lg transition-colors inline-flex items-center" do %>
+    + Novo cliente
+  <% end %>
+</div>
+
+<% if @clients.empty? %>
+  <div class="py-16 text-center">
+    <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto text-slate-300 mb-4" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+    <h2 class="text-lg font-semibold text-slate-900 mb-1">Nenhum cliente cadastrado</h2>
+    <p class="text-sm text-slate-500 mb-6">Cadastre o primeiro cliente para começar.</p>
+    <%= link_to new_admin_client_path,
+          class: "h-10 px-4 bg-[#0F7949] hover:bg-[#0a5c37] active:scale-[0.99] text-white text-sm font-semibold rounded-lg transition-colors inline-flex items-center" do %>
+      + Cadastrar primeiro cliente
+    <% end %>
+  </div>
+<% else %>
+  <%# Tabela desktop %>
+  <div class="bg-white rounded-xl border border-gray-200 shadow-card overflow-hidden hidden sm:block">
+    <table aria-label="Lista de clientes" class="w-full">
+      <caption class="sr-only">Clientes cadastrados — clique no nome para ver os detalhes</caption>
+      <thead class="bg-gray-50 border-b border-gray-200">
+        <tr>
+          <th scope="col" class="py-3 px-4 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">Nome</th>
+          <th scope="col" class="py-3 px-4 text-xs font-medium text-slate-500 uppercase tracking-wide text-center w-[100px]">Status</th>
+          <th scope="col" class="py-3 px-4 text-xs font-medium text-slate-500 uppercase tracking-wide text-left w-[120px]">Criado em</th>
+          <th scope="col" class="py-3 px-4 w-[48px]"><span class="sr-only">Ações</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @clients.each do |client| %>
+          <%= render "client_row", client: client %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <%# Lista de cards mobile %>
+  <div class="block sm:hidden space-y-3">
+    <% @clients.each do |client| %>
+      <%= link_to admin_client_path(client), class: "block bg-white rounded-xl border border-gray-200 shadow-card px-4 py-3 #{client.active ? '' : 'opacity-60'}" do %>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-semibold text-slate-900"><%= client.name %></span>
+            <%= render "status_badge", client: client %>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" class="text-slate-400" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+        <p class="text-xs text-slate-500 mt-1">Criado em <%= client.created_at.strftime("%d/%m/%y") %></p>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>
