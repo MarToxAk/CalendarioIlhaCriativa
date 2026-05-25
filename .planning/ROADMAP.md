@@ -7,7 +7,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 ## Phases
 
 - [ ] **Phase 1: Data Foundation + Security** - Modelos, migrações, Rack::Attack e primitivos de autenticação
-- [ ] **Phase 2: Admin Auth + Client Management** - Login do admin, CRUD de clientes, exibição de link e senha
+- [x] **Phase 2: Admin Auth + Client Management** - Login do admin, CRUD de clientes, exibição de link e senha (completed 2026-05-25)
 - [ ] **Phase 3: Art Management** - Criar/editar/excluir artes, upload de arquivo, link externo, plataforma/formato/prazo
 - [ ] **Phase 4: Client Calendar Portal** - Auth por token + senha, calendário mensal, preview de artes
 - [ ] **Phase 5: Approval Flow** - Aprovar, pedir alteração + comentário, re-aprovação após revisão, histórico
@@ -59,7 +59,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 3. Admin cria um cliente com nome e senha, edita esses dados e desativa o cliente — acesso ao portal é bloqueado após desativação
 4. Na tela de detalhes do cliente, o admin vê o link de acesso completo e a senha em texto claro prontos para copiar
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 **Wave 1**
 
 - [x] 02-01-PLAN.md — Migração password_plain + layout admin + sidebar + ClientsController skeleton + index view + dropdown_controller
@@ -67,7 +67,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [x] 02-02-PLAN.md — Views new/edit + _form partial + password toggle + testes de controller (CLIE-01, CLIE-02)
-- [ ] 02-03-PLAN.md — View show + partials _copy_button/_confirm_modal/_readonly_field + copy_controller + modal_controller (CLIE-03, CLIE-04)
+- [x] 02-03-PLAN.md — View show + partials _copy_button/_confirm_modal/_readonly_field + copy_controller + modal_controller (CLIE-03, CLIE-04)
 
 **UI hint:** yes
 
@@ -143,7 +143,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Data Foundation + Security | 2/5 | In Progress|  |
-| 2. Admin Auth + Client Management | 2/3 | In Progress|  |
+| 2. Admin Auth + Client Management | 3/3 | Complete   | 2026-05-25 |
 | 3. Art Management | 0/? | Not started | - |
 | 4. Client Calendar Portal | 0/? | Not started | - |
 | 5. Approval Flow | 0/? | Not started | - |
