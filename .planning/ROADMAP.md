@@ -147,7 +147,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Data Foundation + Security | 2/5 | In Progress|  |
-| 2. Admin Auth + Client Management | 5/5 | Complete   | 2026-05-25 |
+| 2. Admin Auth + Client Management | 5/5 | Complete    | 2026-05-25 |
 | 3. Art Management | 0/? | Not started | - |
 | 4. Client Calendar Portal | 0/? | Not started | - |
 | 5. Approval Flow | 0/? | Not started | - |
