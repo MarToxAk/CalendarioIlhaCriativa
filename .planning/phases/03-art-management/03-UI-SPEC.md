@@ -611,7 +611,7 @@ Dot indicator (● 6px) antes do texto, mesma cor do texto.
 Partial: `app/views/admin/artes/_platform_badge.html.erb`
 
 ```
-inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium
+inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs font-medium
 bg-[#F8FAFC] border border-[#E2E8F0] text-slate-700
 ```
 
@@ -645,6 +645,14 @@ Limpa campos ao alternar:
 Partial: `app/views/admin/artes/_actions_menu.html.erb`
 
 Herdado do padrão Phase 2 C3. Diferença: exibe "Editar arte" e "Excluir arte" apenas se `arte.pending?`.
+
+**Botão trigger (elemento "..."):**
+```html
+<button type="button" aria-label="Ações para [Título da arte]" ...>
+  <!-- ícone três pontos -->
+</button>
+```
+O `aria-label` é dinâmico: interpola o título da arte — `"Ações para #{arte.title.presence || 'Arte sem título'}"`. Garante que leitores de tela distingam o botão de ações de cada linha da tabela.
 
 ```ruby
 # Lógica de exibição condicional das opções:
@@ -1024,4 +1032,4 @@ Nenhum componente de terceiros. Apenas Rails partials + Tailwind v4 + Heroicons 
 
 ---
 
-*UI-SPEC Fase 3 — Ilha Criativa / Bom Custo — v1.0 — 2026-05-25*
+*UI-SPEC Fase 3 — Ilha Criativa / Bom Custo — v1.1 — 2026-05-25*
