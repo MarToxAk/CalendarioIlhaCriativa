@@ -1,7 +1,8 @@
 <%# Partial _confirm_modal.html.erb %>
-<%# Locals: id, title, body, confirm_label, cancel_label, form_action, method (default :post), confirm_variant ("danger"|"warning") %>
+<%# Locals: id, title, body, confirm_label, cancel_label, form_action, method (default :post), confirm_variant ("danger"|"warning"), hidden_fields (optional hash, e.g. { client: { active: false } }) %>
 <% method = local_assigns.fetch(:method, :post) %>
 <% confirm_variant = local_assigns.fetch(:confirm_variant, "danger") %>
+<% hidden_fields = local_assigns.fetch(:hidden_fields, nil) %>
 
 <%# Overlay — hidden by default; data-modal-target="overlay" connects this to the modal controller in the parent scope %>
 <div id="<%= id %>"
@@ -42,6 +43,17 @@
         <%= cancel_label %>
       </button>
       <%= form_with url: form_action, method: method do |f| %>
+        <% if hidden_fields %>
+          <% hidden_fields.each do |outer_key, outer_value| %>
+            <% if outer_value.is_a?(Hash) %>
+              <% outer_value.each do |inner_key, inner_value| %>
+                <%= hidden_field_tag "#{outer_key}[#{inner_key}]", inner_value %>
+              <% end %>
+            <% else %>
+              <%= hidden_field_tag outer_key, outer_value %>
+            <% end %>
+          <% end %>
+        <% end %>
         <%= f.submit confirm_label,
               class: "h-9 px-4 text-sm font-medium text-white rounded-lg cursor-pointer transition-colors #{confirm_variant == 'danger' ? 'bg-[#EE3537] hover:bg-red-700' : 'bg-[#F59E0B] hover:bg-amber-600'}" %>
       <% end %>

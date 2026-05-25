@@ -61,4 +61,21 @@ class AdminClientsControllerTest < ActionDispatch::IntegrationTest
     }
     assert_response :unprocessable_entity
   end
+
+  # ── active (CLIE-03) ─────────────────────────────────────────────────────────
+
+  test "update com active: false desativa o cliente (CLIE-03)" do
+    patch admin_client_path(@client), params: { client: { active: false } }
+    assert_redirected_to admin_client_path(@client)
+    @client.reload
+    assert_equal false, @client.active?
+  end
+
+  test "update com active: true reativa o cliente (CLIE-03)" do
+    @client.update!(active: false)
+    patch admin_client_path(@client), params: { client: { active: true } }
+    assert_redirected_to admin_client_path(@client)
+    @client.reload
+    assert_equal true, @client.active?
+  end
 end

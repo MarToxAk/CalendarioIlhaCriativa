@@ -27,7 +27,8 @@
             cancel_label: "Manter cliente ativo",
             confirm_variant: "danger",
             form_action: admin_client_path(@client),
-            method: :patch %>
+            method: :patch,
+            hidden_fields: { client: { active: false } } %>
     </div>
   <% else %>
     <%# Reativar — sem modal, ação direta (reativar não é destrutivo) %>
