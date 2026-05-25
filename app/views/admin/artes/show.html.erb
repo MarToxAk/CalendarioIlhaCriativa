@@ -1,0 +1,21 @@
+<%# app/views/admin/artes/show.html.erb %>
+<% content_for(:page_title) { @arte.title || "Arte" } %>
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-card p-6 max-w-2xl">
+  <h2 class="text-lg font-semibold mb-4"><%= @arte.title %></h2>
+  <p><strong>Cliente:</strong> <%= @arte.client.name %></p>
+  <p><strong>Data agendada:</strong> <%= @arte.scheduled_on.strftime("%d/%m/%Y") %></p>
+  <p><strong>Plataforma:</strong> <%= @arte.platform.capitalize %></p>
+  <p><strong>Status:</strong> <%= @arte.status.capitalize %></p>
+  <p><strong>Legenda:</strong> <%= @arte.caption %></p>
+  <% if @arte.media_file.attached? %>
+    <p><strong>Arquivo:</strong> <%= link_to @arte.media_file.filename, rails_blob_path(@arte.media_file, disposition: "attachment") %></p>
+  <% elsif @arte.external_url.present? %>
+    <p><strong>Link externo:</strong> <%= link_to @arte.external_url, @arte.external_url, target: "_blank" %></p>
+  <% end %>
+  <div class="mt-4 flex gap-2">
+    <%= link_to "Editar", edit_admin_arte_path(@arte), class: "btn btn-secondary" if @arte.pending? %>
+    <%= button_to "Excluir", admin_arte_path(@arte), method: :delete, data: { confirm: "Tem certeza?" }, class: "btn btn-danger" if @arte.pending? && @arte.approval_response.nil? %>
+    <%= link_to "Voltar", admin_artes_path, class: "btn" %>
+  </div>
+</div>

@@ -1,0 +1,46 @@
+<%# app/views/admin/artes/_form.html.erb %>
+<%= form_with model: arte, url: arte.persisted? ? admin_arte_path(arte) : admin_artes_path, local: true, html: { multipart: true, data: { controller: "media-type-toggle" } } do |f| %>
+  <div class="mb-4">
+    <%= f.label :title, "Título", class: "block text-sm font-medium mb-1" %>
+    <%= f.text_field :title, class: "form-input w-full" %>
+  </div>
+  <div class="mb-4">
+    <%= f.label :caption, "Legenda", class: "block text-sm font-medium mb-1" %>
+    <%= f.text_area :caption, class: "form-input w-full" %>
+  </div>
+  <div class="mb-4">
+    <%= f.label :scheduled_on, "Data agendada", class: "block text-sm font-medium mb-1" %>
+    <%= f.date_field :scheduled_on, class: "form-input w-full" %>
+  </div>
+  <div class="mb-4">
+    <%= f.label :approval_deadline, "Prazo de aprovação", class: "block text-sm font-medium mb-1" %>
+    <%= f.date_field :approval_deadline, class: "form-input w-full" %>
+  </div>
+  <div class="mb-4">
+    <%= f.label :platform, "Plataforma", class: "block text-sm font-medium mb-1" %>
+    <%= f.select :platform, Arte.platforms.keys.map { |k| [k.capitalize, k] }, {}, class: "form-input w-full" %>
+  </div>
+  <div class="mb-4">
+    <%= f.label :media_type, "Formato", class: "block text-sm font-medium mb-1" %>
+    <%= f.select :media_type, Arte.media_types.keys.map { |k| [k.capitalize, k] }, {}, class: "form-input w-full" %>
+  </div>
+  <div class="mb-4">
+    <label class="block text-sm font-medium mb-1">Tipo de mídia</label>
+    <div class="flex gap-4">
+      <label><%= f.radio_button :media_source, :upload, checked: arte.media_file.attached?, data: { action: "media-type-toggle#selectUpload", media_type_toggle_target: "uploadRadio" } %> Upload de arquivo</label>
+      <label><%= f.radio_button :media_source, :link, checked: arte.external_url.present?, data: { action: "media-type-toggle#selectLink", media_type_toggle_target: "linkRadio" } %> Link externo</label>
+    </div>
+  </div>
+  <div class="mb-4" data-media-type-toggle-target="uploadField" <%= "class='hidden'" unless arte.media_file.attached? %>>
+    <%= f.label :media_file, "Arquivo", class: "block text-sm font-medium mb-1" %>
+    <%= f.file_field :media_file, class: "form-input w-full" %>
+  </div>
+  <div class="mb-4" data-media-type-toggle-target="linkField" <%= "class='hidden'" unless arte.external_url.present? %>>
+    <%= f.label :external_url, "Link externo", class: "block text-sm font-medium mb-1" %>
+    <%= f.url_field :external_url, class: "form-input w-full" %>
+  </div>
+  <div class="flex gap-2">
+    <%= f.submit arte.persisted? ? "Atualizar" : "Criar", class: "btn btn-primary" %>
+    <%= link_to "Cancelar", arte.persisted? ? admin_arte_path(arte) : admin_artes_path, class: "btn" %>
+  </div>
+<% end %>

@@ -1,0 +1,30 @@
+<%# app/views/admin/artes/index.html.erb %>
+<% content_for(:page_title) { "Artes" } %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold">Artes</h1>
+  <%= link_to "Nova Arte", new_admin_arte_path, class: "btn btn-primary" %>
+</div>
+
+<table class="min-w-full bg-white border border-gray-200 rounded-xl shadow-card">
+  <thead>
+    <tr>
+      <th>Cliente</th>
+      <th>Data</th>
+      <th>Plataforma</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @artes.each do |arte| %>
+      <tr>
+        <td><%= arte.client.name %></td>
+        <td><%= arte.scheduled_on.strftime("%d/%m/%Y") %></td>
+        <td><%= arte.platform.capitalize %></td>
+        <td><%= arte.status.capitalize %></td>
+        <td><%= link_to "Ver", admin_arte_path(arte), class: "btn btn-sm" %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

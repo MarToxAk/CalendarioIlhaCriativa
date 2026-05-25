@@ -11,6 +11,12 @@ Rails.application.routes.draw do
         post :rotate_token
       end
     end
+    resources :artes, except: [:show], controller: 'artes'
+  end
+
+  # Artes global index
+  namespace :admin do
+    resources :artes
   end
 
   # Portal do cliente
