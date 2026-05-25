@@ -1,85 +1,131 @@
 <% content_for(:page_title) { @client.name } %>
 
-<div class="mb-6 flex items-center gap-4">
+<%# ===== BARRA DE AÇÕES ===== %>
+<div class="flex items-center gap-3 mb-6">
   <%= link_to admin_clients_path,
+        aria: { label: "Voltar para lista de clientes" },
         class: "text-sm text-slate-600 hover:text-slate-900 transition-colors" do %>
     &larr; Clientes
   <% end %>
+
   <%= link_to "Editar cliente", edit_admin_client_path(@client),
-        class: "inline-flex items-center h-9 px-3 border border-gray-200 rounded-lg text-sm text-slate-700 hover:bg-gray-50 transition-colors" %>
+        class: "inline-flex items-center h-9 px-3 border border-gray-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-gray-50 transition-colors" %>
+
+  <% if @client.active? %>
+    <%# Desativar — abre modal de confirmação (data-controller="modal" está no wrapper abaixo) %>
+    <div data-controller="modal">
+      <button type="button"
+              data-action="click->modal#open"
+              class="inline-flex items-center h-9 px-3 bg-[#EE3537] hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors">
+        Desativar cliente
+      </button>
+      <%= render "confirm_modal",
+            id: "deactivate-modal",
+            title: "Desativar cliente",
+            body: "Desativar <strong>#{@client.name}</strong> bloqueará o acesso ao portal imediatamente. O cliente não conseguirá acessar o calendário até ser reativado.",
+            confirm_label: "Desativar cliente",
+            cancel_label: "Manter cliente ativo",
+            confirm_variant: "danger",
+            form_action: admin_client_path(@client),
+            method: :patch %>
+    </div>
+  <% else %>
+    <%# Reativar — sem modal, ação direta (reativar não é destrutivo) %>
+    <%= button_to "Reativar cliente", admin_client_path(@client),
+          method: :patch,
+          params: { client: { active: true } },
+          class: "inline-flex items-center h-9 px-3 bg-[#14A958] hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer" %>
+  <% end %>
 </div>
 
-<div class="bg-white rounded-xl border border-gray-200 shadow-card p-8 max-w-2xl">
-  <h2 class="text-base font-semibold text-slate-900 mb-6">Dados de acesso do portal</h2>
+<%# ===== CARD: DADOS DE ACESSO DO PORTAL ===== %>
+<div class="bg-white rounded-xl border border-gray-200 shadow-card p-6 max-w-2xl">
+  <h2 class="text-sm font-semibold text-slate-900 border-b border-gray-100 pb-3 mb-4">
+    Dados de acesso do portal
+  </h2>
 
   <div class="space-y-5">
-    <%# Link de acesso %>
+
+    <%# Link de acesso via _readonly_field partial %>
+    <%= render "readonly_field",
+          label: "Link de acesso",
+          value: client_root_url(token: @client.access_token),
+          font_mono: true,
+          show_external_link: true %>
+
+    <%# Senha do portal — visível por padrão (type="text") per D-11 %>
     <div>
-      <label class="block text-sm font-medium text-slate-900 mb-1.5">Link de acesso</label>
-      <div class="flex gap-2">
-        <input type="text"
-               readonly
-               value="<%= client_root_url(token: @client.access_token) %>"
-               aria-label="Link de acesso do portal"
-               aria-readonly="true"
-               class="flex-1 h-11 px-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono text-slate-700 select-all cursor-text focus:outline-none" />
-        <a href="<%= client_root_url(token: @client.access_token) %>"
-           target="_blank"
-           rel="noopener noreferrer"
-           aria-label="Abrir link de acesso em nova aba"
-           class="h-11 w-11 flex items-center justify-center rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-slate-400 hover:text-slate-600 transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-          </svg>
-        </a>
+      <label class="block text-sm font-medium text-slate-900 mb-1">Senha do portal</label>
+      <div class="flex gap-2 items-center">
+        <div class="flex-1 relative" data-controller="password-toggle">
+          <input type="text"
+                 readonly
+                 value="<%= @client.password_plain %>"
+                 aria-label="Senha do portal"
+                 aria-readonly="true"
+                 data-password-toggle-target="field"
+                 class="block w-full h-11 px-3 pr-11 bg-gray-50 border border-gray-200 rounded-lg text-sm text-slate-700 select-all cursor-text focus:outline-none" />
+          <button type="button"
+                  aria-label="Ocultar senha"
+                  aria-pressed="true"
+                  data-action="click->password-toggle#toggle"
+                  data-password-toggle-target="toggle"
+                  class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-600 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="mt-2">
+        <%= render "copy_button", value: @client.password_plain, label: "senha" %>
       </div>
     </div>
 
-    <%# Senha do portal %>
-    <div>
-      <label class="block text-sm font-medium text-slate-900 mb-1.5">Senha do portal</label>
-      <div class="relative" data-controller="password-toggle">
-        <input type="text"
-               readonly
-               value="<%= @client.password_plain %>"
-               aria-label="Senha do portal do cliente"
-               aria-readonly="true"
-               data-password-toggle-target="field"
-               class="block w-full h-11 px-3 pr-11 bg-gray-50 border border-gray-200 rounded-lg text-sm text-slate-700 select-all cursor-text focus:outline-none" />
-        <button type="button"
-                aria-label="Ocultar senha"
-                aria-pressed="true"
-                data-action="click->password-toggle#toggle"
-                data-password-toggle-target="toggle"
-                class="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-600 transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-          </svg>
-        </button>
-      </div>
-    </div>
   </div>
 
-  <hr class="my-6 border-gray-200" />
+  <hr class="my-5 border-gray-100" />
 
-  <%# Rotacionar token %>
-  <%= button_to "↻ Rotacionar token de acesso",
-        rotate_token_admin_client_path(@client),
-        method: :post,
-        class: "text-sm text-slate-600 hover:text-red-600 transition-colors" %>
+  <%# Rotacionar token — abre modal de confirmação %>
+  <div data-controller="modal">
+    <button type="button"
+            data-action="click->modal#open"
+            class="text-sm text-slate-600 hover:text-[#EE3537] transition-colors inline-flex items-center gap-1.5">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      Rotacionar token de acesso
+    </button>
+    <%= render "confirm_modal",
+          id: "rotate-modal",
+          title: "Rotacionar token de acesso",
+          body: "&#9888; <strong>Atenção</strong><br><br>Ao rotacionar o token, o link atual de <strong>#{@client.name}</strong> para de funcionar imediatamente e qualquer sessão aberta do cliente é encerrada.<br><br>Você precisará enviar o novo link para o cliente.",
+          confirm_label: "Rotacionar token",
+          cancel_label: "Manter link atual",
+          confirm_variant: "danger",
+          form_action: rotate_token_admin_client_path(@client),
+          method: :post %>
+  </div>
 </div>
 
+<%# ===== CARD: INFORMAÇÕES ===== %>
 <div class="bg-white rounded-xl border border-gray-200 shadow-card p-6 max-w-2xl mt-4">
-  <h2 class="text-base font-semibold text-slate-900 mb-4">Informações</h2>
+  <h2 class="text-sm font-semibold text-slate-900 border-b border-gray-100 pb-3 mb-4">
+    Informações
+  </h2>
   <dl class="space-y-3">
     <div class="flex items-center gap-4">
-      <dt class="text-sm text-slate-500 w-32">Status</dt>
+      <dt class="text-sm text-slate-500 w-36">Status</dt>
       <dd><%= render "status_badge", client: @client %></dd>
     </div>
     <div class="flex items-center gap-4">
-      <dt class="text-sm text-slate-500 w-32">Criado em</dt>
+      <dt class="text-sm text-slate-500 w-36">Criado em</dt>
       <dd class="text-sm text-slate-700"><%= @client.created_at.strftime("%d/%m/%Y") %></dd>
+    </div>
+    <div class="flex items-center gap-4">
+      <dt class="text-sm text-slate-500 w-36">Última atualização</dt>
+      <dd class="text-sm text-slate-700"><%= @client.updated_at.strftime("%d/%m/%Y") %></dd>
     </div>
   </dl>
 </div>

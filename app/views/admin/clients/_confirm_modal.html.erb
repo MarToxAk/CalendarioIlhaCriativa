@@ -1,0 +1,51 @@
+<%# Partial _confirm_modal.html.erb %>
+<%# Locals: id, title, body, confirm_label, cancel_label, form_action, method (default :post), confirm_variant ("danger"|"warning") %>
+<% method = local_assigns.fetch(:method, :post) %>
+<% confirm_variant = local_assigns.fetch(:confirm_variant, "danger") %>
+
+<%# Overlay — hidden by default; data-modal-target="overlay" connects this to the modal controller in the parent scope %>
+<div id="<%= id %>"
+     data-modal-target="overlay"
+     class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center modal-overlay">
+  <div role="dialog"
+       aria-modal="true"
+       aria-labelledby="<%= id %>-title"
+       aria-describedby="<%= id %>-desc"
+       class="bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4 modal">
+
+    <%# Header %>
+    <div class="flex items-center justify-between">
+      <h2 id="<%= id %>-title" class="text-base font-semibold text-slate-900">
+        <%= title %>
+      </h2>
+      <button type="button"
+              data-action="click->modal#close"
+              aria-label="Fechar modal"
+              class="h-8 w-8 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-600 hover:bg-gray-100 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <%# Body %>
+    <p id="<%= id %>-desc" class="text-sm text-slate-600 leading-relaxed mt-3">
+      <%= raw(body) %>
+    </p>
+
+    <%# Footer %>
+    <div class="flex justify-end gap-3 mt-6">
+      <button type="button"
+              data-modal-cancel
+              data-action="click->modal#close"
+              class="h-9 px-4 inline-flex items-center text-sm font-medium text-slate-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+        <%= cancel_label %>
+      </button>
+      <%= form_with url: form_action, method: method do |f| %>
+        <%= f.submit confirm_label,
+              class: "h-9 px-4 text-sm font-medium text-white rounded-lg cursor-pointer transition-colors #{confirm_variant == 'danger' ? 'bg-[#EE3537] hover:bg-red-700' : 'bg-[#F59E0B] hover:bg-amber-600'}" %>
+      <% end %>
+    </div>
+
+  </div>
+</div>
