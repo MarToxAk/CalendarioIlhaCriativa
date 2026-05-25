@@ -12,7 +12,8 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Admin pode cadastrar e gerenciar clientes (nome, link, senha) — Validated in Phase 02: admin-auth-client-management
+- [x] Admin pode desativar um cliente (bloqueia acesso ao portal) — Validated in Phase 02: admin-auth-client-management
 
 ### Active
 
