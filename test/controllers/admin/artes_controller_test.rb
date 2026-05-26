@@ -69,4 +69,21 @@ class Admin::ArtesControllerTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_match /Ação inválida/, response.body
   end
+
+  test "ciclo completo APRO-03: revised aceita nova aprovacao do cliente" do
+    # Avança arte para change_requested via ApprovalResponse
+    @arte.approval_responses.create!(decision: :change_requested)
+    assert @arte.reload.change_requested?
+
+    # Admin marca como revisada
+    patch mark_revised_admin_arte_url(@arte)
+    assert_redirected_to admin_arte_url(@arte)
+    assert @arte.reload.revised?
+
+    # Cliente aprova a arte revisada (validator aceita revised?)
+    response = @arte.approval_responses.build(decision: :approved)
+    assert response.valid?, "ApprovalResponse deve ser válida para arte com status revised"
+    response.save!
+    assert @arte.reload.approved?, "Arte deve ficar approved após aprovação pelo cliente"
+  end
 end
