@@ -23,11 +23,11 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - [ ] Arte pode ter formato: imagem, vídeo ou texto/legenda
 - [ ] Arte pode ser marcada para Instagram, Facebook ou LinkedIn
 - [ ] Cliente visualiza o calendário com as artes do mês
-- [ ] Cliente marca cada arte como Aprovado ou Pediu Alteração
-- [ ] Cliente pode escrever comentário explicando as alterações desejadas
+- [x] Cliente marca cada arte como Aprovado ou Pediu Alteração — Validated in Phase 05: approval-flow
+- [x] Cliente pode escrever comentário explicando as alterações desejadas — Validated in Phase 05: approval-flow
+- [x] Admin pode marcar arte como revisada após fazer as alterações — Validated in Phase 05: approval-flow
 - [ ] Admin visualiza todas as respostas dos clientes no painel
 - [ ] Cada arte tem data limite de aprovação (prazo)
-- [ ] Admin pode marcar arte como revisada após fazer as alterações
 
 ### Out of Scope
 
@@ -81,4 +81,4 @@ Este documento evolui a cada transição de fase e marco do projeto.
 4. Atualizar Context com o estado atual
 
 ---
-*Last updated: 2026-05-24 after initialization*
+*Last updated: 2026-05-26 — Phase 05 complete: fluxo de aprovação do cliente implementado*
