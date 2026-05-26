@@ -1,1 +1,105 @@
-<p>TODO</p>
+<% content_for(:title) { "#{@arte.platform.capitalize} · #{I18n.l(@arte.scheduled_on, format: '%d/%m/%Y')} — Ilha Criativa" } %>
+
+<div class="max-w-2xl mx-auto">
+  <%= link_to client_root_path(token: @client.access_token),
+        class: "text-sm text-slate-500 hover:text-slate-900 mb-6 inline-block transition-colors" do %>
+    ← Voltar ao calendário
+  <% end %>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+
+    <%# ── Seção de mídia (D-10) ────────────────────────────────────────────── %>
+    <div class="p-6 border-b border-gray-100 flex items-center justify-center min-h-[160px] bg-gray-50">
+      <% if @arte.external_url.present? %>
+        <%= link_to @arte.external_url,
+              target: "_blank", rel: "noopener noreferrer",
+              class: "inline-flex items-center gap-2 px-4 py-2 bg-[#EA580C] hover:bg-[#C2410C] text-white rounded-lg font-medium transition-colors" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+          Abrir arquivo
+        <% end %>
+      <% elsif @arte.image? && @arte.media_file.attached? %>
+        <%= image_tag rails_blob_path(@arte.media_file, disposition: "inline"),
+              class: "max-w-full max-h-[480px] object-contain mx-auto block rounded-lg",
+              alt: "Preview da arte" %>
+      <% elsif @arte.video? && @arte.media_file.attached? %>
+        <video controls class="max-w-full max-h-[480px] block mx-auto rounded-lg">
+          <source src="<%= rails_service_blob_proxy_path(@arte.media_file.blob) %>"
+                  type="<%= @arte.media_file.content_type %>">
+          Seu navegador não suporta reprodução de vídeo.
+        </video>
+      <% elsif @arte.caption_only? %>
+        <div class="p-6 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap bg-white rounded-xl w-full">
+          <%= @arte.caption.presence || "Legenda não informada." %>
+        </div>
+      <% else %>
+        <p class="text-sm text-slate-400">Arquivo não disponível.</p>
+      <% end %>
+    </div>
+
+    <%# ── Seção de metadados (D-11) ──────────────────────────────────────── %>
+    <div class="p-6 space-y-4">
+
+      <%# Plataforma %>
+      <div class="flex items-center gap-2">
+        <%= render 'client/shared/platform_icon', arte: @arte, size: 18 %>
+        <span class="text-sm font-medium text-slate-700">
+          <%=
+            case @arte.platform
+            when 'instagram' then 'Instagram'
+            when 'facebook'  then 'Facebook'
+            when 'linkedin'  then 'LinkedIn'
+            else @arte.platform.capitalize
+            end
+          %>
+        </span>
+      </div>
+
+      <%# Data agendada %>
+      <div class="flex items-center gap-2 text-sm text-slate-600">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             class="text-slate-400" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <span>Agendado para <%= I18n.l(@arte.scheduled_on, format: '%d de %B de %Y') %></span>
+      </div>
+
+      <%# Prazo de aprovação (CAL-04) %>
+      <% if @arte.approval_deadline.present? %>
+        <div class="flex items-center gap-2 text-sm text-slate-600">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               class="text-slate-400" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span>Prazo: <%= I18n.l(@arte.approval_deadline, format: '%d/%m/%Y') %></span>
+        </div>
+      <% end %>
+
+      <%# Status (CAL-04) %>
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-slate-500">Status:</span>
+        <%= render 'client/shared/arte_status_badge', arte: @arte %>
+      </div>
+
+      <%# Legenda (para imagem/vídeo que também têm legenda — não exibir para caption_only pois já foi exibido acima) %>
+      <% if @arte.caption.present? && !@arte.caption_only? %>
+        <div class="pt-2 border-t border-gray-100">
+          <p class="text-xs font-medium text-slate-500 mb-1">Legenda:</p>
+          <p class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap"><%= @arte.caption %></p>
+        </div>
+      <% end %>
+
+    </div>
+  </div>
+</div>
