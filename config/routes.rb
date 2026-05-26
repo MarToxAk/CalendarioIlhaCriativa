@@ -11,19 +11,20 @@ Rails.application.routes.draw do
         post :rotate_token
       end
     end
-    resources :artes, except: [:show], controller: 'artes'
-  end
-
-  # Artes global index
-  namespace :admin do
-    resources :artes
+    resources :artes do
+      member do
+        patch :mark_revised
+      end
+    end
   end
 
   # Portal do cliente
   scope "/c/:token", as: :client do
     root to: "client/home#index"
     resource :session, only: [ :new, :create, :destroy ], controller: "client/sessions"
-    resources :artes, only: [ :show ], controller: "client/artes"
+    resources :artes, only: [ :show ], controller: "client/artes" do
+      resources :responses, only: [ :create ], controller: "client/responses"
+    end
   end
 
   # Health check

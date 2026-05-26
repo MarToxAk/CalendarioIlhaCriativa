@@ -54,4 +54,19 @@ class Admin::ArtesControllerTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_match /Exclusão bloqueada/, response.body
   end
+
+  test "mark_revised muda status para revised quando change_requested" do
+    @arte.update!(status: :change_requested)
+    patch mark_revised_admin_arte_url(@arte)
+    assert_redirected_to admin_arte_url(@arte)
+    assert @arte.reload.revised?
+  end
+
+  test "mark_revised rejeita arte nao change_requested" do
+    # @arte está com status :pending
+    patch mark_revised_admin_arte_url(@arte)
+    assert_redirected_to admin_arte_url(@arte)
+    follow_redirect!
+    assert_match /Ação inválida/, response.body
+  end
 end

@@ -1,5 +1,5 @@
 class Admin::ArtesController < Admin::BaseController
-  before_action :set_arte, only: %i[show edit update destroy]
+  before_action :set_arte, only: %i[show edit update destroy mark_revised]
   before_action :set_client, only: %i[new create]
   before_action :check_editable, only: %i[edit update]
   before_action :check_deletable, only: %i[destroy]
@@ -44,6 +44,15 @@ class Admin::ArtesController < Admin::BaseController
     redirect_to admin_artes_path, notice: "Arte excluída com sucesso."
   end
 
+  def mark_revised
+    if @arte.change_requested?
+      @arte.revised!
+      redirect_to admin_arte_path(@arte), notice: "Arte marcada como revisada."
+    else
+      redirect_to admin_arte_path(@arte), alert: "Ação inválida para o status atual."
+    end
+  end
+
   private
 
   def set_arte
@@ -65,7 +74,7 @@ class Admin::ArtesController < Admin::BaseController
   end
 
   def check_deletable
-    unless @arte.pending? && @arte.approval_response.nil?
+    unless @arte.pending? && @arte.approval_responses.none?
       redirect_to admin_arte_path(@arte), alert: "Exclusão bloqueada: só é possível excluir artes pendentes sem resposta do cliente."
     end
   end
