@@ -1,6 +1,6 @@
 class Arte < ApplicationRecord
   belongs_to :client
-  has_one    :approval_response, dependent: :destroy
+  has_many :approval_responses, -> { order(created_at: :desc) }, dependent: :destroy
   has_one_attached :media_file
 
   enum :platform,   { instagram: 0, facebook: 1, linkedin: 2 }, prefix: :platform
