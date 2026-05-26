@@ -10,7 +10,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 - [x] **Phase 2: Admin Auth + Client Management** - Login do admin, CRUD de clientes, exibição de link e senha (completed 2026-05-25)
 - [x] **Phase 3: Art Management** - Criar/editar/excluir artes, upload de arquivo, link externo, plataforma/formato/prazo (completed 2026-05-25)
 - [x] **Phase 4: Client Calendar Portal** - Auth por token + senha, calendário mensal, preview de artes (completed 2026-05-26)
-- [ ] **Phase 5: Approval Flow** - Aprovar, pedir alteração + comentário, re-aprovação após revisão, histórico
+- [x] **Phase 5: Approval Flow** - Aprovar, pedir alteração + comentário, re-aprovação após revisão, histórico (completed 2026-05-26)
 - [ ] **Phase 6: Admin Feedback Panel** - Dashboard, filtros, marcar revisado, responder comentário, histórico do cliente
 
 ## Phase Details
@@ -134,7 +134,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 4. Cliente vê o histórico de decisões de uma arte (aprovações e pedidos anteriores em ordem cronológica)
 5. Botões de aprovação ficam desabilitados em artes que não estão com status pendente, impedindo duplo envio
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 **Wave 1**
 
 - [x] 05-01-PLAN.md — Migração allow_multiple_approval_responses + Arte has_many + validator revised? + consolidação de rotas admin + mark_revised action
@@ -143,7 +143,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 - [x] 05-02-PLAN.md — Client::ResponsesController + approval_controller.js + show.html.erb com botões e histórico (APRO-01, APRO-02, APRO-04, APRO-05)
 **Wave 3** *(blocked on Wave 1+2 completion)*
 
-- [ ] 05-03-PLAN.md — Botão mark_revised na admin show view + testes ciclo completo (APRO-03)
+- [x] 05-03-PLAN.md — Botão mark_revised na admin show view + testes ciclo completo (APRO-03)
 **UI hint:** yes
 
 ### Phase 6: Admin Feedback Panel
@@ -171,5 +171,5 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 | 2. Admin Auth + Client Management | 5/5 | Complete    | 2026-05-25 |
 | 3. Art Management | 1/1 | Complete   | 2026-05-25 |
 | 4. Client Calendar Portal | 3/3 | Complete   | 2026-05-26 |
-| 5. Approval Flow | 2/3 | In Progress|  |
+| 5. Approval Flow | 3/3 | Complete   | 2026-05-26 |
 | 6. Admin Feedback Panel | 0/? | Not started | - |
