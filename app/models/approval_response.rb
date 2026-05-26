@@ -6,7 +6,8 @@ class ApprovalResponse < ApplicationRecord
   validates :decision, presence: true
   validate  :arte_must_be_pending, on: :create
 
-  after_create :sync_arte_status
+  before_create { self.responded_at ||= Time.current }
+  after_create  :sync_arte_status
 
   private
 
