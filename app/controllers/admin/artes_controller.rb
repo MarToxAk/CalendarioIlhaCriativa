@@ -64,12 +64,12 @@ class Admin::ArtesController < Admin::BaseController
   end
 
   def arte_params
-    params.require(:arte).permit(:title, :caption, :scheduled_on, :approval_deadline, :external_url, :platform, :media_type, :status, :client_id, :media_file)
+    params.require(:arte).permit(:title, :caption, :scheduled_on, :approval_deadline, :external_url, :platform, :media_type, :client_id, :media_file)
   end
 
   def check_editable
-    unless @arte.pending?
-      redirect_to admin_arte_path(@arte), alert: "Edição bloqueada: só é possível editar artes pendentes."
+    unless @arte.pending? || @arte.revised?
+      redirect_to admin_arte_path(@arte), alert: "Edição bloqueada: só é possível editar artes pendentes ou revisadas."
     end
   end
 
