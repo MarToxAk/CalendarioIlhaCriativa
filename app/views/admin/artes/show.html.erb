@@ -11,7 +11,7 @@
   <% if @arte.media_file.attached? %>
     <p><strong>Arquivo:</strong> <%= link_to @arte.media_file.filename, rails_blob_path(@arte.media_file, disposition: "attachment") %></p>
   <% elsif @arte.external_url.present? %>
-    <p><strong>Link externo:</strong> <%= link_to @arte.external_url, @arte.external_url, target: "_blank" %></p>
+    <p><strong>Link externo:</strong> <%= link_to @arte.external_url, @arte.external_url, target: "_blank", rel: "noopener noreferrer" %></p>
   <% end %>
   <div class="mt-4 flex gap-2">
     <%= link_to "Editar", edit_admin_arte_path(@arte), class: "btn btn-secondary" if @arte.pending? %>
