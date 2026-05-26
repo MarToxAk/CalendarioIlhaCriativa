@@ -105,14 +105,14 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 3. Cliente abre uma arte e vê o preview completo — imagem renderizada, player de vídeo ou texto da legenda conforme o tipo
 4. Cada arte no calendário exibe o ícone da plataforma (Instagram, Facebook ou LinkedIn) e a data limite de aprovação com o status atual
 
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 **Wave 1**
 
 - [x] 04-01-PLAN.md — Layout client.html.erb + ClientController layout + locale pt-BR + refatorar sessions/new + rota client_arte_path
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 04-02-PLAN.md — Client::HomeController#index + grade CSS 7 colunas + _platform_icon + _arte_status_badge + testes CAL-01/02/04/05
+- [x] 04-02-PLAN.md — Client::HomeController#index + grade CSS 7 colunas + _platform_icon + _arte_status_badge + testes CAL-01/02/04/05
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -161,6 +161,6 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 | 1. Data Foundation + Security | 2/5 | In Progress|  |
 | 2. Admin Auth + Client Management | 5/5 | Complete    | 2026-05-25 |
 | 3. Art Management | 1/1 | Complete   | 2026-05-25 |
-| 4. Client Calendar Portal | 1/3 | In Progress|  |
+| 4. Client Calendar Portal | 2/3 | In Progress|  |
 | 5. Approval Flow | 0/? | Not started | - |
 | 6. Admin Feedback Panel | 0/? | Not started | - |
