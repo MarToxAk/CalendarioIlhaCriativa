@@ -8,6 +8,7 @@ class Client < ApplicationRecord
   validates :access_token, presence: true, uniqueness: true
 
   def token_version
-    access_token&.first(8)
+    raise "access_token is nil — client #{id} has no valid token" if access_token.nil?
+    access_token.first(8)
   end
 end
