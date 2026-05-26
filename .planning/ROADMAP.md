@@ -171,5 +171,5 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 | 2. Admin Auth + Client Management | 5/5 | Complete    | 2026-05-25 |
 | 3. Art Management | 1/1 | Complete   | 2026-05-25 |
 | 4. Client Calendar Portal | 3/3 | Complete   | 2026-05-26 |
-| 5. Approval Flow | 3/3 | Complete   | 2026-05-26 |
+| 5. Approval Flow | 3/3 | Complete    | 2026-05-26 |
 | 6. Admin Feedback Panel | 0/? | Not started | - |

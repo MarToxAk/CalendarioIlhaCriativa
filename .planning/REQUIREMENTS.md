@@ -44,11 +44,11 @@
 
 ### Aprovação (APRO)
 
-- [ ] **APRO-01**: Cliente pode aprovar uma arte com um clique
-- [ ] **APRO-02**: Cliente pode pedir alteração em uma arte e escrever um comentário explicando o que quer
-- [ ] **APRO-03**: Após o admin revisar e marcar como revisada, a arte volta ao status pendente e o cliente precisa aprovar novamente (re-aprovação)
-- [ ] **APRO-04**: Cliente pode ver o histórico de decisões de cada arte (aprovações e pedidos anteriores)
-- [ ] **APRO-05**: Somente artes com status pendente podem receber ação de aprovação (sem duplo-envio)
+- [x] **APRO-01**: Cliente pode aprovar uma arte com um clique
+- [x] **APRO-02**: Cliente pode pedir alteração em uma arte e escrever um comentário explicando o que quer
+- [x] **APRO-03**: Após o admin revisar e marcar como revisada, a arte volta ao status pendente e o cliente precisa aprovar novamente (re-aprovação)
+- [x] **APRO-04**: Cliente pode ver o histórico de decisões de cada arte (aprovações e pedidos anteriores)
+- [x] **APRO-05**: Somente artes com status pendente podem receber ação de aprovação (sem duplo-envio)
 
 ### Painel do Admin (PAIN)
 
@@ -116,11 +116,11 @@
 | CAL-03 | Phase 4 | Complete |
 | CAL-04 | Phase 4 | Complete |
 | CAL-05 | Phase 4 | Complete |
-| APRO-01 | Phase 5 | Pending |
-| APRO-02 | Phase 5 | Pending |
-| APRO-03 | Phase 5 | Pending |
-| APRO-04 | Phase 5 | Pending |
-| APRO-05 | Phase 5 | Pending |
+| APRO-01 | Phase 5 | Complete |
+| APRO-02 | Phase 5 | Complete |
+| APRO-03 | Phase 5 | Complete |
+| APRO-04 | Phase 5 | Complete |
+| APRO-05 | Phase 5 | Complete |
 | PAIN-01 | Phase 6 | Pending |
 | PAIN-02 | Phase 6 | Pending |
 | PAIN-03 | Phase 6 | Pending |
