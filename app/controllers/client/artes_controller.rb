@@ -7,7 +7,7 @@ class Client::ArtesController < ClientController
   private
 
   def set_arte
-    @arte = @client.artes.find(params[:id])
+    @arte = @client.artes.includes(:approval_responses).find(params[:id])
   rescue ActiveRecord::RecordNotFound
     redirect_to client_root_path(token: @client.access_token),
                 alert: "Arte não encontrada."
