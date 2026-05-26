@@ -17,7 +17,7 @@ class ArteTest < ActiveSupport::TestCase
   test "arte sem scheduled_on é inválida" do
     arte = Arte.new(client: @client, external_url: "https://exemplo.com")
     assert_not arte.valid?
-    assert_includes arte.errors[:scheduled_on], "can't be blank"
+    assert_includes arte.errors[:scheduled_on], "não pode ficar em branco"
   end
 
   test "platform default é instagram" do

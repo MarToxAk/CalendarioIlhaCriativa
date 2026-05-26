@@ -1,0 +1,20 @@
+<%
+  compact ||= false
+  status_config = {
+    "pending"          => { label: "Pendente",  classes: "bg-amber-100 text-amber-800" },
+    "approved"         => { label: "Aprovado",  classes: "bg-green-100 text-green-800" },
+    "change_requested" => { label: compact ? "Alteração" : "Alteração Solicitada", classes: "bg-red-100 text-red-800" },
+    "revised"          => { label: "Revisado",  classes: "bg-slate-100 text-slate-700" }
+  }
+  config = status_config[arte.status.to_s] || { label: arte.status.to_s, classes: "bg-gray-100 text-gray-700" }
+%>
+
+<% if compact %>
+  <span class="px-1 py-0.5 text-[10px] font-medium rounded <%= config[:classes] %>">
+    <%= config[:label] %>
+  </span>
+<% else %>
+  <span class="px-2 py-1 text-xs font-medium rounded-full <%= config[:classes] %>">
+    <%= config[:label] %>
+  </span>
+<% end %>

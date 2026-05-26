@@ -1,4 +1,19 @@
 pt-BR:
+  errors:
+    messages:
+      blank: "não pode ficar em branco"
+      invalid: "não é válido"
+      taken: "já está em uso"
+      too_short: "é muito curto (mínimo: %{count} caracteres)"
+      too_long: "é muito longo (máximo: %{count} caracteres)"
+      inclusion: "não está incluído na lista"
+  activerecord:
+    errors:
+      messages:
+        record_invalid: "A validação falhou: %{errors}"
+        blank: "não pode ficar em branco"
+        taken: "já está em uso"
+        invalid: "não é válido"
   date:
     month_names: [~, Janeiro, Fevereiro, Março, Abril, Maio, Junho, Julho, Agosto, Setembro, Outubro, Novembro, Dezembro]
     abbr_month_names: [~, Jan, Fev, Mar, Abr, Mai, Jun, Jul, Ago, Set, Out, Nov, Dez]

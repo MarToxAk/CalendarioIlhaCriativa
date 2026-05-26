@@ -1,0 +1,35 @@
+<div class="grid grid-cols-7 gap-px bg-gray-200 rounded-xl overflow-hidden">
+  <%# Cabeçalho dias da semana %>
+  <% %w[Seg Ter Qua Qui Sex Sáb Dom].each do |day| %>
+    <div class="bg-gray-50 py-2 text-center text-xs font-medium text-slate-500 uppercase tracking-wide">
+      <%= day %>
+    </div>
+  <% end %>
+
+  <%# Células do calendário %>
+  <% grid_dates.each do |date| %>
+    <%
+      artes_do_dia = artes_by_date[date] || []
+      is_current_month = date.month == current_month.month
+    %>
+    <div class="<%= is_current_month ? 'bg-white' : 'bg-gray-50' %> min-h-[100px] p-1.5">
+      <% if date == Date.today %>
+        <span class="text-xs font-medium bg-[#EA580C] text-white rounded-full w-5 h-5 inline-flex items-center justify-center">
+          <%= date.day %>
+        </span>
+      <% else %>
+        <span class="text-xs font-medium <%= artes_do_dia.any? ? 'text-slate-700' : 'text-gray-300' %>">
+          <%= date.day %>
+        </span>
+      <% end %>
+
+      <% artes_do_dia.each do |arte| %>
+        <%= link_to client_arte_path(token: client.access_token, id: arte),
+              class: "mt-1 flex items-center gap-1 p-1 rounded bg-gray-50 hover:bg-orange-50 transition-colors" do %>
+          <%= render "client/shared/platform_icon", arte: arte, size: 14 %>
+          <%= render "client/shared/arte_status_badge", arte: arte, compact: true %>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
