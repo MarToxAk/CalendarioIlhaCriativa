@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-05-26T02:00:57.687Z"
+last_updated: "2026-05-26T02:11:32.655Z"
 last_activity: 2026-05-26 -- Phase 4 planning complete
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 14
-  completed_plans: 11
+  completed_plans: 12
   percent: 50
 ---
 
@@ -29,7 +29,7 @@ Plan: Not started
 Status: Ready to execute
 Last activity: 2026-05-26 -- Phase 4 planning complete
 
-Progress: [██████████] 100%
+Progress: [█████████░] 86%
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Progress: [██████████] 100%
 | Phase 02-admin-auth-client-management P02 | 12 | 2 tasks | 6 files |
 | Phase 02 P03 | 20 min | 2 tasks | 7 files |
 | Phase 02 P05 | 20 min | 2 tasks | 6 files |
+| Phase 04-client-calendar-portal P01 | 15 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,9 @@ Recent decisions affecting current work:
 - [Phase ?]: 02-03: modal_controller com focus trap Tab e foco inicial no data-modal-cancel
 - [Phase ?]: 02-03: cada modal com div[data-controller=modal] proprio em show.html.erb
 - [Phase ?]: 02-05: Guard inactive em load_client_from_token retorna 403 para todas as rotas do portal — sessions#create recebe 403 porque before_action dispara primeiro
+- [Phase ?]: Layout client.html.erb com bg-white para distinguir visualmente o portal do cliente
+- [Phase ?]: Locale pt-BR manual em config/locales/pt-BR.yml sem gem rails-i18n
+- [Phase ?]: safe navigation @client&.name no layout do cliente
 
 ### Pending Todos
 
@@ -94,6 +98,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-26T01:37:37.900Z
+Last session: 2026-05-26T02:11:27.902Z
 Stopped at: Phase 04 context gathered
-Resume file: .planning/phases/04-client-calendar-portal/04-CONTEXT.md
+Resume file: None
