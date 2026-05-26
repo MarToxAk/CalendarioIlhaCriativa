@@ -463,17 +463,13 @@ end
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Formato `:short` no locale pt-BR**
-   - O que sabemos: `config/locales/pt-BR.yml` existe (mencionado em STATE.md); `I18n.l` é usado nas views
-   - O que é incerto: se `:short` para datetime está definido nesse locale
-   - Recomendação: Verificar o arquivo durante implementação; fallback: `resp.created_at.strftime("%d/%m/%Y %H:%M")`
+   - RESOLVED: usar `strftime("%d/%m/%Y %H:%M")` como fallback no histórico de respostas — definido em 05-02 Task 2. O locale pt-BR atual não define o formato `:short` para datetime, apenas `date.month_names` e `date.day_names`.
 
 2. **Duplicação de rotas admin**
-   - O que sabemos: `config/routes.rb` tem dois blocos `namespace :admin { resources :artes }`
-   - O que é incerto: se há lógica de precedência entre eles que precise ser preservada
-   - Recomendação: Consolidar em um único bloco; verificar `rake routes` antes e depois
+   - RESOLVED: consolidar em um único bloco `namespace :admin { resources :artes }` conforme 05-01 Task 2 action item 1. Verificar `bundle exec rails routes` antes e após a consolidação para confirmar que todas as rotas admin de artes são preservadas.
 
 ---
 
