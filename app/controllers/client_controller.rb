@@ -1,4 +1,6 @@
 class ClientController < ApplicationController
+  layout 'client'
+
   skip_before_action :require_authentication
 
   before_action :load_client_from_token

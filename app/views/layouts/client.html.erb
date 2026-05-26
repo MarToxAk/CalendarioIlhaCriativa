@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <title><%= content_for(:title) || "Ilha Criativa · Calendário" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body class="min-h-screen bg-white flex flex-col">
+    <header class="sticky top-0 bg-white border-b border-gray-100 z-10">
+      <div class="px-4 sm:px-6 py-4 flex items-center justify-between">
+        <span class="font-semibold text-[#0F7949]">Ilha Criativa · Bom Custo</span>
+        <span class="text-sm text-slate-600 font-medium"><%= @client&.name %></span>
+        <%= button_to "Sair", client_session_path(token: @client&.access_token),
+              method: :delete,
+              class: "text-sm text-slate-500 hover:text-slate-900 transition-colors" %>
+      </div>
+    </header>
+
+    <% if flash[:notice] %>
+      <div class="mx-4 sm:mx-6 mt-4 px-4 py-3 bg-green-50 border border-green-200 rounded-lg" role="alert">
+        <span class="text-green-700 text-sm"><%= flash[:notice] %></span>
+      </div>
+    <% end %>
+    <% if flash[:alert] %>
+      <div class="mx-4 sm:mx-6 mt-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg" role="alert">
+        <span class="text-red-600 text-sm font-medium"><%= flash[:alert] %></span>
+      </div>
+    <% end %>
+
+    <main class="flex-1 px-4 sm:px-6 py-6 sm:py-8">
+      <%= yield %>
+    </main>
+  </body>
+</html>
