@@ -2,6 +2,11 @@ class Client::ResponsesController < ClientController
   before_action :set_arte
 
   def create
+    unless ApprovalResponse.decisions.key?(params.dig(:approval_response, :decision))
+      return redirect_to client_arte_path(token: @client.access_token, id: @arte.id),
+                         alert: "Resposta inválida."
+    end
+
     response = @arte.approval_responses.build(response_params)
     if response.save
       redirect_to client_arte_path(token: @client.access_token, id: @arte.id),
