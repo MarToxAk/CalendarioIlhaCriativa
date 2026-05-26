@@ -134,7 +134,16 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 4. Cliente vê o histórico de decisões de uma arte (aprovações e pedidos anteriores em ordem cronológica)
 5. Botões de aprovação ficam desabilitados em artes que não estão com status pendente, impedindo duplo envio
 
-**Plans:** TBD
+**Plans:** 3 plans
+**Wave 1**
+
+- [ ] 05-01-PLAN.md — Migração allow_multiple_approval_responses + Arte has_many + validator revised? + consolidação de rotas admin + mark_revised action
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 05-02-PLAN.md — Client::ResponsesController + approval_controller.js + show.html.erb com botões e histórico (APRO-01, APRO-02, APRO-04, APRO-05)
+**Wave 3** *(blocked on Wave 1+2 completion)*
+
+- [ ] 05-03-PLAN.md — Botão mark_revised na admin show view + testes ciclo completo (APRO-03)
 **UI hint:** yes
 
 ### Phase 6: Admin Feedback Panel
