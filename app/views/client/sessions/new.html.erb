@@ -1,0 +1,60 @@
+<div class="flex-1 flex items-center justify-center px-4 py-8">
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 max-w-sm w-full p-8">
+
+    <h1 class="text-xl font-semibold text-slate-900 mb-1">Bem-vindo(a)!</h1>
+    <p class="text-slate-500 text-sm mb-6">Digite sua senha para acessar os conteúdos preparados para você.</p>
+
+    <% if flash[:alert] %>
+      <div class="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm" role="alert">
+        <%= flash[:alert] %>
+      </div>
+    <% end %>
+
+    <%= form_with url: client_session_path(token: params[:token]), method: :post,
+                  aria: { label: "Acesso ao calendário" },
+                  class: "space-y-4" do |f| %>
+
+      <div>
+        <%= f.label :password, "Senha de acesso",
+                    for: "senha-cliente",
+                    class: "block text-sm font-medium text-slate-700 mb-1" %>
+
+        <div class="relative" data-controller="password-toggle">
+          <%= f.password_field :password,
+                id: "senha-cliente",
+                data: { "password-toggle-target": "field" },
+                autocomplete: "current-password",
+                aria: { required: "true", describedby: "senha-cliente-error" },
+                class: "w-full h-12 sm:h-11 border-2 border-gray-200 rounded-lg px-4 pr-12 text-sm
+                        focus:outline-none focus:border-[#EA580C] focus:ring-2 focus:ring-[#EA580C]/10
+                        #{flash[:alert] ? 'border-red-400' : ''}",
+                placeholder: "••••••••" %>
+
+          <button type="button"
+                  data-password-toggle-target="toggle"
+                  data-action="click->password-toggle#toggle"
+                  aria-label="Mostrar senha"
+                  aria-pressed="false"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 eye-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </button>
+        </div>
+
+        <span id="senha-cliente-error" role="alert" aria-live="polite" class="text-red-600 text-xs mt-1 block">
+          <%= flash[:alert] %>
+        </span>
+      </div>
+
+      <%= f.submit "Acessar calendário",
+            class: "w-full h-11 bg-[#EA580C] hover:bg-[#C2410C] text-white font-semibold
+                    rounded-lg transition-colors duration-150 cursor-pointer" %>
+
+    <% end %>
+
+  </div>
+</div>

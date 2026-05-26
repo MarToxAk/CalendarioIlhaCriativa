@@ -23,6 +23,7 @@ Rails.application.routes.draw do
   scope "/c/:token", as: :client do
     root to: "client/home#index"
     resource :session, only: [ :new, :create, :destroy ], controller: "client/sessions"
+    resources :artes, only: [ :show ], controller: "client/artes"
   end
 
   # Health check
