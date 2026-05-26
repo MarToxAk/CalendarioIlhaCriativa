@@ -9,7 +9,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 - [ ] **Phase 1: Data Foundation + Security** - Modelos, migrações, Rack::Attack e primitivos de autenticação
 - [x] **Phase 2: Admin Auth + Client Management** - Login do admin, CRUD de clientes, exibição de link e senha (completed 2026-05-25)
 - [x] **Phase 3: Art Management** - Criar/editar/excluir artes, upload de arquivo, link externo, plataforma/formato/prazo (completed 2026-05-25)
-- [ ] **Phase 4: Client Calendar Portal** - Auth por token + senha, calendário mensal, preview de artes
+- [x] **Phase 4: Client Calendar Portal** - Auth por token + senha, calendário mensal, preview de artes (completed 2026-05-26)
 - [ ] **Phase 5: Approval Flow** - Aprovar, pedir alteração + comentário, re-aprovação após revisão, histórico
 - [ ] **Phase 6: Admin Feedback Panel** - Dashboard, filtros, marcar revisado, responder comentário, histórico do cliente
 
@@ -105,7 +105,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 3. Cliente abre uma arte e vê o preview completo — imagem renderizada, player de vídeo ou texto da legenda conforme o tipo
 4. Cada arte no calendário exibe o ícone da plataforma (Instagram, Facebook ou LinkedIn) e a data limite de aprovação com o status atual
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 **Wave 1**
 
 - [x] 04-01-PLAN.md — Layout client.html.erb + ClientController layout + locale pt-BR + refatorar sessions/new + rota client_arte_path
@@ -116,7 +116,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 04-03-PLAN.md — Client::ArtesController#show + view preview (imagem/vídeo/legenda/external_url) + testes CAL-03
+- [x] 04-03-PLAN.md — Client::ArtesController#show + view preview (imagem/vídeo/legenda/external_url) + testes CAL-03
 
 **UI hint:** yes
 
@@ -161,6 +161,6 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 | 1. Data Foundation + Security | 2/5 | In Progress|  |
 | 2. Admin Auth + Client Management | 5/5 | Complete    | 2026-05-25 |
 | 3. Art Management | 1/1 | Complete   | 2026-05-25 |
-| 4. Client Calendar Portal | 2/3 | In Progress|  |
+| 4. Client Calendar Portal | 3/3 | Complete   | 2026-05-26 |
 | 5. Approval Flow | 0/? | Not started | - |
 | 6. Admin Feedback Panel | 0/? | Not started | - |

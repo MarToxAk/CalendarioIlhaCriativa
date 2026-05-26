@@ -38,7 +38,7 @@
 
 - [x] **CAL-01**: Cliente vê um grid mensal com todas as artes agendadas para o mês
 - [x] **CAL-02**: Cliente pode navegar entre meses (mês anterior / próximo)
-- [ ] **CAL-03**: Cliente pode ver o preview completo de cada arte (imagem, vídeo ou legenda)
+- [x] **CAL-03**: Cliente pode ver o preview completo de cada arte (imagem, vídeo ou legenda)
 - [x] **CAL-04**: Cliente vê o prazo de aprovação e o status atual de cada arte
 - [x] **CAL-05**: Cliente vê o ícone da plataforma (Instagram, Facebook, LinkedIn) em cada arte
 
@@ -113,7 +113,7 @@
 | ARTE-09 | Phase 3 | Pending |
 | CAL-01 | Phase 4 | Complete |
 | CAL-02 | Phase 4 | Complete |
-| CAL-03 | Phase 4 | Pending |
+| CAL-03 | Phase 4 | Complete |
 | CAL-04 | Phase 4 | Complete |
 | CAL-05 | Phase 4 | Complete |
 | APRO-01 | Phase 5 | Pending |
