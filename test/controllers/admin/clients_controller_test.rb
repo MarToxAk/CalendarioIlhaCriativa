@@ -95,5 +95,7 @@ class AdminClientsControllerTest < ActionDispatch::IntegrationTest
 
     get admin_client_path(@client)
     assert_response :success
+    assert_includes response.body, "Arte com Resposta"
+    assert_includes response.body, "Histórico de aprovações"
   end
 end
