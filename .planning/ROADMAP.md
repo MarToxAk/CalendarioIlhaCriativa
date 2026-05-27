@@ -6,7 +6,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 
 ## Phases
 
-- [ ] **Phase 1: Data Foundation + Security** - Modelos, migrações, Rack::Attack e primitivos de autenticação
+- [x] **Phase 1: Data Foundation + Security** - Modelos, migrações, Rack::Attack e primitivos de autenticação (completed 2026-05-27)
 - [x] **Phase 2: Admin Auth + Client Management** - Login do admin, CRUD de clientes, exibição de link e senha (completed 2026-05-25)
 - [x] **Phase 3: Art Management** - Criar/editar/excluir artes, upload de arquivo, link externo, plataforma/formato/prazo (completed 2026-05-25)
 - [x] **Phase 4: Client Calendar Portal** - Auth por token + senha, calendário mensal, preview de artes (completed 2026-05-26)
@@ -29,7 +29,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 4. Rack::Attack está ativo e bloqueia mais de 5 tentativas de senha num intervalo de 20 segundos no endpoint do portal do cliente
 5. O admin pode rotacionar o token de um cliente e o token anterior é invalidado imediatamente
 
-**Plans:** 2/5 plans executed
+**Plans:** 5/5 plans complete
 **Wave 1**
 
 - [x] 01-01-PLAN.md — Criar projeto Rails 8.1.3 + Gemfile completo + banco PostgreSQL + timezone Brasilia + design tokens
@@ -37,12 +37,12 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [x] 01-02-PLAN.md — Rails auth generator + Admin::BaseController + Dashboard stub + formulário de login UI-SPEC + seeds
-- [ ] 01-03-PLAN.md — Migrações Create Clients/Artes/ApprovalResponses + models + testes unitários
+- [x] 01-03-PLAN.md — Migrações Create Clients/Artes/ApprovalResponses + models + testes unitários
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 01-04-PLAN.md — Rack::Attack com 4 throttles + teste de integração brute-force
-- [ ] 01-05-PLAN.md — ClientController + Client::SessionsController + formulário cliente UI-SPEC + rotação de token + isolamento cross-client
+- [x] 01-04-PLAN.md — Rack::Attack com 4 throttles + teste de integração brute-force
+- [x] 01-05-PLAN.md — ClientController + Client::SessionsController + formulário cliente UI-SPEC + rotação de token + isolamento cross-client
 
 **UI hint:** yes
 
@@ -176,7 +176,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Data Foundation + Security | 2/5 | In Progress|  |
+| 1. Data Foundation + Security | 5/5 | Complete   | 2026-05-27 |
 | 2. Admin Auth + Client Management | 5/5 | Complete    | 2026-05-25 |
 | 3. Art Management | 1/1 | Complete   | 2026-05-25 |
 | 4. Client Calendar Portal | 3/3 | Complete   | 2026-05-26 |
