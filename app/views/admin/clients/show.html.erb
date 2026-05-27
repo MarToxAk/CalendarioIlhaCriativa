@@ -131,6 +131,37 @@
   </dl>
 </div>
 
+<%# ===== CARD: ARTES DO CLIENTE ===== %>
+<div class="bg-white rounded-xl border border-gray-200 shadow-card p-6 max-w-2xl mt-4">
+  <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+    <h2 class="text-sm font-semibold text-slate-900">Artes</h2>
+    <%= link_to "Nova Arte", new_admin_arte_path(client_id: @client.id),
+          class: "inline-flex items-center h-8 px-3 bg-[#0F7949] hover:bg-green-800 text-white text-xs font-medium rounded-lg transition-colors" %>
+  </div>
+
+  <% if @artes.empty? %>
+    <p class="text-sm text-slate-500">Nenhuma arte cadastrada.</p>
+  <% else %>
+    <div class="space-y-2">
+      <% @artes.each do |arte| %>
+        <div class="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-slate-900 truncate">
+              <%= arte.title.presence || "Arte sem título" %>
+            </p>
+            <p class="text-xs text-slate-500 mt-0.5">
+              <%= arte.scheduled_on.strftime("%d/%m/%Y") %> &middot; <%= arte.platform.capitalize %> &middot; <%= arte.status.capitalize %>
+            </p>
+          </div>
+          <div class="ml-4 shrink-0">
+            <%= link_to "Ver", admin_arte_path(arte), class: "text-xs text-[#0F7949] hover:underline" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
 <%# ===== CARD: HISTÓRICO DE APROVAÇÕES (CLIE-05) ===== %>
 <% if @artes_with_responses.any? %>
 <div class="bg-white rounded-xl border border-gray-200 shadow-card p-6 max-w-2xl mt-4">

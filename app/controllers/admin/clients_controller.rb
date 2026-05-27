@@ -6,6 +6,7 @@ class Admin::ClientsController < Admin::BaseController
   end
 
   def show
+    @artes = @client.artes.order(scheduled_on: :desc)
     @artes_with_responses = @client.artes
                                     .joins(:approval_responses)
                                     .includes(:approval_responses)
