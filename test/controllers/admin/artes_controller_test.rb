@@ -38,6 +38,18 @@ class Admin::ArtesControllerTest < ActionDispatch::IntegrationTest
     assert_match /Edição bloqueada/, response.body
   end
 
+  test "should allow edit for change_requested arte" do
+    @arte.update!(status: :change_requested)
+    get edit_admin_arte_url(@arte)
+    assert_response :success
+  end
+
+  test "should allow edit for revised arte" do
+    @arte.update!(status: :revised)
+    get edit_admin_arte_url(@arte)
+    assert_response :success
+  end
+
   test "should destroy pending arte" do
     assert_difference("Arte.count", -1) do
       delete admin_arte_url(@arte)
