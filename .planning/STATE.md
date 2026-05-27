@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: ready_to_plan
-last_updated: 2026-05-27T10:08:52.793Z
-last_activity: 2026-05-27 -- Phase 01 execution started
+status: executing
+last_updated: "2026-05-27T11:32:44.145Z"
+last_activity: 2026-05-27 -- Phase 03.1 planning complete
 progress:
-  total_phases: 6
+  total_phases: 8
   completed_phases: 6
-  total_plans: 21
+  total_plans: 22
   completed_plans: 21
-  percent: 100
-stopped_at: Phase 01 complete (5/5) — ready to discuss Phase 02
+  percent: 75
 ---
 
 # Project State
@@ -21,14 +20,14 @@ stopped_at: Phase 01 complete (5/5) — ready to discuss Phase 02
 See: .planning/PROJECT.md (updated 2026-05-24)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 02 — admin auth client management
+**Current focus:** Phase 2.1 — gap password_plain sync; Phase 3.1 — gap arte create flow
 
 ## Current Position
 
-Phase: 02
+Phase: 2.1 + 3.1 (inserted gap-closure phases)
 Plan: Not started
-Status: Ready to plan
-Last activity: 2026-05-27
+Status: Ready to execute
+Last activity: 2026-05-27 -- Phase 03.1 planning complete
 
 Progress: [██████████] 100%
 
@@ -86,6 +85,11 @@ Recent decisions affecting current work:
 - [Phase ?]: Locale pt-BR manual em config/locales/pt-BR.yml sem gem rails-i18n
 - [Phase ?]: safe navigation @client&.name no layout do cliente
 
+### Roadmap Evolution
+
+- Phase 2.1 inserted after Phase 2 (URGENT) — gap: password_plain não sincronizado no update; detectado na auditoria v1.0 2026-05-27
+- Phase 3.1 inserted after Phase 3 (URGENT) — gap: formulário de criação de artes sem client_id; admin não consegue criar artes pelo painel; detectado na auditoria v1.0 2026-05-27
+
 ### Pending Todos
 
 None yet.
@@ -102,6 +106,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-26T12:31:27.344Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-admin-feedback-panel/06-CONTEXT.md
+Last session: 2026-05-27T11:22:56.760Z
+Stopped at: context exhaustion at 79% (2026-05-27)
+Resume file: None

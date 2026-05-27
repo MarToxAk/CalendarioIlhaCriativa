@@ -75,6 +75,23 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 
 **UI hint:** yes
 
+### Phase 2.1: Gap Closure — Sincronizar password_plain no update (INSERTED)
+
+**Goal:** A senha visível na tela de detalhes do cliente fica correta após edição
+**Mode:** mvp
+**Depends on:** Phase 2
+**Requirements:** CLIE-04
+**Success Criteria**:
+
+1. Admin edita a senha de um cliente com um novo valor, salva, e a tela de detalhes exibe a nova senha corretamente
+2. Edição com campo senha em branco continua mantendo a senha anterior (comportamento existente preservado)
+
+**Plans:** 0/1 plans complete
+
+- [ ] 02.1-01-PLAN.md — Sincronizar password_plain no ClientsController#update + teste cobrindo o caso de novo password
+
+**UI hint:** no
+
 ### Phase 3: Art Management
 
 **Goal:** O admin consegue criar, editar e excluir artes associadas a clientes, com upload de arquivo ou link externo, plataforma, formato, prazo e legenda
@@ -90,6 +107,25 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 5. Admin exclui uma arte e ela some do sistema
 
 **Plans:** 1/1 plans complete
+**UI hint:** yes
+
+### Phase 3.1: Gap Closure — Fluxo de criação de artes (INSERTED)
+
+**Goal:** Admin consegue criar artes a partir do painel, associando-as a um cliente específico, com todos os campos e upload funcionais
+**Mode:** mvp
+**Depends on:** Phase 3
+**Requirements:** ARTE-01, ARTE-02, ARTE-03, ARTE-04, ARTE-05, ARTE-06, ARTE-07
+**Success Criteria**:
+
+1. Admin clica em "Nova Arte" a partir da tela de um cliente e o formulário abre pré-preenchido com o cliente selecionado
+2. Admin preenche título, plataforma, formato, data, prazo e legenda, faz upload de arquivo ou cola link externo, e a arte é criada com sucesso
+3. A arte criada aparece no calendário do cliente (visível para o cliente no portal)
+4. Sidebar do admin tem link direto para a lista de artes
+
+**Plans:** 0/1 plans complete
+
+- [ ] 03.1-01-PLAN.md — Adicionar client_id ao formulário de artes + link na sidebar + fix do botão "Nova Arte" passando client_id + correção do duplicate class no media toggle + teste E2E de criação
+
 **UI hint:** yes
 
 ### Phase 4: Client Calendar Portal
@@ -138,12 +174,15 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 **Wave 1**
 
 - [x] 05-01-PLAN.md — Migração allow_multiple_approval_responses + Arte has_many + validator revised? + consolidação de rotas admin + mark_revised action
+
 **Wave 2** *(blocked on Wave 1 completion)*
 
 - [x] 05-02-PLAN.md — Client::ResponsesController + approval_controller.js + show.html.erb com botões e histórico (APRO-01, APRO-02, APRO-04, APRO-05)
+
 **Wave 3** *(blocked on Wave 1+2 completion)*
 
 - [x] 05-03-PLAN.md — Botão mark_revised na admin show view + testes ciclo completo (APRO-03)
+
 **UI hint:** yes
 
 ### Phase 6: Admin Feedback Panel
@@ -178,7 +217,9 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 |-------|----------------|--------|-----------|
 | 1. Data Foundation + Security | 5/5 | Complete    | 2026-05-27 |
 | 2. Admin Auth + Client Management | 5/5 | Complete    | 2026-05-25 |
+| 2.1. Gap — password_plain sync (INSERTED) | 0/1 | Not started | - |
 | 3. Art Management | 1/1 | Complete   | 2026-05-25 |
+| 3.1. Gap — Arte create flow (INSERTED) | 0/1 | Not started | - |
 | 4. Client Calendar Portal | 3/3 | Complete   | 2026-05-26 |
 | 5. Approval Flow | 3/3 | Complete    | 2026-05-26 |
 | 6. Admin Feedback Panel | 4/4 | Complete   | 2026-05-27 |
