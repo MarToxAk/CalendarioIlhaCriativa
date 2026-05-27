@@ -36,7 +36,7 @@ class Admin::ClientsController < Admin::BaseController
 
   def update
     was_active = @client.active
-    filtered = client_params.reject { |k, v| [ "password", "password_plain" ].include?(k) && v.blank? }
+    filtered = client_params.reject { |k, v| k == "password" && v.blank? }
     if filtered[:password].present?
       filtered = filtered.merge(password_plain: filtered[:password])
     end
@@ -66,6 +66,6 @@ class Admin::ClientsController < Admin::BaseController
   end
 
   def client_params
-    params.require(:client).permit(:name, :password, :password_plain, :active)
+    params.require(:client).permit(:name, :password, :active)
   end
 end
