@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: ready_to_plan
-last_updated: 2026-05-27T13:21:38.845Z
-last_activity: 2026-05-27 -- Phase 03.1 execution started
+status: executing
+last_updated: "2026-05-27T13:24:50.006Z"
+last_activity: 2026-05-27 -- Phase 02.1 execution started
 progress:
   total_phases: 8
-  completed_phases: 6
-  total_plans: 22
+  completed_phases: 7
+  total_plans: 23
   completed_plans: 22
-  percent: 75
-stopped_at: Phase 03.1 complete (1/1) — ready to discuss Phase 04
+  percent: 88
 ---
 
 # Project State
@@ -21,14 +20,14 @@ stopped_at: Phase 03.1 complete (1/1) — ready to discuss Phase 04
 See: .planning/PROJECT.md (updated 2026-05-24)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 04 — client calendar portal
+**Current focus:** Phase 02.1 — gap-password-plain-sync
 
 ## Current Position
 
-Phase: 04
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-05-27
+Phase: 02.1 (gap-password-plain-sync) — EXECUTING
+Plan: 1 of 1
+Status: Executing Phase 02.1
+Last activity: 2026-05-27 -- Phase 02.1 execution started
 
 Progress: [██████████] 100%
 

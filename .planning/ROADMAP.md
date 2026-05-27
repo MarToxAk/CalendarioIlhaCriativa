@@ -86,9 +86,9 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 1. Admin edita a senha de um cliente com um novo valor, salva, e a tela de detalhes exibe a nova senha corretamente
 2. Edição com campo senha em branco continua mantendo a senha anterior (comportamento existente preservado)
 
-**Plans:** 0/1 plans complete
+**Plans:** 1/1 plans complete
 
-- [ ] 02.1-01-PLAN.md — Sincronizar password_plain no ClientsController#update + teste cobrindo o caso de novo password
+- [x] 02.1-01-PLAN.md — Sincronizar password_plain no ClientsController#update + teste cobrindo o caso de novo password
 
 **UI hint:** no
 
@@ -217,7 +217,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 |-------|----------------|--------|-----------|
 | 1. Data Foundation + Security | 5/5 | Complete    | 2026-05-27 |
 | 2. Admin Auth + Client Management | 5/5 | Complete    | 2026-05-25 |
-| 2.1. Gap — password_plain sync (INSERTED) | 0/1 | Not started | - |
+| 2.1. Gap — password_plain sync (INSERTED) | 1/1 | Complete   | 2026-05-27 |
 | 3. Art Management | 1/1 | Complete   | 2026-05-25 |
 | 3.1. Gap — Arte create flow (INSERTED) | 1/1 | Complete    | 2026-05-27 |
 | 4. Client Calendar Portal | 3/3 | Complete   | 2026-05-26 |
