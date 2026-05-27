@@ -14,6 +14,7 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 
 - [x] Admin pode cadastrar e gerenciar clientes (nome, link, senha) — Validated in Phase 02: admin-auth-client-management
 - [x] Admin pode desativar um cliente (bloqueia acesso ao portal) — Validated in Phase 02: admin-auth-client-management
+- [x] Senha visível na tela do cliente fica correta após edição — Validated in Phase 02.1: gap-password-plain-sync
 
 ### Active
 
@@ -67,6 +68,7 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 
 Este documento evolui a cada transição de fase e marco do projeto.
 
+- Phase 02.1 complete (2026-05-27) — Gap password_plain sync fechado: update action agora sincroniza password_plain quando senha é alterada.
 - Phase 03.1 complete (2026-05-27) — Gaps do fluxo de criação de artes fechados: hidden_field client_id, fix media toggle, sidebar link Artes, card artes no show do cliente.
 
 **Após cada transição de fase** (via `/gsd-transition`):
