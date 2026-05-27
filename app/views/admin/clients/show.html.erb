@@ -22,7 +22,7 @@
       <%= render "confirm_modal",
             id: "deactivate-modal",
             title: "Desativar cliente",
-            body: "Desativar <strong>#{@client.name}</strong> bloqueará o acesso ao portal imediatamente. O cliente não conseguirá acessar o calendário até ser reativado.",
+            body: "Desativar <strong>#{h(@client.name)}</strong> bloqueará o acesso ao portal imediatamente. O cliente não conseguirá acessar o calendário até ser reativado.".html_safe,
             confirm_label: "Desativar cliente",
             cancel_label: "Manter cliente ativo",
             confirm_variant: "danger",
@@ -101,7 +101,9 @@
     <%= render "confirm_modal",
           id: "rotate-modal",
           title: "Rotacionar token de acesso",
-          body: "&#9888; <strong>Atenção</strong><br><br>Ao rotacionar o token, o link atual de <strong>#{@client.name}</strong> para de funcionar imediatamente e qualquer sessão aberta do cliente é encerrada.<br><br>Você precisará enviar o novo link para o cliente.",
+          body: ("&#9888; <strong>Atenção</strong><br><br>Ao rotacionar o token, o link atual de " \
+                 "<strong>#{h(@client.name)}</strong> para de funcionar imediatamente e qualquer sessão " \
+                 "aberta do cliente é encerrada.<br><br>Você precisará enviar o novo link para o cliente.").html_safe,
           confirm_label: "Rotacionar token",
           cancel_label: "Manter link atual",
           confirm_variant: "danger",
