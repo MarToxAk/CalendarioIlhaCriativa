@@ -86,4 +86,10 @@ class Admin::ArtesControllerTest < ActionDispatch::IntegrationTest
     response.save!
     assert @arte.reload.approved?, "Arte deve ficar approved após aprovação pelo cliente"
   end
+
+  test "update_admin_reply persiste campo" do
+    patch admin_arte_url(@arte), params: { arte: { admin_reply: "Nota interna do admin" } }
+    assert_redirected_to admin_arte_url(@arte)
+    assert_equal "Nota interna do admin", @arte.reload.admin_reply
+  end
 end

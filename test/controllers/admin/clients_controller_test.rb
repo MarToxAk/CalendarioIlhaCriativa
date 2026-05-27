@@ -78,4 +78,22 @@ class AdminClientsControllerTest < ActionDispatch::IntegrationTest
     @client.reload
     assert_equal true, @client.active?
   end
+
+  test "show_inclui_historico_de_aprovacoes" do
+    arte = Arte.create!(
+      client: @client,
+      scheduled_on: Date.current,
+      platform: :instagram,
+      media_type: :image,
+      status: :pending,
+      title: "Arte com Resposta",
+      caption: "Legenda",
+      approval_deadline: Date.current + 5,
+      external_url: "https://drive.google.com/file/exemplo"
+    )
+    arte.approval_responses.create!(decision: :change_requested)
+
+    get admin_client_path(@client)
+    assert_response :success
+  end
 end
