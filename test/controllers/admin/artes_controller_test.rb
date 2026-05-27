@@ -88,6 +88,7 @@ class Admin::ArtesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update_admin_reply persiste campo" do
+    @arte.update!(status: :change_requested)
     patch admin_arte_url(@arte), params: { arte: { admin_reply: "Nota interna do admin" } }
     assert_redirected_to admin_arte_url(@arte)
     assert_equal "Nota interna do admin", @arte.reload.admin_reply

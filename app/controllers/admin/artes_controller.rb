@@ -68,8 +68,8 @@ class Admin::ArtesController < Admin::BaseController
   end
 
   def check_editable
-    unless @arte.pending? || @arte.revised?
-      redirect_to admin_arte_path(@arte), alert: "Edição bloqueada: só é possível editar artes pendentes ou revisadas."
+    unless @arte.pending? || @arte.revised? || @arte.change_requested?
+      redirect_to admin_arte_path(@arte), alert: "Edição bloqueada: só é possível editar artes pendentes, revisadas ou com pedido de alteração."
     end
   end
 
