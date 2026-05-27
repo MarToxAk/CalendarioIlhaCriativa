@@ -217,7 +217,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 |-------|----------------|--------|-----------|
 | 1. Data Foundation + Security | 5/5 | Complete    | 2026-05-27 |
 | 2. Admin Auth + Client Management | 5/5 | Complete    | 2026-05-25 |
-| 2.1. Gap — password_plain sync (INSERTED) | 1/1 | Complete   | 2026-05-27 |
+| 2.1. Gap — password_plain sync (INSERTED) | 1/1 | Complete    | 2026-05-27 |
 | 3. Art Management | 1/1 | Complete   | 2026-05-25 |
 | 3.1. Gap — Arte create flow (INSERTED) | 1/1 | Complete    | 2026-05-27 |
 | 4. Client Calendar Portal | 3/3 | Complete   | 2026-05-26 |
