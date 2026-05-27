@@ -32,4 +32,10 @@ class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
     get admin_root_url, params: { status: "pending" }
     assert_response :success
   end
+
+  test "filter by invalid status is ignored and returns all artes" do
+    get admin_root_url, params: { status: "nonexistent_status" }
+    assert_response :success
+    assert_includes response.body, @arte.title
+  end
 end
