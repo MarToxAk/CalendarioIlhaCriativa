@@ -93,4 +93,15 @@ class Admin::ArtesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_arte_url(@arte)
     assert_equal "Nota interna do admin", @arte.reload.admin_reply
   end
+
+  test "should get new with client_id pre-filled" do
+    get new_admin_arte_url(client_id: @client.id)
+    assert_response :success
+    assert_match @client.id.to_s, response.body
+  end
+
+  test "should get new without client_id" do
+    get new_admin_arte_url
+    assert_response :success
+  end
 end
