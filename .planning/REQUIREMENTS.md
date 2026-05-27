@@ -24,13 +24,13 @@
 
 ### Artes / Conteúdo (ARTE)
 
-- [ ] **ARTE-01**: Admin pode criar uma arte associada a um cliente e a uma data específica
-- [ ] **ARTE-02**: Admin pode fazer upload direto de arquivo (imagem ou vídeo) para a arte
-- [ ] **ARTE-03**: Admin pode colar um link externo (Google Drive, Dropbox) como arquivo da arte
-- [ ] **ARTE-04**: Admin pode definir a plataforma da arte (Instagram, Facebook ou LinkedIn)
-- [ ] **ARTE-05**: Admin pode definir o formato da arte (imagem, vídeo ou legenda)
-- [ ] **ARTE-06**: Admin pode definir uma data limite de aprovação para a arte
-- [ ] **ARTE-07**: Admin pode adicionar uma legenda/texto que acompanha a arte
+- [x] **ARTE-01**: Admin pode criar uma arte associada a um cliente e a uma data específica
+- [x] **ARTE-02**: Admin pode fazer upload direto de arquivo (imagem ou vídeo) para a arte
+- [x] **ARTE-03**: Admin pode colar um link externo (Google Drive, Dropbox) como arquivo da arte
+- [x] **ARTE-04**: Admin pode definir a plataforma da arte (Instagram, Facebook ou LinkedIn)
+- [x] **ARTE-05**: Admin pode definir o formato da arte (imagem, vídeo ou legenda)
+- [x] **ARTE-06**: Admin pode definir uma data limite de aprovação para a arte
+- [x] **ARTE-07**: Admin pode adicionar uma legenda/texto que acompanha a arte
 - [ ] **ARTE-08**: Admin pode editar os dados de uma arte (antes da aprovação do cliente)
 - [ ] **ARTE-09**: Admin pode excluir uma arte
 
@@ -102,13 +102,13 @@
 | CLIE-03 | Phase 2 | Complete |
 | CLIE-04 | Phase 2 | Complete |
 | CLIE-05 | Phase 6 | Pending |
-| ARTE-01 | Phase 3 | Pending |
-| ARTE-02 | Phase 3 | Pending |
-| ARTE-03 | Phase 3 | Pending |
-| ARTE-04 | Phase 3 | Pending |
-| ARTE-05 | Phase 3 | Pending |
-| ARTE-06 | Phase 3 | Pending |
-| ARTE-07 | Phase 3 | Pending |
+| ARTE-01 | Phase 3 | Complete |
+| ARTE-02 | Phase 3 | Complete |
+| ARTE-03 | Phase 3 | Complete |
+| ARTE-04 | Phase 3 | Complete |
+| ARTE-05 | Phase 3 | Complete |
+| ARTE-06 | Phase 3 | Complete |
+| ARTE-07 | Phase 3 | Complete |
 | ARTE-08 | Phase 3 | Pending |
 | ARTE-09 | Phase 3 | Pending |
 | CAL-01 | Phase 4 | Complete |

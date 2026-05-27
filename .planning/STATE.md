@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-last_updated: "2026-05-27T11:42:11.812Z"
+status: ready_to_plan
+last_updated: 2026-05-27T13:21:38.845Z
 last_activity: 2026-05-27 -- Phase 03.1 execution started
 progress:
   total_phases: 8
   completed_phases: 6
   total_plans: 22
-  completed_plans: 21
+  completed_plans: 22
   percent: 75
+stopped_at: Phase 03.1 complete (1/1) — ready to discuss Phase 04
 ---
 
 # Project State
@@ -20,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-24)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 03.1 — gap-arte-create-flow
+**Current focus:** Phase 04 — client calendar portal
 
 ## Current Position
 
-Phase: 03.1 (gap-arte-create-flow) — EXECUTING
-Plan: 1 of 1
-Status: Executing Phase 03.1
-Last activity: 2026-05-27 -- Phase 03.1 execution started
+Phase: 04
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-05-27
 
 Progress: [██████████] 100%
 
@@ -35,7 +36,7 @@ Progress: [██████████] 100%
 
 **Velocity:**
 
-- Total plans completed: 14
+- Total plans completed: 15
 - Average duration: ~25 min
 - Total execution time: ~0.4 hours
 
@@ -47,6 +48,7 @@ Progress: [██████████] 100%
 | 02 | 5 | - | - |
 | 05 | 3 | - | - |
 | 01 | 5 | - | - |
+| 03.1 | 1 | - | - |
 
 **Recent Trend:**
 
