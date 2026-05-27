@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-05-27T11:32:44.145Z"
-last_activity: 2026-05-27 -- Phase 03.1 planning complete
+last_updated: "2026-05-27T11:42:11.812Z"
+last_activity: 2026-05-27 -- Phase 03.1 execution started
 progress:
   total_phases: 8
   completed_phases: 6
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-24)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 2.1 — gap password_plain sync; Phase 3.1 — gap arte create flow
+**Current focus:** Phase 03.1 — gap-arte-create-flow
 
 ## Current Position
 
-Phase: 2.1 + 3.1 (inserted gap-closure phases)
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-05-27 -- Phase 03.1 planning complete
+Phase: 03.1 (gap-arte-create-flow) — EXECUTING
+Plan: 1 of 1
+Status: Executing Phase 03.1
+Last activity: 2026-05-27 -- Phase 03.1 execution started
 
 Progress: [██████████] 100%
 

@@ -122,9 +122,9 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 3. A arte criada aparece no calendário do cliente (visível para o cliente no portal)
 4. Sidebar do admin tem link direto para a lista de artes
 
-**Plans:** 0/1 plans complete
+**Plans:** 1/1 plans complete
 
-- [ ] 03.1-01-PLAN.md — Adicionar client_id ao formulário de artes + link na sidebar + fix do botão "Nova Arte" passando client_id + correção do duplicate class no media toggle + teste E2E de criação
+- [x] 03.1-01-PLAN.md — Adicionar client_id ao formulário de artes + link na sidebar + fix do botão "Nova Arte" passando client_id + correção do duplicate class no media toggle + teste E2E de criação
 
 **UI hint:** yes
 
@@ -219,7 +219,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 | 2. Admin Auth + Client Management | 5/5 | Complete    | 2026-05-25 |
 | 2.1. Gap — password_plain sync (INSERTED) | 0/1 | Not started | - |
 | 3. Art Management | 1/1 | Complete   | 2026-05-25 |
-| 3.1. Gap — Arte create flow (INSERTED) | 0/1 | Not started | - |
+| 3.1. Gap — Arte create flow (INSERTED) | 1/1 | Complete   | 2026-05-27 |
 | 4. Client Calendar Portal | 3/3 | Complete   | 2026-05-26 |
 | 5. Approval Flow | 3/3 | Complete    | 2026-05-26 |
 | 6. Admin Feedback Panel | 4/4 | Complete   | 2026-05-27 |
