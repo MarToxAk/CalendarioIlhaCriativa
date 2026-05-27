@@ -160,7 +160,7 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 4. Admin escreve uma resposta ao comentário do cliente dentro do sistema e a resposta fica associada à arte
 5. Admin acessa o histórico completo de aprovações de um cliente específico, listando todas as artes respondidas com decisões e comentários
 
-**Plans:** 3/3 plans complete
+**Plans:** 4/4 plans complete
 **Wave 1**
 
 - [x] 06-01-PLAN.md — Migração admin_reply + stubs Wave 0 + DashboardController#index + view com Turbo Frame e filtros por cliente/status (PAIN-01, PAIN-02, PAIN-03, PAIN-04)
@@ -181,4 +181,4 @@ O projeto entrega um sistema de aprovação de conteúdo de social media em seis
 | 3. Art Management | 1/1 | Complete   | 2026-05-25 |
 | 4. Client Calendar Portal | 3/3 | Complete   | 2026-05-26 |
 | 5. Approval Flow | 3/3 | Complete    | 2026-05-26 |
-| 6. Admin Feedback Panel | 3/3 | Complete   | 2026-05-27 |
+| 6. Admin Feedback Panel | 4/4 | Complete   | 2026-05-27 |
