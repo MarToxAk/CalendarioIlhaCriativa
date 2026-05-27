@@ -31,15 +31,16 @@
       <label><%= f.radio_button :media_source, :link, checked: arte.external_url.present?, data: { action: "media-type-toggle#selectLink", media_type_toggle_target: "linkRadio" } %> Link externo</label>
     </div>
   </div>
-  <div class="mb-4" data-media-type-toggle-target="uploadField" <%= "class='hidden'" unless arte.media_file.attached? %>>
+  <div class="<%= arte.media_file.attached? ? 'mb-4' : 'mb-4 hidden' %>" data-media-type-toggle-target="uploadField">
     <%= f.label :media_file, "Arquivo", class: "block text-sm font-medium mb-1" %>
     <%= f.file_field :media_file, class: "form-input w-full" %>
   </div>
-  <div class="mb-4" data-media-type-toggle-target="linkField" <%= "class='hidden'" unless arte.external_url.present? %>>
+  <div class="<%= arte.external_url.present? ? 'mb-4' : 'mb-4 hidden' %>" data-media-type-toggle-target="linkField">
     <%= f.label :external_url, "Link externo", class: "block text-sm font-medium mb-1" %>
     <%= f.url_field :external_url, class: "form-input w-full" %>
   </div>
   <div class="flex gap-2">
+    <%= f.hidden_field :client_id %>
     <%= f.submit arte.persisted? ? "Atualizar" : "Criar", class: "btn btn-primary" %>
     <%= link_to "Cancelar", arte.persisted? ? admin_arte_path(arte) : admin_artes_path, class: "btn" %>
   </div>
