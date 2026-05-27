@@ -1,2 +1,66 @@
-<h1 class="text-2xl font-semibold text-slate-900">Dashboard</h1>
-<p class="mt-2 text-slate-600">Admin Dashboard — Fase 2 implementa este painel.</p>
+<% content_for(:page_title) { "Painel de Respostas" } %>
+
+<h1 class="text-2xl font-bold text-slate-900 mb-6">Painel de Respostas</h1>
+
+<%# Barra de filtros FORA do turbo-frame %>
+<%= form_with url: admin_root_path, method: :get, data: { turbo_frame: "dashboard-content" }, class: "flex items-center gap-3 mb-6" do |f| %>
+  <%= f.select :client_id,
+        [["Todos os clientes", ""]] + @clients.map { |c| [c.name, c.id] },
+        { selected: params[:client_id] },
+        class: "h-9 px-3 border border-gray-200 rounded-lg text-sm text-slate-700 bg-white" %>
+
+  <%
+    status_labels = {
+      "pending"          => "Pendente",
+      "approved"         => "Aprovado",
+      "change_requested" => "Pediu Alteração",
+      "revised"          => "Revisado"
+    }
+    status_options = [["Todos os status", ""]] + Arte.statuses.keys.map { |s| [status_labels[s], s] }
+  %>
+  <%= f.select :status,
+        status_options,
+        { selected: params[:status] },
+        class: "h-9 px-3 border border-gray-200 rounded-lg text-sm text-slate-700 bg-white" %>
+
+  <%= f.submit "Filtrar",
+        class: "h-9 px-4 bg-[#0F7949] hover:bg-[#0a5c37] text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer" %>
+<% end %>
+
+<turbo-frame id="dashboard-content">
+  <% if @artes_by_client.empty? %>
+    <p class="text-sm text-slate-500 py-4">Nenhuma arte encontrada.</p>
+  <% else %>
+    <% @artes_by_client.each do |client, artes| %>
+      <div class="mb-8">
+        <h3 class="text-base font-semibold text-slate-700 mb-2 uppercase tracking-wide">
+          <%= client.name %>
+        </h3>
+        <table class="min-w-full bg-white border border-gray-200 rounded-xl shadow-card">
+          <thead>
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Arte</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Data</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Ações</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% artes.each do |arte| %>
+              <tr class="hover:bg-slate-50">
+                <td class="px-4 py-3 text-sm text-slate-900"><%= arte.title.presence || "Sem título" %></td>
+                <td class="px-4 py-3 text-sm text-slate-600"><%= arte.scheduled_on.strftime("%d/%m/%Y") %></td>
+                <td class="px-4 py-3">
+                  <%= render "client/shared/arte_status_badge", arte: arte, compact: true %>
+                </td>
+                <td class="px-4 py-3">
+                  <%= link_to "Ver", admin_arte_path(arte), class: "btn btn-sm" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  <% end %>
+</turbo-frame>
