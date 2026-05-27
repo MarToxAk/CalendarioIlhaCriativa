@@ -55,6 +55,15 @@ class AdminClientsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Nome Novo", @client.name
   end
 
+  test "update com nova senha sincroniza password_plain (CLIE-04)" do
+    patch admin_client_path(@client), params: {
+      client: { name: @client.name, password: "novasenha99" }
+    }
+    assert_response :redirect
+    @client.reload
+    assert_equal "novasenha99", @client.password_plain
+  end
+
   test "update com dados inválidos renderiza edit com status 422" do
     patch admin_client_path(@client), params: {
       client: { name: "" }
