@@ -130,3 +130,38 @@
     </div>
   </dl>
 </div>
+
+<%# ===== CARD: HISTÓRICO DE APROVAÇÕES (CLIE-05) ===== %>
+<% if @artes_with_responses.any? %>
+<div class="bg-white rounded-xl border border-gray-200 shadow-card p-6 max-w-2xl mt-4">
+  <h2 class="text-sm font-semibold text-slate-900 border-b border-gray-100 pb-3 mb-4">
+    Histórico de aprovações
+  </h2>
+
+  <div class="space-y-3">
+    <% @artes_with_responses.each do |arte| %>
+      <div class="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+        <%# Lado esquerdo: título, data, comentário %>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-slate-900 truncate">
+            <%= arte.title.presence || "Arte sem título" %>
+          </p>
+          <p class="text-xs text-slate-500 mt-0.5">
+            <%= arte.scheduled_on.strftime("%d/%m/%Y") %>
+          </p>
+          <% last_response = arte.approval_responses.sort_by(&:created_at).last %>
+          <% if last_response&.comment.present? %>
+            <p class="text-xs text-slate-600 mt-1 italic">"<%= last_response.comment %>"</p>
+          <% end %>
+        </div>
+
+        <%# Lado direito: badge de status + link Ver %>
+        <div class="ml-4 flex items-center gap-3 shrink-0">
+          <%= render "client/shared/arte_status_badge", arte: arte, compact: true %>
+          <%= link_to "Ver", admin_arte_path(arte), class: "text-xs text-[#0F7949] hover:underline" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+<% end %>
