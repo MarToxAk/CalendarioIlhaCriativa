@@ -27,7 +27,10 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - [x] Cliente marca cada arte como Aprovado ou Pediu Alteração — Validated in Phase 05: approval-flow
 - [x] Cliente pode escrever comentário explicando as alterações desejadas — Validated in Phase 05: approval-flow
 - [x] Admin pode marcar arte como revisada após fazer as alterações — Validated in Phase 05: approval-flow
-- [ ] Admin visualiza todas as respostas dos clientes no painel
+- [x] Admin visualiza todas as respostas dos clientes no painel — Validated in Phase 06: admin-feedback-panel
+- [x] Admin pode filtrar dashboard por cliente e por status — Validated in Phase 06: admin-feedback-panel
+- [x] Admin pode escrever resposta interna a artes com pedido de alteração — Validated in Phase 06: admin-feedback-panel
+- [x] Admin vê histórico de aprovações por cliente — Validated in Phase 06: admin-feedback-panel
 - [ ] Cada arte tem data limite de aprovação (prazo)
 
 ### Out of Scope
@@ -70,6 +73,7 @@ Este documento evolui a cada transição de fase e marco do projeto.
 
 - Phase 02.1 complete (2026-05-27) — Gap password_plain sync fechado: update action agora sincroniza password_plain quando senha é alterada.
 - Phase 03.1 complete (2026-05-27) — Gaps do fluxo de criação de artes fechados: hidden_field client_id, fix media toggle, sidebar link Artes, card artes no show do cliente.
+- Phase 06 complete (2026-05-27) — Painel admin com dashboard agrupado por cliente, filtros Turbo Frame por cliente/status, resposta interna admin_reply (PAIN-05 — check_editable corrigido via plan 06-04), histórico de aprovações por cliente.
 
 **Após cada transição de fase** (via `/gsd-transition`):
 1. Requisitos invalidados? → Mover para Out of Scope com motivo
@@ -85,4 +89,4 @@ Este documento evolui a cada transição de fase e marco do projeto.
 4. Atualizar Context com o estado atual
 
 ---
-*Last updated: 2026-05-26 — Phase 05 complete: fluxo de aprovação do cliente implementado*
+*Last updated: 2026-05-27 — Phase 06 complete: painel de feedback do admin implementado e verificado (9/9 truths)*
