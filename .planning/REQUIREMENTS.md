@@ -9,10 +9,10 @@
 
 - [x] **AUTH-01**: Admin pode criar conta e fazer login com email e senha
 - [x] **AUTH-02**: Admin pode fazer logout da sessão
-- [ ] **AUTH-03**: Cada cliente tem um link público único (token de 24 chars) para acessar o próprio calendário
-- [ ] **AUTH-04**: Cliente precisa digitar uma senha simples ao acessar o link pela primeira vez na sessão
-- [ ] **AUTH-05**: Admin pode rotacionar o token de um cliente (gera novo link, invalida o anterior e a sessão existente)
-- [ ] **AUTH-06**: Cliente pode fazer logout do portal
+- [x] **AUTH-03**: Cada cliente tem um link público único (token de 24 chars) para acessar o próprio calendário
+- [x] **AUTH-04**: Cliente precisa digitar uma senha simples ao acessar o link pela primeira vez na sessão
+- [x] **AUTH-05**: Admin pode rotacionar o token de um cliente (gera novo link, invalida o anterior e a sessão existente)
+- [x] **AUTH-06**: Cliente pode fazer logout do portal
 
 ### Clientes (CLIE)
 
@@ -93,10 +93,10 @@
 |-------------|-------|--------|
 | AUTH-01 | Phase 1 | Complete |
 | AUTH-02 | Phase 1 | Complete |
-| AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
-| AUTH-05 | Phase 1 | Pending |
-| AUTH-06 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Complete |
+| AUTH-04 | Phase 1 | Complete |
+| AUTH-05 | Phase 1 | Complete |
+| AUTH-06 | Phase 1 | Complete |
 | CLIE-01 | Phase 2 | Complete |
 | CLIE-02 | Phase 2 | Complete |
 | CLIE-03 | Phase 2 | Complete |
