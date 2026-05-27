@@ -19,9 +19,9 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 
 - [ ] Admin pode cadastrar e gerenciar clientes (nome, link, senha)
 - [ ] Cada cliente tem um calendário mensal de artes com link público + senha simples
-- [ ] Admin pode adicionar artes a dias específicos do calendário (upload direto ou link externo)
-- [ ] Arte pode ter formato: imagem, vídeo ou texto/legenda
-- [ ] Arte pode ser marcada para Instagram, Facebook ou LinkedIn
+- [x] Admin pode adicionar artes a dias específicos do calendário (upload direto ou link externo) — Validated in Phase 03.1: gap-arte-create-flow
+- [x] Arte pode ter formato: imagem, vídeo ou texto/legenda — Validated in Phase 03: art-management
+- [x] Arte pode ser marcada para Instagram, Facebook ou LinkedIn — Validated in Phase 03: art-management
 - [ ] Cliente visualiza o calendário com as artes do mês
 - [x] Cliente marca cada arte como Aprovado ou Pediu Alteração — Validated in Phase 05: approval-flow
 - [x] Cliente pode escrever comentário explicando as alterações desejadas — Validated in Phase 05: approval-flow
@@ -66,6 +66,8 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 ## Evolution
 
 Este documento evolui a cada transição de fase e marco do projeto.
+
+- Phase 03.1 complete (2026-05-27) — Gaps do fluxo de criação de artes fechados: hidden_field client_id, fix media toggle, sidebar link Artes, card artes no show do cliente.
 
 **Após cada transição de fase** (via `/gsd-transition`):
 1. Requisitos invalidados? → Mover para Out of Scope com motivo
