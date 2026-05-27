@@ -64,7 +64,7 @@ class Admin::ArtesController < Admin::BaseController
   end
 
   def arte_params
-    params.require(:arte).permit(:title, :caption, :scheduled_on, :approval_deadline, :external_url, :platform, :media_type, :client_id, :media_file)
+    params.require(:arte).permit(:title, :caption, :scheduled_on, :approval_deadline, :external_url, :platform, :media_type, :client_id, :media_file, :admin_reply)
   end
 
   def check_editable
