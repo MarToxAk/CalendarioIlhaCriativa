@@ -37,6 +37,9 @@ class Admin::ClientsController < Admin::BaseController
   def update
     was_active = @client.active
     filtered = client_params.reject { |k, v| [ "password", "password_plain" ].include?(k) && v.blank? }
+    if filtered[:password].present?
+      filtered = filtered.merge(password_plain: filtered[:password])
+    end
     if @client.update(filtered)
       if was_active && !@client.active
         redirect_to admin_client_path(@client), notice: "#{@client.name} foi desativado. O acesso ao portal está bloqueado."
