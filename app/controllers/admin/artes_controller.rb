@@ -1,5 +1,5 @@
 class Admin::ArtesController < Admin::BaseController
-  before_action :set_client, only: %i[new create show edit update destroy mark_revised]
+  before_action :set_client, only: %i[index new create show edit update destroy mark_revised]
   before_action :set_arte, only: %i[show edit update destroy mark_revised]
   before_action :check_editable, only: %i[edit update]
   before_action :check_deletable, only: %i[destroy]
@@ -68,7 +68,11 @@ class Admin::ArtesController < Admin::BaseController
   end
 
   def set_client
+    return unless params[:client_id].present?
     @client = Client.find_by(id: params[:client_id])
+    unless @client
+      redirect_to admin_artes_path, alert: "Cliente não encontrado." and return
+    end
   end
 
   def arte_params
