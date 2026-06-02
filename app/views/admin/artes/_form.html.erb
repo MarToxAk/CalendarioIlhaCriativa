@@ -38,7 +38,7 @@
       <label><%= f.radio_button :media_source, :link, checked: arte.external_url.present?, data: { action: "media-type-toggle#selectLink", media_type_toggle_target: "linkRadio" } %> Link externo</label>
     </div>
   </div>
-  <div class="<%= arte.media_file.attached? ? 'mb-4' : 'mb-4 hidden' %>" data-media-type-toggle-target="uploadField">
+  <div class="<%= (arte.media_file.attached? || arte.external_url.blank?) ? 'mb-4' : 'mb-4 hidden' %>" data-media-type-toggle-target="uploadField">
     <%= f.label :media_file, "Arquivo", class: "block text-sm font-medium mb-1" %>
     <%= f.file_field :media_file, class: "form-input w-full" %>
   </div>
