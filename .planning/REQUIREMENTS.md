@@ -1,0 +1,69 @@
+# Requirements: Calendário de Aprovação de Artes
+
+**Defined:** 2026-06-02
+**Core Value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
+
+## v1.1 Requirements
+
+Correção de upload e associação de cliente no model Arte.
+
+### Upload de Arquivos
+
+- [ ] **ARTE-08**: Admin pode fazer upload de arquivo ao criar uma arte e o arquivo fica salvo e acessível via ActiveStorage
+
+### Associação com Cliente
+
+- [ ] **ARTE-09**: Arte não pode ser criada sem `client_id` válido — o sistema garante que o `client_id` vem do contexto correto (parâmetro de URL ou escopo do admin), não de campo livre no form
+
+- [ ] **ARTE-10**: `set_arte` (edit/update/destroy/show) verifica que a arte pertence ao cliente esperado, evitando acesso cross-client
+
+## Backlog (v1.2+)
+
+### Notificações
+
+- **NOTF-01**: Admin recebe e-mail quando cliente aprova ou pede alteração
+- **NOTF-02**: Cliente recebe e-mail quando arte é revisada
+
+### Calendário
+
+- **CAL2-01**: Faixa de resumo no topo do calendário do cliente (X aprovados, Y pendentes)
+
+### Admin
+
+- **ADM2-01**: Exportar relatório de aprovações de um cliente em PDF ou CSV
+- **ADM2-02**: Duplicar uma arte para outro cliente ou data
+
+### Infraestrutura
+
+- **INFRA-01**: Deploy em produção com Active Storage S3
+- **INFRA-02**: Sidebar links "Aprovações" e "Calendário" wired (atualmente apontam para `#`)
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Login OAuth / conta de cliente | Link+senha é suficiente para o perfil de uso |
+| Integração com APIs de redes sociais | Meta API exige app review |
+| App mobile nativo | Web-first; mobile responsivo via browser |
+| Multi-stage workflows | Desnecessário para 10-30 clientes |
+| White-labeling / domínio personalizado | Complexidade sem benefício imediato |
+| IA para geração de legendas | Fora do escopo de aprovação |
+| Drag-and-drop de artes no calendário | v2+ UX |
+| Real-time collaboration | WebSockets desnecessário neste volume |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| ARTE-08 | Phase 7 | Pending |
+| ARTE-09 | Phase 7 | Pending |
+| ARTE-10 | Phase 7 | Pending |
+
+**Coverage:**
+- v1.1 requirements: 3 total
+- Mapped to phases: 3
+- Unmapped: 0 ✓
+
+---
+*Requirements defined: 2026-06-02*
+*Last updated: 2026-06-02 after v1.1 milestone start*
