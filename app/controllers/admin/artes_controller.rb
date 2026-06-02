@@ -5,11 +5,14 @@ class Admin::ArtesController < Admin::BaseController
   before_action :check_deletable, only: %i[destroy]
 
   def index
-    @artes = Arte.includes(:client).order(scheduled_on: :desc)
+    @artes = if params[:client_id].present?
+      Arte.where(client_id: params[:client_id]).includes(:client).order(scheduled_on: :desc)
+    else
+      Arte.includes(:client).order(scheduled_on: :desc)
+    end
     @clients = Client.all
     @status_options = Arte.statuses.keys
     @platform_options = Arte.platforms.keys
-    # Filtering logic can be added here
   end
 
   def show
