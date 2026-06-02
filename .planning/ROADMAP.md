@@ -69,20 +69,20 @@ Wave 2 *(blocked on Wave 1 completion)* — Gap Closure:
 | 5. Approval Flow | v1.0 | 3/3 | Complete | 2026-05-26 |
 | 6. Admin Feedback Panel | v1.0 | 4/4 | Complete | 2026-05-27 |
 | 7. Art Upload & Client Scoping Fix | v1.1 | 3/3 | Complete | 2026-06-02 |
-| 7.1. Fix: media_source + destroy + SC3 UI | v1.1 | 0/2 | Not started | — |
+| 7.1. Fix: media_source + destroy + SC3 UI | v1.1 | 1/2 | In Progress|  |
 
 ### Phase 07.1: Fix: media_source params + destroy feedback + SC3 UI (INSERTED)
 
 **Goal:** Corrigir 3 issues críticos do code review da fase 7: set_client com guard de redirect (CR-01), destroy com verificação de retorno booleano (CR-02), e honrar o radio media_source no controller para exclusão mútua de mídia (CR-03). Inclui WR-01 (radio upload pré-selecionado) e WR-02 (botão Editar para todos os status editáveis).
 **Requirements**: ARTE-08, ARTE-10
 **Depends on:** Phase 7
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 
 Wave 1:
 
-- [ ] 07.1-01-PLAN.md — CR-01: guard em set_client + CR-02: retorno booleano de destroy (ARTE-10)
+- [x] 07.1-01-PLAN.md — CR-01: guard em set_client + CR-02: retorno booleano de destroy (ARTE-10)
 
 Wave 2 *(depends on 07.1-01)*:
 

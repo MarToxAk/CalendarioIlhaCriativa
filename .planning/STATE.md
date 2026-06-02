@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Fix Art Upload & Client Association
-status: in_progress
-last_updated: "2026-06-02T20:30:00.000Z"
-last_activity: 2026-06-02
+status: executing
+last_updated: "2026-06-02T21:00:18.743Z"
+last_activity: 2026-06-02 -- Phase 07.1 execution started
 progress:
-  total_phases: 2
+  total_phases: 3
   completed_phases: 1
   total_plans: 5
   completed_plans: 3
-  percent: 60
+  percent: 33
 ---
 
 # Project State
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** 07.1 Fix: media_source params + destroy feedback + SC3 UI
+**Current focus:** Phase 07.1 — fix-media-source-params-destroy-feedback-sc3-ui
 
 ## Current Position
 
-Phase: 07.1
-Plan: Not started
-Status: Ready to execute (2 plans planned)
-Last activity: 2026-06-02
+Phase: 07.1 (fix-media-source-params-destroy-feedback-sc3-ui) — EXECUTING
+Plan: 1 of 2
+Status: Executing Phase 07.1
+Last activity: 2026-06-02 -- Phase 07.1 execution started
 
 ## Milestone v1.0 — Shipped
 
