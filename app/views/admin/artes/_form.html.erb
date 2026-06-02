@@ -34,7 +34,7 @@
   <div class="mb-4">
     <label class="block text-sm font-medium mb-1">Tipo de mídia</label>
     <div class="flex gap-4">
-      <label><%= f.radio_button :media_source, :upload, checked: arte.media_file.attached?, data: { action: "media-type-toggle#selectUpload", media_type_toggle_target: "uploadRadio" } %> Upload de arquivo</label>
+      <label><%= f.radio_button :media_source, :upload, checked: arte.media_file.attached? || arte.external_url.blank?, data: { action: "media-type-toggle#selectUpload", media_type_toggle_target: "uploadRadio" } %> Upload de arquivo</label>
       <label><%= f.radio_button :media_source, :link, checked: arte.external_url.present?, data: { action: "media-type-toggle#selectLink", media_type_toggle_target: "linkRadio" } %> Link externo</label>
     </div>
   </div>

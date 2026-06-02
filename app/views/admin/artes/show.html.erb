@@ -14,7 +14,7 @@
     <p><strong>Link externo:</strong> <%= link_to @arte.external_url, @arte.external_url, target: "_blank", rel: "noopener noreferrer" %></p>
   <% end %>
   <div class="mt-4 flex gap-2">
-    <%= link_to "Editar", edit_admin_arte_path(@arte), class: "btn btn-secondary" if @arte.pending? %>
+    <%= link_to "Editar", edit_admin_arte_path(@arte), class: "btn btn-secondary" if @arte.pending? || @arte.revised? || @arte.change_requested? %>
     <%= button_to "Excluir", admin_arte_path(@arte), method: :delete, data: { confirm: "Tem certeza?" }, class: "btn btn-danger" if @arte.pending? && @arte.approval_responses.none? %>
     <% if @arte.change_requested? %>
       <%= button_to "Marcar como Revisada",
