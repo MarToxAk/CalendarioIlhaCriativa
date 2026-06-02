@@ -57,6 +57,7 @@ class Admin::ArtesController < Admin::BaseController
 
   def set_arte
     @arte = Arte.includes(:approval_responses).find(params[:id])
+    @client = @arte.client
   end
 
   def set_client
