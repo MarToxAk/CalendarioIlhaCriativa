@@ -28,6 +28,7 @@ Full details: [.planning/milestones/v1.0-ROADMAP.md](.planning/milestones/v1.0-R
 **Milestone Goal:** Corrigir o upload de arquivos no model Art e garantir que cada arte seja criada com associação correta e segura ao `@client` do admin logado.
 
 - [x] **Phase 7: Art Upload & Client Scoping Fix** — Upload via ActiveStorage funcional e associação/escopo de cliente corrigidos (completed 2026-06-02)
+- [ ] **Phase 7.1: Fix: media_source params + destroy feedback + SC3 UI** (INSERTED) — Correções urgentes pós-fase 7
 
 ## Phase Details
 
@@ -67,4 +68,22 @@ Wave 2 *(blocked on Wave 1 completion)* — Gap Closure:
 | 4. Client Calendar Portal | v1.0 | 3/3 | Complete | 2026-05-26 |
 | 5. Approval Flow | v1.0 | 3/3 | Complete | 2026-05-26 |
 | 6. Admin Feedback Panel | v1.0 | 4/4 | Complete | 2026-05-27 |
-| 7. Art Upload & Client Scoping Fix | v1.1 | 3/3 | Complete    | 2026-06-02 |
+| 7. Art Upload & Client Scoping Fix | v1.1 | 3/3 | Complete | 2026-06-02 |
+| 7.1. Fix: media_source + destroy + SC3 UI | v1.1 | 0/2 | Not started | — |
+
+### Phase 07.1: Fix: media_source params + destroy feedback + SC3 UI (INSERTED)
+
+**Goal:** Corrigir 3 issues críticos do code review da fase 7: set_client com guard de redirect (CR-01), destroy com verificação de retorno booleano (CR-02), e honrar o radio media_source no controller para exclusão mútua de mídia (CR-03). Inclui WR-01 (radio upload pré-selecionado) e WR-02 (botão Editar para todos os status editáveis).
+**Requirements**: ARTE-08, ARTE-10
+**Depends on:** Phase 7
+**Plans:** 2 plans
+
+Plans:
+
+Wave 1:
+
+- [ ] 07.1-01-PLAN.md — CR-01: guard em set_client + CR-02: retorno booleano de destroy (ARTE-10)
+
+Wave 2 *(depends on 07.1-01)*:
+
+- [ ] 07.1-02-PLAN.md — CR-03: media_source param em update/create + WR-01: radio padrão + WR-02: botão Editar (ARTE-08)
