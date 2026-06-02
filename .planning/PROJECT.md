@@ -31,7 +31,13 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - ✓ Admin vê histórico de aprovações por cliente — v1.0 Phase 6
 - ✓ Cada arte tem data limite de aprovação (prazo) — v1.0 Phase 3
 
-### Active (v1.1+)
+### Active (v1.1)
+
+- [ ] Upload de arquivos no model Art funcional (ActiveStorage) — ARTE-08
+- [ ] client_id sempre associado corretamente ao admin logado ao criar/editar artes — ARTE-09
+- [ ] Validações e escopos @client consistentes nas queries de Art — ARTE-10
+
+### Backlog (v1.2+)
 
 - [ ] Notificações por e-mail ao admin quando cliente aprova ou pede alteração (NOTF-01)
 - [ ] Notificações por e-mail ao cliente quando arte é revisada (NOTF-02)
@@ -91,14 +97,43 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 | Phase 2.1 inserida | password_plain stale após update (bug pós-auditoria) | ✓ CLIE-04 satisfeito |
 | Phase 3.1 inserida | form sem client_id — blocker absoluto de criação | ✓ ARTE-01→07 satisfeitos |
 
+## Current Milestone: v1.1 Fix Art Upload & Client Association
+
+**Goal:** Corrigir o upload de arquivos no model Art e garantir que cada arte seja criada com a associação correta ao `@client` do admin logado.
+
+**Target features:**
+- Upload funcional via ActiveStorage no model Art (arquivos salvos e acessíveis)
+- Associação automática e correta do `client_id` ao criar/editar artes
+- Validações e escopos consistentes (`@client` sempre presente nas queries de Art)
+
 ---
 
 ## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd-transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd-complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
+
+---
+
+### History
 
 - 2026-05-27 — v1.0 SHIPPED — todos os 35 requisitos implementados em 3 dias
 - Phase 06 complete (2026-05-27) — Painel admin completo com dashboard, filtros Turbo Frame, admin_reply, histórico por cliente
 - Phase 02.1 complete (2026-05-27) — Gap password_plain sync fechado
 - Phase 03.1 complete (2026-05-27) — Gap criação de artes fechado (client_id, media toggle, sidebar link)
+- 2026-06-02 — v1.1 started — Fix Art Upload & Client Association
 
 ---
-*Last updated: 2026-06-02 after v1.0 milestone*
+*Last updated: 2026-06-02 after v1.1 milestone start*
