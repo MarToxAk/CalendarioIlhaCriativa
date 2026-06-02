@@ -116,4 +116,29 @@ class Admin::ArtesControllerTest < ActionDispatch::IntegrationTest
     get new_admin_arte_url
     assert_response :success
   end
+
+  # CR-01: set_client guard tests
+  test "CR-01: index com client_id invalido redireciona para admin_artes_path com alert" do
+    get admin_artes_url(client_id: 99999)
+    assert_redirected_to admin_artes_url
+    follow_redirect!
+    assert_match /Cliente não encontrado/, response.body
+  end
+
+  test "CR-01: edit com client_id invalido redireciona para admin_artes_path com alert" do
+    get edit_admin_arte_url(@arte, client_id: 99999)
+    assert_redirected_to admin_artes_url
+    follow_redirect!
+    assert_match /Cliente não encontrado/, response.body
+  end
+
+  test "CR-01: show sem client_id mantém @client nil e retorna success" do
+    get admin_arte_url(@arte)
+    assert_response :success
+  end
+
+  test "CR-01: show com client_id valido atribui @client corretamente" do
+    get admin_arte_url(@arte, client_id: @client.id)
+    assert_response :success
+  end
 end
