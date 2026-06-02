@@ -43,8 +43,11 @@ class Admin::ArtesController < Admin::BaseController
   end
 
   def destroy
-    @arte.destroy
-    redirect_to admin_artes_path, notice: "Arte excluída com sucesso."
+    if @arte.destroy
+      redirect_to admin_artes_path, notice: "Arte excluída com sucesso."
+    else
+      redirect_to admin_arte_path(@arte), alert: "Não foi possível excluir a arte."
+    end
   end
 
   def mark_revised
