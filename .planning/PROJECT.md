@@ -4,50 +4,66 @@
 
 Sistema web em Ruby on Rails para agências e freelancers de social media gerenciarem o fluxo de aprovação de conteúdo com seus clientes. Cada cliente recebe um link único com senha simples para acessar um calendário mensal, visualizar as artes agendadas por dia e registrar aprovação ou solicitar alterações com comentários. O administrador gerencia todo o processo pelo painel interno.
 
+**v1.0 shipped 2026-05-27** — sistema completo e funcional com todos os 35 requisitos implementados.
+
 ## Core Value
 
 O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
 
 ## Requirements
 
-### Validated
+### Validated (v1.0)
 
-- [x] Admin pode cadastrar e gerenciar clientes (nome, link, senha) — Validated in Phase 02: admin-auth-client-management
-- [x] Admin pode desativar um cliente (bloqueia acesso ao portal) — Validated in Phase 02: admin-auth-client-management
-- [x] Senha visível na tela do cliente fica correta após edição — Validated in Phase 02.1: gap-password-plain-sync
+- ✓ Admin pode cadastrar e gerenciar clientes (nome, link, senha) — v1.0 Phase 2
+- ✓ Admin pode desativar um cliente (bloqueia acesso ao portal) — v1.0 Phase 2
+- ✓ Senha visível na tela do cliente fica correta após edição — v1.0 Phase 2.1
+- ✓ Admin pode adicionar artes a dias específicos do calendário (upload direto ou link externo) — v1.0 Phase 3 + 3.1
+- ✓ Arte pode ter formato: imagem, vídeo ou texto/legenda — v1.0 Phase 3
+- ✓ Arte pode ser marcada para Instagram, Facebook ou LinkedIn — v1.0 Phase 3
+- ✓ Cada cliente tem um calendário mensal de artes com link público + senha simples — v1.0 Phase 4
+- ✓ Cliente visualiza o calendário com as artes do mês — v1.0 Phase 4
+- ✓ Cliente marca cada arte como Aprovado ou Pediu Alteração — v1.0 Phase 5
+- ✓ Cliente pode escrever comentário explicando as alterações desejadas — v1.0 Phase 5
+- ✓ Admin pode marcar arte como revisada após fazer as alterações — v1.0 Phase 5
+- ✓ Admin visualiza todas as respostas dos clientes no painel — v1.0 Phase 6
+- ✓ Admin pode filtrar dashboard por cliente e por status — v1.0 Phase 6
+- ✓ Admin pode escrever resposta interna a artes com pedido de alteração — v1.0 Phase 6
+- ✓ Admin vê histórico de aprovações por cliente — v1.0 Phase 6
+- ✓ Cada arte tem data limite de aprovação (prazo) — v1.0 Phase 3
 
-### Active
+### Active (v1.1+)
 
-- [ ] Admin pode cadastrar e gerenciar clientes (nome, link, senha)
-- [ ] Cada cliente tem um calendário mensal de artes com link público + senha simples
-- [x] Admin pode adicionar artes a dias específicos do calendário (upload direto ou link externo) — Validated in Phase 03.1: gap-arte-create-flow
-- [x] Arte pode ter formato: imagem, vídeo ou texto/legenda — Validated in Phase 03: art-management
-- [x] Arte pode ser marcada para Instagram, Facebook ou LinkedIn — Validated in Phase 03: art-management
-- [ ] Cliente visualiza o calendário com as artes do mês
-- [x] Cliente marca cada arte como Aprovado ou Pediu Alteração — Validated in Phase 05: approval-flow
-- [x] Cliente pode escrever comentário explicando as alterações desejadas — Validated in Phase 05: approval-flow
-- [x] Admin pode marcar arte como revisada após fazer as alterações — Validated in Phase 05: approval-flow
-- [x] Admin visualiza todas as respostas dos clientes no painel — Validated in Phase 06: admin-feedback-panel
-- [x] Admin pode filtrar dashboard por cliente e por status — Validated in Phase 06: admin-feedback-panel
-- [x] Admin pode escrever resposta interna a artes com pedido de alteração — Validated in Phase 06: admin-feedback-panel
-- [x] Admin vê histórico de aprovações por cliente — Validated in Phase 06: admin-feedback-panel
-- [ ] Cada arte tem data limite de aprovação (prazo)
+- [ ] Notificações por e-mail ao admin quando cliente aprova ou pede alteração (NOTF-01)
+- [ ] Notificações por e-mail ao cliente quando arte é revisada (NOTF-02)
+- [ ] Faixa de resumo no topo do calendário (X aprovados, Y pendentes) (CAL2-01)
+- [ ] Exportar relatório de aprovações de um cliente em PDF ou CSV (ADM2-01)
+- [ ] Duplicar uma arte para outro cliente ou data (ADM2-02)
+- [ ] Deploy em produção com Active Storage S3 (infraestrutura de storage)
+- [ ] Sidebar links "Aprovações" e "Calendário" wired (atualmente apontam para `#`)
 
 ### Out of Scope
 
-- Login OAuth / conta de cliente — link+senha é suficiente para v1
-- Notificações por e-mail ou WhatsApp — admin verifica pelo painel
-- Agendamento automático de publicação — não integra com APIs de redes sociais em v1
-- App mobile — web-first
+- Login OAuth / conta de cliente — link+senha é suficiente para o perfil de uso
+- Integração com APIs de redes sociais (publicação automática) — Meta API exige app review
+- App mobile nativo — web-first; mobile responsivo via browser
+- Multi-stage workflows — desnecessário para 10-30 clientes
+- White-labeling / domínio personalizado — complexidade sem benefício imediato v1
+- IA para geração de legendas — fora do escopo de aprovação
+- Drag-and-drop de artes no calendário — v2+ UX
+- Real-time collaboration — WebSockets desnecessário neste volume
 
 ## Context
 
+**Estado atual (v1.0 shipped):**
 - Carteira de 10–30 clientes ativos
 - Conteúdo para Instagram, Facebook e LinkedIn
 - Admin faz upload direto de arquivos OU cola links externos (Google Drive, Dropbox)
-- Status simplificado: só Aprovado ou Pediu Alteração (sem estados intermediários)
+- Status simplificado: Pendente → Aprovado / Pediu Alteração → Revisado → Pendente
 - Prazo de aprovação por arte (data limite definida pelo admin)
 - Notificações: admin verifica o painel quando quiser, sem alertas automáticos
+- **Tech stack:** Rails 8.1.3, PostgreSQL (192.168.3.203), Tailwind v4, Stimulus, Turbo, ActiveStorage
+- **Codebase:** ~284 arquivos, 26.713+ linhas de código
+- **Storage:** ActiveStorage local (upload) + URLs externas (Drive/Dropbox) — S3 para produção
 
 ## Constraints
 
@@ -55,38 +71,34 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - **Acesso do cliente**: Link único por cliente + senha simples, sem autenticação complexa
 - **Storage**: Suporte a upload local e links externos (Drive/Dropbox) para os arquivos
 - **Escala**: Projetado para 10–30 clientes simultâneos
+- **Deploy**: Infraestrutura local (192.168.3.203) — produção precisará de S3 para storage
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Rails como stack | Escolha do usuário | — Pending |
-| Link + senha simples para cliente | Evita fricção de cadastro para o cliente | — Pending |
-| Status binário (Aprovado/Pediu Alteração) | Mantém o fluxo simples | — Pending |
-| Sem notificações automáticas v1 | Reduz complexidade inicial | — Pending |
+| Rails como stack | Escolha do usuário | ✓ Bom |
+| Link + senha simples para cliente | Evita fricção de cadastro para o cliente | ✓ Bom — funciona para o perfil de uso |
+| Status binário (Aprovado/Pediu Alteração) | Mantém o fluxo simples | ✓ Bom — re-aprovação via revised? funciona |
+| Sem notificações automáticas v1 | Reduz complexidade inicial | ✓ Bom — admin usa o painel ativo |
+| Rails 8 auth generator sem Devise | Auth nativo simples e controlável | ✓ Bom — Session DB-persistida funciona |
+| Tailwind v4 CSS-native (@theme) | Versão instalada pela gem tailwindcss-rails 4.x | ✓ Bom — design tokens funcionam |
+| Gems em vendor/bundle | bot user não está no grupo rvm | ✓ Necessário |
+| scheduled_on :date (não datetime) | Evita problemas de timezone no calendário | ✓ Bom — artes no dia correto |
+| Queries sempre escopadas por @client | Previne cross-client data leak | ✓ Seguro — aplicado em todos os controllers |
+| has_many :approval_responses | Permite histórico completo por arte | ✓ Correto — re-aprovação funciona |
+| Turbo Frame para filtros do dashboard | Filtros sem recarregar a página completa | ✓ UX responsiva |
+| Phase 2.1 inserida | password_plain stale após update (bug pós-auditoria) | ✓ CLIE-04 satisfeito |
+| Phase 3.1 inserida | form sem client_id — blocker absoluto de criação | ✓ ARTE-01→07 satisfeitos |
 
 ---
 
 ## Evolution
 
-Este documento evolui a cada transição de fase e marco do projeto.
-
-- Phase 02.1 complete (2026-05-27) — Gap password_plain sync fechado: update action agora sincroniza password_plain quando senha é alterada.
-- Phase 03.1 complete (2026-05-27) — Gaps do fluxo de criação de artes fechados: hidden_field client_id, fix media toggle, sidebar link Artes, card artes no show do cliente.
-- Phase 06 complete (2026-05-27) — Painel admin com dashboard agrupado por cliente, filtros Turbo Frame por cliente/status, resposta interna admin_reply (PAIN-05 — check_editable corrigido via plan 06-04), histórico de aprovações por cliente.
-
-**Após cada transição de fase** (via `/gsd-transition`):
-1. Requisitos invalidados? → Mover para Out of Scope com motivo
-2. Requisitos validados? → Mover para Validated com referência da fase
-3. Novos requisitos surgiram? → Adicionar em Active
-4. Decisões a registrar? → Adicionar em Key Decisions
-5. "What This Is" ainda preciso? → Atualizar se divergiu
-
-**Após cada marco** (via `/gsd-complete-milestone`):
-1. Revisão completa de todas as seções
-2. Verificar Core Value — ainda é a prioridade certa?
-3. Auditar Out of Scope — os motivos ainda são válidos?
-4. Atualizar Context com o estado atual
+- 2026-05-27 — v1.0 SHIPPED — todos os 35 requisitos implementados em 3 dias
+- Phase 06 complete (2026-05-27) — Painel admin completo com dashboard, filtros Turbo Frame, admin_reply, histórico por cliente
+- Phase 02.1 complete (2026-05-27) — Gap password_plain sync fechado
+- Phase 03.1 complete (2026-05-27) — Gap criação de artes fechado (client_id, media toggle, sidebar link)
 
 ---
-*Last updated: 2026-05-27 — Phase 06 complete: painel de feedback do admin implementado e verificado (9/9 truths)*
+*Last updated: 2026-06-02 after v1.0 milestone*
