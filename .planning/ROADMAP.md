@@ -69,7 +69,7 @@ Wave 2 *(blocked on Wave 1 completion)* — Gap Closure:
 | 5. Approval Flow | v1.0 | 3/3 | Complete | 2026-05-26 |
 | 6. Admin Feedback Panel | v1.0 | 4/4 | Complete | 2026-05-27 |
 | 7. Art Upload & Client Scoping Fix | v1.1 | 3/3 | Complete | 2026-06-02 |
-| 7.1. Fix: media_source + destroy + SC3 UI | v1.1 | 2/2 | Complete   | 2026-06-02 |
+| 7.1. Fix: media_source + destroy + SC3 UI | v1.1 | 2/2 | Complete    | 2026-06-02 |
 
 ### Phase 07.1: Fix: media_source params + destroy feedback + SC3 UI (INSERTED)
 
