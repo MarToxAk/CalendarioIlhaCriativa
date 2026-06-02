@@ -27,7 +27,7 @@ Full details: [.planning/milestones/v1.0-ROADMAP.md](.planning/milestones/v1.0-R
 
 **Milestone Goal:** Corrigir o upload de arquivos no model Art e garantir que cada arte seja criada com associação correta e segura ao `@client` do admin logado.
 
-- [ ] **Phase 7: Art Upload & Client Scoping Fix** — Upload via ActiveStorage funcional e associação/escopo de cliente corrigidos
+- [x] **Phase 7: Art Upload & Client Scoping Fix** — Upload via ActiveStorage funcional e associação/escopo de cliente corrigidos (completed 2026-06-02)
 
 ## Phase Details
 
@@ -46,8 +46,8 @@ Full details: [.planning/milestones/v1.0-ROADMAP.md](.planning/milestones/v1.0-R
 **Plans**: 2 plans
 Plans:
 
-- [ ] 07-01-PLAN.md — Adicionar @client = @arte.client em set_arte (ARTE-10)
-- [ ] 07-02-PLAN.md — Selector condicional de cliente + erros de :base no form (ARTE-08, ARTE-09)
+- [x] 07-01-PLAN.md — Adicionar @client = @arte.client em set_arte (ARTE-10)
+- [x] 07-02-PLAN.md — Selector condicional de cliente + erros de :base no form (ARTE-08, ARTE-09)
 
 ## Progress
 
@@ -61,4 +61,4 @@ Plans:
 | 4. Client Calendar Portal | v1.0 | 3/3 | Complete | 2026-05-26 |
 | 5. Approval Flow | v1.0 | 3/3 | Complete | 2026-05-26 |
 | 6. Admin Feedback Panel | v1.0 | 4/4 | Complete | 2026-05-27 |
-| 7. Art Upload & Client Scoping Fix | v1.1 | 0/2 | Not started | - |
+| 7. Art Upload & Client Scoping Fix | v1.1 | 2/2 | Complete   | 2026-06-02 |

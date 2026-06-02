@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Fix Art Upload & Client Association
 status: executing
-last_updated: "2026-06-02T16:11:25.600Z"
-last_activity: 2026-06-02 -- Phase 07 planning complete
+last_updated: "2026-06-02T16:23:54.656Z"
+last_activity: 2026-06-02 -- Phase 07 execution started
 progress:
   total_phases: 1
   completed_phases: 0
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** v1.1 — Phase 7: Art Upload & Client Scoping Fix
+**Current focus:** Phase 07 — art-upload-client-scoping-fix
 
 ## Current Position
 
-Phase: 7 — Art Upload & Client Scoping Fix
-Plan: —
-Status: Ready to execute
-Last activity: 2026-06-02 -- Phase 07 planning complete
+Phase: 07 (art-upload-client-scoping-fix) — EXECUTING
+Plan: 1 of 2
+Status: Executing Phase 07
+Last activity: 2026-06-02 -- Phase 07 execution started
 
 ## Milestone v1.0 — Shipped
 
