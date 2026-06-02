@@ -1,5 +1,18 @@
 # Milestones
 
+## v1.1 Fix Art Upload & Client Association (Shipped: 2026-06-02)
+
+**Phases completed:** 2 phases, 5 plans, 5 tasks
+
+**Key accomplishments:**
+
+- `set_arte` agora atribui `@client = @arte.client` após carregar `@arte`, garantindo que todas as actions que o usam (show, edit, update, destroy, mark_revised) tenham `@client` disponível sem depender de `params[:client_id]`
+- Selector condicional de cliente (hidden_field vs f.select) e bloco de erros :base no _form.html.erb, habilitando criacao de artes sem client_id pre-definido e depuracao de erros de upload
+- One-liner:
+- One-liner:
+
+---
+
 ## v1.0 MVP — Calendário de Aprovação de Artes
 
 **Shipped:** 2026-05-27

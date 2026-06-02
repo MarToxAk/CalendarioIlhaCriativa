@@ -6,7 +6,7 @@ Sistema web em Ruby on Rails para agências e freelancers de social media gerenc
 
 **v1.0 shipped 2026-05-27** — sistema completo e funcional com todos os 35 requisitos implementados.
 
-**v1.1 em progresso** — Phase 07.1 complete 2026-06-02: CR-01 (set_client guard), CR-02 (destroy feedback), CR-03 (media_source param), WR-01 (radio padrão), WR-02 (botão Editar) corrigidos.
+**v1.1 shipped 2026-06-02** — upload via ActiveStorage funcional, associação correta de cliente ao criar artes, proteção cross-client, rádio de mídia honrado no controller, feedback de destroy, e consistência SSR no formulário.
 
 ## Core Value
 
@@ -33,11 +33,11 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - ✓ Admin vê histórico de aprovações por cliente — v1.0 Phase 6
 - ✓ Cada arte tem data limite de aprovação (prazo) — v1.0 Phase 3
 
-### Active (v1.1)
+### Validated (v1.1)
 
-- [x] Upload de arquivos no model Art funcional (ActiveStorage) — ARTE-08 — Validated in Phase 07.1: media_source param handling (CR-03), radio upload padrão (WR-01), botão Editar expandido (WR-02)
-- [ ] client_id sempre associado corretamente ao admin logado ao criar/editar artes — ARTE-09
-- [x] Validações e escopos @client consistentes nas queries de Art — ARTE-10 — Validated in Phase 07.1: set_client guard (CR-01) + destroy boolean check (CR-02)
+- ✓ Upload de arquivos no model Art funcional via ActiveStorage — ARTE-08 — v1.1 Phase 7 + 7.1
+- ✓ Arte não pode ser criada sem client_id válido — selector condicional garante associação correta — ARTE-09 — v1.1 Phase 7
+- ✓ set_arte/set_client garantem que arte pertence ao cliente esperado, evitando acesso cross-client — ARTE-10 — v1.1 Phase 7 + 7.1
 
 ### Backlog (v1.2+)
 
@@ -46,8 +46,8 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - [ ] Faixa de resumo no topo do calendário (X aprovados, Y pendentes) (CAL2-01)
 - [ ] Exportar relatório de aprovações de um cliente em PDF ou CSV (ADM2-01)
 - [ ] Duplicar uma arte para outro cliente ou data (ADM2-02)
-- [ ] Deploy em produção com Active Storage S3 (infraestrutura de storage)
-- [ ] Sidebar links "Aprovações" e "Calendário" wired (atualmente apontam para `#`)
+- [ ] Deploy em produção com Active Storage S3 (INFRA-01)
+- [ ] Sidebar links "Aprovações" e "Calendário" wired (atualmente apontam para `#`) (INFRA-02)
 
 ### Out of Scope
 
@@ -62,7 +62,7 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 
 ## Context
 
-**Estado atual (v1.0 shipped):**
+**Estado atual (v1.1 shipped 2026-06-02):**
 - Carteira de 10–30 clientes ativos
 - Conteúdo para Instagram, Facebook e LinkedIn
 - Admin faz upload direto de arquivos OU cola links externos (Google Drive, Dropbox)
@@ -70,7 +70,7 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - Prazo de aprovação por arte (data limite definida pelo admin)
 - Notificações: admin verifica o painel quando quiser, sem alertas automáticos
 - **Tech stack:** Rails 8.1.3, PostgreSQL (192.168.3.203), Tailwind v4, Stimulus, Turbo, ActiveStorage
-- **Codebase:** ~284 arquivos, 26.713+ linhas de código
+- **Codebase:** ~290 arquivos, ~27.000+ linhas de código
 - **Storage:** ActiveStorage local (upload) + URLs externas (Drive/Dropbox) — S3 para produção
 
 ## Constraints
@@ -98,15 +98,9 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 | Turbo Frame para filtros do dashboard | Filtros sem recarregar a página completa | ✓ UX responsiva |
 | Phase 2.1 inserida | password_plain stale após update (bug pós-auditoria) | ✓ CLIE-04 satisfeito |
 | Phase 3.1 inserida | form sem client_id — blocker absoluto de criação | ✓ ARTE-01→07 satisfeitos |
-
-## Current Milestone: v1.1 Fix Art Upload & Client Association
-
-**Goal:** Corrigir o upload de arquivos no model Art e garantir que cada arte seja criada com a associação correta ao `@client` do admin logado.
-
-**Target features:**
-- Upload funcional via ActiveStorage no model Art (arquivos salvos e acessíveis)
-- Associação automática e correta do `client_id` ao criar/editar artes
-- Validações e escopos consistentes (`@client` sempre presente nas queries de Art)
+| set_arte usa @client.artes.find quando @client presente | Escopo por associação levanta RecordNotFound automaticamente para cross-client | ✓ Seguro — ARTE-10 satisfeito |
+| Phase 07.1 inserida pós-fase 7 | Code review encontrou 3 issues críticos + 2 UX gaps | ✓ CR-01..CR-03 + WR-01..WR-02 corrigidos |
+| uploadField SSR usa mesma lógica do radio | Evita estado contraditório (radio checked + campo hidden) sem JavaScript | ✓ WR-01 resolvido completamente |
 
 ---
 
@@ -137,6 +131,8 @@ This document evolves at phase transitions and milestone boundaries.
 - Phase 03.1 complete (2026-05-27) — Gap criação de artes fechado (client_id, media toggle, sidebar link)
 - 2026-06-02 — v1.1 started — Fix Art Upload & Client Association
 - Phase 07 complete (2026-06-02) — Proteção cross-client em set_arte (SC3), filtragem por client_id no index (SC4), form condicional com selector/hidden_field e erros :base (ARTE-08, ARTE-09, ARTE-10)
+- Phase 07.1 complete (2026-06-02) — CR-01 (set_client guard), CR-02 (destroy feedback), CR-03 (media_source param), WR-01 (radio padrão + SSR fix), WR-02 (botão Editar expandido)
+- 2026-06-02 — v1.1 SHIPPED — 3 requisitos (ARTE-08, ARTE-09, ARTE-10) validados
 
 ---
-*Last updated: 2026-06-02 after Phase 07 complete*
+*Last updated: 2026-06-02 after v1.1 milestone shipped*

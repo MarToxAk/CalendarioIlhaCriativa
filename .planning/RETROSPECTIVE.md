@@ -57,14 +57,66 @@
 
 ---
 
+## Milestone: v1.1 — Fix Art Upload & Client Association
+
+**Shipped:** 2026-06-02
+**Phases:** 2 (07 + 07.1) | **Plans:** 5 | **Timeline:** 1 dia
+
+---
+
+### What Was Built
+
+1. **set_arte + @client disponível** — `@client = @arte.client` eliminando risco de NoMethodError nas views
+2. **Selector condicional de cliente** — hidden_field quando client_id presente, f.select quando não, com erros :base visíveis
+3. **Proteção cross-client** — `@client.artes.find` levanta RecordNotFound automaticamente; index filtrado por client_id
+4. **set_client guard (CR-01)** — redirect com alert quando client_id presente mas cliente não existe
+5. **destroy com feedback booleano (CR-02)** — notice de sucesso vs. alert de falha baseado no retorno real
+6. **media_source honrado no controller (CR-03)** — purge_later condicional para upload→link; external_url zerando para link→upload
+7. **Radio upload pré-selecionado + SSR fix (WR-01)** — div uploadField usa mesma condição que o radio
+8. **Botão Editar expandido (WR-02)** — visible para pending, revised e change_requested
+
+### What Worked
+
+- **Code review como driver de fase** — as 3 issues críticas e 2 UX gaps do `/gsd-code-review` se tornaram uma fase inteira (07.1). O processo de review pós-execução continua comprovando valor.
+- **Verificação automática + UAT manual** — a separação clara entre o que pode ser verificado por grep/testes e o que precisa de servidor rodando foi eficiente. 4 testes manuais cobrindo os cenários que realmente importam.
+- **Inserção de fase decimal para urgências** — Phase 07.1 foi inserida sem retrabalho de numeração. Padrão consolidado.
+- **TDD para 07.1** — RED/GREEN por task produziu 26 testes, 65 assertions, cobertura completa dos behaviors do controller.
+
+### What Was Inefficient
+
+- **VERIFICATION.md com status `human_needed` não atualizado após UAT** — o status permaneceu `human_needed` após o UAT manual passar. O processo precisa de um passo explícito de "fechar VERIFICATION.md após UAT completo".
+- **UAT herdado de fases v1.0 aberto no milestone v1.1** — fases 02, 03.1, 05 foram arquivadas mas seus HUMAN-UAT.md ficaram como `partial`. Ao fechar v1.1, o audit os surfacou como itens abertos. Processo: marcar fases históricas como `partial-archived` ao arquivar milestone.
+- **Inconsistência SSR no WR-01** — a lógica do radio foi corrigida (fase 07.1) mas a div de upload não foi alinhada na mesma fase. Isso exigiu um fix adicional no momento do fechamento do milestone.
+
+### Patterns Established
+
+- **uploadField SSR = mesma condição do radio** — `(attached? || external_url.blank?)` como lógica unificada para evitar estado contraditório sem JS.
+- **Milestone audit de verificações v1.x ao fechar v1.x+1** — itens `human_needed` de fases antigas precisam ser deferred explicitamente, não ignorados.
+
+### Key Lessons
+
+1. **Fechar VERIFICATION.md imediatamente após UAT** — não deixar `human_needed` aberto quando o UAT já validou os testes.
+2. **Alinhar SSR e lógica de radio na mesma fase** — qualquer mudança em `checked:` deve auditar o `class hidden` correspondente.
+3. **26 testes TDD em 1 sessão** — TDD com RED/GREEN por behavior é viável mesmo para controllers Rails densos. Custo baixo, cobertura alta.
+
+### Cost Observations
+
+- **Sessions:** ~2 sessões de trabalho
+- **Timeline:** 1 dia (2026-06-02)
+- **Commits:** ~53 (pós-v1.0)
+- **Velocity:** 5 planos em 1 dia
+
+---
+
 ## Cross-Milestone Trends
 
-| Metric | v1.0 |
-|--------|------|
-| Days to ship | 3 |
-| Phases | 8 |
-| Plans | 23 |
-| Gap phases inserted | 2 |
-| Bugs found by audit | 2 critical |
-| Bugs found by code review | 2 (XSS + HTTP desync) |
-| Requirements coverage | 35/35 |
+| Metric | v1.0 | v1.1 |
+|--------|------|------|
+| Days to ship | 3 | 1 |
+| Phases | 8 | 2 |
+| Plans | 23 | 5 |
+| Gap phases inserted | 2 | 1 |
+| Bugs found by audit | 2 critical | 0 |
+| Bugs found by code review | 2 (XSS + HTTP desync) | 3 critical + 2 UX |
+| Requirements coverage | 35/35 | 3/3 |
+| TDD coverage | partial | 26 tests, 65 assertions |

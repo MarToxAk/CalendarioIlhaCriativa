@@ -2,8 +2,9 @@
 
 ## Milestones
 
-- ✅ **v1.0 MVP** — Fases 1–6 (shipped 2026-05-27) → [Archive](.planning/milestones/v1.0-ROADMAP.md)
-- 🚧 **v1.1 Fix Art Upload & Client Association** — Fase 7 (in progress)
+- ✅ **v1.0 MVP** — Fases 1–6 + 2.1 + 3.1 (shipped 2026-05-27) → [Archive](.planning/milestones/v1.0-ROADMAP.md)
+- ✅ **v1.1 Fix Art Upload & Client Association** — Fases 7 + 7.1 (shipped 2026-06-02) → [Archive](.planning/milestones/v1.1-ROADMAP.md)
+- 📋 **v1.2** — Próximo milestone (a definir)
 
 ## Phases
 
@@ -23,38 +24,19 @@ Full details: [.planning/milestones/v1.0-ROADMAP.md](.planning/milestones/v1.0-R
 
 </details>
 
-### 🚧 v1.1 Fix Art Upload & Client Association (In Progress)
+<details>
+<summary>✅ v1.1 Fix Art Upload & Client Association (Fases 7 + 7.1) — SHIPPED 2026-06-02</summary>
 
-**Milestone Goal:** Corrigir o upload de arquivos no model Art e garantir que cada arte seja criada com associação correta e segura ao `@client` do admin logado.
+- [x] Phase 7: Art Upload & Client Scoping Fix (3/3 plans) — completed 2026-06-02
+- [x] Phase 7.1: Fix: media_source params + destroy feedback + SC3 UI (2/2 plans) — completed 2026-06-02
 
-- [x] **Phase 7: Art Upload & Client Scoping Fix** — Upload via ActiveStorage funcional e associação/escopo de cliente corrigidos (completed 2026-06-02)
-- [x] **Phase 7.1: Fix: media_source params + destroy feedback + SC3 UI** (INSERTED) — Correções urgentes pós-fase 7 (completed 2026-06-02)
+Full details: [.planning/milestones/v1.1-ROADMAP.md](.planning/milestones/v1.1-ROADMAP.md)
 
-## Phase Details
+</details>
 
-### Phase 7: Art Upload & Client Scoping Fix
+### 📋 v1.2 (Planejado)
 
-**Goal**: Upload de arquivos de artes funciona via ActiveStorage e o client_id é sempre derivado do contexto correto, com proteção contra acesso cross-client
-**Depends on**: Phase 6 (v1.0 complete)
-**Requirements**: ARTE-08, ARTE-09, ARTE-10
-**Success Criteria** (what must be TRUE):
-
-  1. Admin pode fazer upload de um arquivo ao criar uma arte e o arquivo fica salvo e acessível (preview visível no portal do cliente)
-  2. Arte criada sem informar client_id via form nunca resulta em arte orphan — o sistema deriva o client_id do contexto do admin logado
-  3. Admin não consegue acessar, editar ou excluir arte de outro cliente mesmo manipulando a URL
-  4. Artes listadas no painel do admin são sempre escopadas ao cliente selecionado, sem vazamento cross-client
-
-**Plans**: 3 plans
-Plans:
-
-Wave 1 *(completo)*:
-
-- [x] 07-01-PLAN.md — Adicionar @client = @arte.client em set_arte (ARTE-10)
-- [x] 07-02-PLAN.md — Selector condicional de cliente + erros de :base no form (ARTE-08, ARTE-09)
-
-Wave 2 *(blocked on Wave 1 completion)* — Gap Closure:
-
-- [x] 07-03-PLAN.md — Proteção cross-client em set_arte + filtragem index por client_id (SC3, SC4) [gap_closure]
+Próximo milestone a definir. Execute `/gsd-new-milestone` para iniciar o ciclo de questionamento → pesquisa → requisitos → roadmap.
 
 ## Progress
 
@@ -69,21 +51,4 @@ Wave 2 *(blocked on Wave 1 completion)* — Gap Closure:
 | 5. Approval Flow | v1.0 | 3/3 | Complete | 2026-05-26 |
 | 6. Admin Feedback Panel | v1.0 | 4/4 | Complete | 2026-05-27 |
 | 7. Art Upload & Client Scoping Fix | v1.1 | 3/3 | Complete | 2026-06-02 |
-| 7.1. Fix: media_source + destroy + SC3 UI | v1.1 | 2/2 | Complete    | 2026-06-02 |
-
-### Phase 07.1: Fix: media_source params + destroy feedback + SC3 UI (INSERTED)
-
-**Goal:** Corrigir 3 issues críticos do code review da fase 7: set_client com guard de redirect (CR-01), destroy com verificação de retorno booleano (CR-02), e honrar o radio media_source no controller para exclusão mútua de mídia (CR-03). Inclui WR-01 (radio upload pré-selecionado) e WR-02 (botão Editar para todos os status editáveis).
-**Requirements**: ARTE-08, ARTE-10
-**Depends on:** Phase 7
-**Plans:** 2/2 plans complete
-
-Plans:
-
-Wave 1:
-
-- [x] 07.1-01-PLAN.md — CR-01: guard em set_client + CR-02: retorno booleano de destroy (ARTE-10)
-
-Wave 2 *(depends on 07.1-01)*:
-
-- [x] 07.1-02-PLAN.md — CR-03: media_source param em update/create + WR-01: radio padrão + WR-02: botão Editar (ARTE-08)
+| 7.1. Fix: media_source + destroy + SC3 UI | v1.1 | 2/2 | Complete | 2026-06-02 |
