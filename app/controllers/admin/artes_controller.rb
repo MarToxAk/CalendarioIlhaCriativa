@@ -1,6 +1,6 @@
 class Admin::ArtesController < Admin::BaseController
+  before_action :set_client, only: %i[new create show edit update destroy mark_revised]
   before_action :set_arte, only: %i[show edit update destroy mark_revised]
-  before_action :set_client, only: %i[new create]
   before_action :check_editable, only: %i[edit update]
   before_action :check_deletable, only: %i[destroy]
 
@@ -56,8 +56,12 @@ class Admin::ArtesController < Admin::BaseController
   private
 
   def set_arte
-    @arte = Arte.includes(:approval_responses).find(params[:id])
-    @client = @arte.client
+    if @client
+      @arte = @client.artes.includes(:approval_responses).find(params[:id])
+    else
+      @arte = Arte.includes(:approval_responses).find(params[:id])
+      @client = @arte.client
+    end
   end
 
   def set_client
