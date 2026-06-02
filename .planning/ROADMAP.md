@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 MVP** — Fases 1–6 (shipped 2026-05-27) → [Archive](.planning/milestones/v1.0-ROADMAP.md)
-- 📋 **v1.1** — Próximas features (planned)
+- 🚧 **v1.1 Fix Art Upload & Client Association** — Fase 7 (in progress)
 
 ## Phases
 
@@ -23,16 +23,24 @@ Full details: [.planning/milestones/v1.0-ROADMAP.md](.planning/milestones/v1.0-R
 
 </details>
 
-### 📋 v1.1 (Planned)
+### 🚧 v1.1 Fix Art Upload & Client Association (In Progress)
 
-*Start with `/gsd-new-milestone` to define requirements and phases.*
+**Milestone Goal:** Corrigir o upload de arquivos no model Art e garantir que cada arte seja criada com associação correta e segura ao `@client` do admin logado.
 
-Candidates:
-- Notificações por e-mail (admin e cliente)
-- Deploy em produção com Active Storage S3
-- Faixa de resumo no topo do calendário
-- Sidebar links "Aprovações" e "Calendário" wired
-- Relatório de aprovações em PDF/CSV
+- [ ] **Phase 7: Art Upload & Client Scoping Fix** — Upload via ActiveStorage funcional e associação/escopo de cliente corrigidos
+
+## Phase Details
+
+### Phase 7: Art Upload & Client Scoping Fix
+**Goal**: Upload de arquivos de artes funciona via ActiveStorage e o client_id é sempre derivado do contexto correto, com proteção contra acesso cross-client
+**Depends on**: Phase 6 (v1.0 complete)
+**Requirements**: ARTE-08, ARTE-09, ARTE-10
+**Success Criteria** (what must be TRUE):
+  1. Admin pode fazer upload de um arquivo ao criar uma arte e o arquivo fica salvo e acessível (preview visível no portal do cliente)
+  2. Arte criada sem informar client_id via form nunca resulta em arte orphan — o sistema deriva o client_id do contexto do admin logado
+  3. Admin não consegue acessar, editar ou excluir arte de outro cliente mesmo manipulando a URL
+  4. Artes listadas no painel do admin são sempre escopadas ao cliente selecionado, sem vazamento cross-client
+**Plans**: TBD
 
 ## Progress
 
@@ -46,3 +54,4 @@ Candidates:
 | 4. Client Calendar Portal | v1.0 | 3/3 | Complete | 2026-05-26 |
 | 5. Approval Flow | v1.0 | 3/3 | Complete | 2026-05-26 |
 | 6. Admin Feedback Panel | v1.0 | 4/4 | Complete | 2026-05-27 |
+| 7. Art Upload & Client Scoping Fix | v1.1 | 0/? | Not started | - |

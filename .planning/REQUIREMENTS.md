@@ -66,4 +66,4 @@ Correção de upload e associação de cliente no model Arte.
 
 ---
 *Requirements defined: 2026-06-02*
-*Last updated: 2026-06-02 after v1.1 milestone start*
+*Last updated: 2026-06-02 after v1.1 roadmap created*

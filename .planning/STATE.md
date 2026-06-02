@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Fix Art Upload & Client Association
-status: planning
-last_updated: "2026-06-02T13:46:43.004Z"
+status: roadmap_ready
+last_updated: "2026-06-02T00:00:00.000Z"
 last_activity: 2026-06-02
 progress:
-  total_phases: 0
+  total_phases: 1
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** v1.0 shipped — planning v1.1
+**Current focus:** v1.1 — Phase 7: Art Upload & Client Scoping Fix
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 7 — Art Upload & Client Scoping Fix
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-02 — Milestone v1.1 started
+Status: Roadmap defined — awaiting plan-phase
+Last activity: 2026-06-02 — Roadmap v1.1 created (Phase 7)
 
 ## Milestone v1.0 — Shipped
 
@@ -37,20 +37,20 @@ Last activity: 2026-06-02 — Milestone v1.1 started
 - **Plans:** 23/23 complete
 - **Requirements:** 35/35 v1 requirements implemented
 
+## Milestone v1.1 — In Progress
+
+- **Started:** 2026-06-02
+- **Phases:** 1 (Phase 7)
+- **Plans:** TBD
+- **Requirements:** 3 (ARTE-08, ARTE-09, ARTE-10)
+
 ## Next Steps
 
-Start v1.1 with:
+Plan Phase 7:
 
 ```
-/gsd-new-milestone
+/gsd-plan-phase 7
 ```
-
-Candidates for v1.1:
-
-- Notificações por e-mail
-- Deploy em produção com S3
-- Faixa de resumo no calendário
-- Relatório PDF/CSV
 
 ## Deferred Items
 
