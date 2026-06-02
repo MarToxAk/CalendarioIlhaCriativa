@@ -43,11 +43,17 @@ Full details: [.planning/milestones/v1.0-ROADMAP.md](.planning/milestones/v1.0-R
   3. Admin não consegue acessar, editar ou excluir arte de outro cliente mesmo manipulando a URL
   4. Artes listadas no painel do admin são sempre escopadas ao cliente selecionado, sem vazamento cross-client
 
-**Plans**: 2 plans
+**Plans**: 3 plans
 Plans:
+
+Wave 1 *(completo)*:
 
 - [x] 07-01-PLAN.md — Adicionar @client = @arte.client em set_arte (ARTE-10)
 - [x] 07-02-PLAN.md — Selector condicional de cliente + erros de :base no form (ARTE-08, ARTE-09)
+
+Wave 2 *(blocked on Wave 1 completion)* — Gap Closure:
+
+- [x] 07-03-PLAN.md — Proteção cross-client em set_arte + filtragem index por client_id (SC3, SC4) [gap_closure]
 
 ## Progress
 
@@ -61,4 +67,4 @@ Plans:
 | 4. Client Calendar Portal | v1.0 | 3/3 | Complete | 2026-05-26 |
 | 5. Approval Flow | v1.0 | 3/3 | Complete | 2026-05-26 |
 | 6. Admin Feedback Panel | v1.0 | 4/4 | Complete | 2026-05-27 |
-| 7. Art Upload & Client Scoping Fix | v1.1 | 2/2 | Complete   | 2026-06-02 |
+| 7. Art Upload & Client Scoping Fix | v1.1 | 3/3 | Complete   | 2026-06-02 |
