@@ -39,8 +39,15 @@
     <%= f.label :external_url, "Link externo", class: "block text-sm font-medium mb-1" %>
     <%= f.url_field :external_url, class: "form-input w-full" %>
   </div>
-  <div class="flex gap-2">
+  <% if arte.client_id.present? %>
     <%= f.hidden_field :client_id %>
+  <% else %>
+    <div class="mb-4">
+      <%= f.label :client_id, "Cliente", class: "block text-sm font-medium mb-1" %>
+      <%= f.select :client_id, Client.order(:name).map { |c| [c.name, c.id] }, { prompt: "Selecione o cliente" }, class: "form-input w-full" %>
+    </div>
+  <% end %>
+  <div class="flex gap-2">
     <%= f.submit arte.persisted? ? "Atualizar" : "Criar", class: "btn btn-primary" %>
     <%= link_to "Cancelar", arte.persisted? ? admin_arte_path(arte) : admin_artes_path, class: "btn" %>
   </div>
