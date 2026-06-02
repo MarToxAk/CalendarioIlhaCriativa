@@ -67,4 +67,4 @@ Wave 2 *(blocked on Wave 1 completion)* — Gap Closure:
 | 4. Client Calendar Portal | v1.0 | 3/3 | Complete | 2026-05-26 |
 | 5. Approval Flow | v1.0 | 3/3 | Complete | 2026-05-26 |
 | 6. Admin Feedback Panel | v1.0 | 4/4 | Complete | 2026-05-27 |
-| 7. Art Upload & Client Scoping Fix | v1.1 | 3/3 | Complete   | 2026-06-02 |
+| 7. Art Upload & Client Scoping Fix | v1.1 | 3/3 | Complete    | 2026-06-02 |

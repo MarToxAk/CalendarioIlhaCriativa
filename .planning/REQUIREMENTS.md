@@ -9,13 +9,13 @@ Correção de upload e associação de cliente no model Arte.
 
 ### Upload de Arquivos
 
-- [ ] **ARTE-08**: Admin pode fazer upload de arquivo ao criar uma arte e o arquivo fica salvo e acessível via ActiveStorage
+- [x] **ARTE-08**: Admin pode fazer upload de arquivo ao criar uma arte e o arquivo fica salvo e acessível via ActiveStorage
 
 ### Associação com Cliente
 
-- [ ] **ARTE-09**: Arte não pode ser criada sem `client_id` válido — o sistema garante que o `client_id` vem do contexto correto (parâmetro de URL ou escopo do admin), não de campo livre no form
+- [x] **ARTE-09**: Arte não pode ser criada sem `client_id` válido — o sistema garante que o `client_id` vem do contexto correto (parâmetro de URL ou escopo do admin), não de campo livre no form
 
-- [ ] **ARTE-10**: `set_arte` (edit/update/destroy/show) verifica que a arte pertence ao cliente esperado, evitando acesso cross-client
+- [x] **ARTE-10**: `set_arte` (edit/update/destroy/show) verifica que a arte pertence ao cliente esperado, evitando acesso cross-client
 
 ## Backlog (v1.2+)
 
@@ -55,9 +55,9 @@ Correção de upload e associação de cliente no model Arte.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ARTE-08 | Phase 7 | Pending |
-| ARTE-09 | Phase 7 | Pending |
-| ARTE-10 | Phase 7 | Pending |
+| ARTE-08 | Phase 7 | Complete |
+| ARTE-09 | Phase 7 | Complete |
+| ARTE-10 | Phase 7 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 3 total
