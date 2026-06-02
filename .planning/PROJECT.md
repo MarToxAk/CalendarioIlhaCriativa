@@ -134,6 +134,7 @@ This document evolves at phase transitions and milestone boundaries.
 - Phase 02.1 complete (2026-05-27) — Gap password_plain sync fechado
 - Phase 03.1 complete (2026-05-27) — Gap criação de artes fechado (client_id, media toggle, sidebar link)
 - 2026-06-02 — v1.1 started — Fix Art Upload & Client Association
+- Phase 07 complete (2026-06-02) — Proteção cross-client em set_arte (SC3), filtragem por client_id no index (SC4), form condicional com selector/hidden_field e erros :base (ARTE-08, ARTE-09, ARTE-10)
 
 ---
-*Last updated: 2026-06-02 after v1.1 milestone start*
+*Last updated: 2026-06-02 after Phase 07 complete*
