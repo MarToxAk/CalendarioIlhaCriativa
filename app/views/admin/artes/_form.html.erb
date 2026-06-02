@@ -1,5 +1,12 @@
 <%# app/views/admin/artes/_form.html.erb %>
 <%= form_with model: arte, url: arte.persisted? ? admin_arte_path(arte) : admin_artes_path, local: true, html: { multipart: true, data: { controller: "media-type-toggle" } } do |f| %>
+  <% if arte.errors[:base].any? %>
+    <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+      <% arte.errors[:base].each do |msg| %>
+        <p><%= msg %></p>
+      <% end %>
+    </div>
+  <% end %>
   <div class="mb-4">
     <%= f.label :title, "Título", class: "block text-sm font-medium mb-1" %>
     <%= f.text_field :title, class: "form-input w-full" %>
