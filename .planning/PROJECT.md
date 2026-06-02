@@ -6,6 +6,8 @@ Sistema web em Ruby on Rails para agências e freelancers de social media gerenc
 
 **v1.0 shipped 2026-05-27** — sistema completo e funcional com todos os 35 requisitos implementados.
 
+**v1.1 em progresso** — Phase 07.1 complete 2026-06-02: CR-01 (set_client guard), CR-02 (destroy feedback), CR-03 (media_source param), WR-01 (radio padrão), WR-02 (botão Editar) corrigidos.
+
 ## Core Value
 
 O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
@@ -33,9 +35,9 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 
 ### Active (v1.1)
 
-- [ ] Upload de arquivos no model Art funcional (ActiveStorage) — ARTE-08
+- [x] Upload de arquivos no model Art funcional (ActiveStorage) — ARTE-08 — Validated in Phase 07.1: media_source param handling (CR-03), radio upload padrão (WR-01), botão Editar expandido (WR-02)
 - [ ] client_id sempre associado corretamente ao admin logado ao criar/editar artes — ARTE-09
-- [ ] Validações e escopos @client consistentes nas queries de Art — ARTE-10
+- [x] Validações e escopos @client consistentes nas queries de Art — ARTE-10 — Validated in Phase 07.1: set_client guard (CR-01) + destroy boolean check (CR-02)
 
 ### Backlog (v1.2+)
 
