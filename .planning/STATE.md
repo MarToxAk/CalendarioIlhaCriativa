@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Fix Art Upload & Client Association
-status: roadmap_ready
-last_updated: "2026-06-02T00:00:00.000Z"
-last_activity: 2026-06-02
+status: Roadmap defined — awaiting plan-phase
+last_updated: "2026-06-02T15:31:33.913Z"
+last_activity: 2026-06-02 — Roadmap v1.1 created (Phase 7)
 progress:
   total_phases: 1
   completed_phases: 0
