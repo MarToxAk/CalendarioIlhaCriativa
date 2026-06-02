@@ -24,6 +24,10 @@ class Admin::ArtesController < Admin::BaseController
 
   def create
     @arte = Arte.new(arte_params)
+    case params.dig(:arte, :media_source)
+    when "upload"
+      @arte.external_url = nil
+    end
     if @arte.save
       redirect_to admin_arte_path(@arte), notice: "Arte criada com sucesso."
     else
@@ -35,7 +39,14 @@ class Admin::ArtesController < Admin::BaseController
   end
 
   def update
-    if @arte.update(arte_params)
+    @arte.assign_attributes(arte_params)
+    case params.dig(:arte, :media_source)
+    when "link"
+      @arte.media_file.purge_later if @arte.media_file.attached?
+    when "upload"
+      @arte.external_url = nil
+    end
+    if @arte.save
       redirect_to admin_arte_path(@arte), notice: "Arte atualizada com sucesso."
     else
       render :edit, status: :unprocessable_entity

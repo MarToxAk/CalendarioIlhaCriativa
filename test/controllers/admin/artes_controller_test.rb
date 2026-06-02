@@ -193,15 +193,12 @@ class Admin::ArtesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "CR-03 T2: update com media_source=upload quando arte tem external_url — external_url zerado e save bem-sucedido" do
-    # @arte tem external_url preenchido; enviando media_source=upload deve zerar external_url
-    # Sem arquivo de mídia, a validação media_source_present bloquearia. Usamos um campo de link
-    # existente na arte e trocamos media_source para "upload". Como não há arquivo real no teste,
-    # precisamos de uma arte que possa ser salva sem arquivo. Vamos verificar que o controller
-    # tenta salvar com external_url=nil — a validação media_source_present vai disparar e renderizar :edit.
-    # O teste verifica que external_url foi zerado na tentativa (comportamento correto do controller).
-    # Na prática real, um arquivo seria enviado junto. Para o teste unitário, verificamos o fluxo
-    # de limpeza de external_url sem arquivo: resultado é render :edit (validação falha), mas
-    # external_url foi atribuído como nil antes do save.
+    # @arte tem external_url preenchido; enviando media_source=upload deve zerar external_url.
+    # Como não há arquivo real no teste de integração, a validação media_source_present vai
+    # rejeitar (external_url=nil e sem media_file) → renderiza :edit com status 422.
+    # O ponto crítico é que o erro não é "Use arquivo OU link externo" (only_one_media_source),
+    # mas sim "Precisa de arquivo ou link externo" (media_source_present) — confirmando que
+    # external_url foi corretamente zerado antes do save.
     patch admin_arte_url(@arte), params: {
       arte: {
         external_url: "https://drive.google.com/file/exemplo",
@@ -211,10 +208,11 @@ class Admin::ArtesControllerTest < ActionDispatch::IntegrationTest
     # Com media_source=upload e sem arquivo novo, a validação media_source_present vai rejeitar
     # (external_url nil e sem media_file) → renderiza :edit com status 422
     assert_response :unprocessable_entity
-    # Verifica que external_url foi zerado (não foi "Use arquivo OU link externo" — foi "Precisa de arquivo ou link")
-    @arte.reload
-    # external_url deve estar nil/em branco (foi zerado pelo controller antes do save)
-    assert @arte.external_url.blank?, "external_url deveria ter sido zerado com media_source=upload"
+    # Verifica que a resposta contém o erro correto (media_source_present, não only_one_media_source)
+    # O erro "Use arquivo OU link externo" indica que external_url NÃO foi zerado (bug)
+    assert_no_match /Use arquivo OU link externo/, response.body
+    # O erro esperado quando external_url é zerado e sem arquivo
+    assert_match /Precisa de arquivo ou link externo/, response.body
   end
 
   test "CR-03 T3: update com media_source=link quando arte NAO tem media_file — purge_later NAO chamado e save bem-sucedido" do
