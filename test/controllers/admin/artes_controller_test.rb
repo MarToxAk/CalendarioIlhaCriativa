@@ -117,6 +117,27 @@ class Admin::ArtesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  # CR-02: destroy boolean return tests
+  test "CR-02: destroy quando @arte.destroy retorna true redireciona com notice de sucesso" do
+    delete admin_arte_url(@arte)
+    assert_redirected_to admin_artes_url
+    follow_redirect!
+    assert_match /Arte excluída com sucesso/, response.body
+  end
+
+  test "CR-02: destroy quando @arte.destroy retorna false redireciona com alert de falha" do
+    # Usa hook definido em test_helper.rb que simula before_destroy retornando false
+    Arte.test_block_destroy = true
+    begin
+      delete admin_arte_url(@arte)
+      assert_redirected_to admin_arte_url(@arte)
+      follow_redirect!
+      assert_match /Não foi possível excluir a arte/, response.body
+    ensure
+      Arte.test_block_destroy = false
+    end
+  end
+
   # CR-01: set_client guard tests
   test "CR-01: index com client_id invalido redireciona para admin_artes_path com alert" do
     get admin_artes_url(client_id: 99999)
