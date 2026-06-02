@@ -32,17 +32,20 @@ Full details: [.planning/milestones/v1.0-ROADMAP.md](.planning/milestones/v1.0-R
 ## Phase Details
 
 ### Phase 7: Art Upload & Client Scoping Fix
+
 **Goal**: Upload de arquivos de artes funciona via ActiveStorage e o client_id é sempre derivado do contexto correto, com proteção contra acesso cross-client
 **Depends on**: Phase 6 (v1.0 complete)
 **Requirements**: ARTE-08, ARTE-09, ARTE-10
 **Success Criteria** (what must be TRUE):
+
   1. Admin pode fazer upload de um arquivo ao criar uma arte e o arquivo fica salvo e acessível (preview visível no portal do cliente)
   2. Arte criada sem informar client_id via form nunca resulta em arte orphan — o sistema deriva o client_id do contexto do admin logado
   3. Admin não consegue acessar, editar ou excluir arte de outro cliente mesmo manipulando a URL
   4. Artes listadas no painel do admin são sempre escopadas ao cliente selecionado, sem vazamento cross-client
-**Plans**: 2 plans
 
+**Plans**: 2 plans
 Plans:
+
 - [ ] 07-01-PLAN.md — Adicionar @client = @arte.client em set_arte (ARTE-10)
 - [ ] 07-02-PLAN.md — Selector condicional de cliente + erros de :base no form (ARTE-08, ARTE-09)
 
