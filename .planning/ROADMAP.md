@@ -40,7 +40,11 @@ Full details: [.planning/milestones/v1.0-ROADMAP.md](.planning/milestones/v1.0-R
   2. Arte criada sem informar client_id via form nunca resulta em arte orphan — o sistema deriva o client_id do contexto do admin logado
   3. Admin não consegue acessar, editar ou excluir arte de outro cliente mesmo manipulando a URL
   4. Artes listadas no painel do admin são sempre escopadas ao cliente selecionado, sem vazamento cross-client
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 07-01-PLAN.md — Adicionar @client = @arte.client em set_arte (ARTE-10)
+- [ ] 07-02-PLAN.md — Selector condicional de cliente + erros de :base no form (ARTE-08, ARTE-09)
 
 ## Progress
 
@@ -54,4 +58,4 @@ Full details: [.planning/milestones/v1.0-ROADMAP.md](.planning/milestones/v1.0-R
 | 4. Client Calendar Portal | v1.0 | 3/3 | Complete | 2026-05-26 |
 | 5. Approval Flow | v1.0 | 3/3 | Complete | 2026-05-26 |
 | 6. Admin Feedback Panel | v1.0 | 4/4 | Complete | 2026-05-27 |
-| 7. Art Upload & Client Scoping Fix | v1.1 | 0/? | Not started | - |
+| 7. Art Upload & Client Scoping Fix | v1.1 | 0/2 | Not started | - |
