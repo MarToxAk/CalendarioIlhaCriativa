@@ -89,7 +89,11 @@ Plans:
   3. Os botões Criar/Atualizar e Cancelar têm estilos distintos (verde para submit, neutro para cancelar)
   4. A página "Nova Arte" exibe o form dentro de um card branco com link de voltar visível
   5. A página "Editar Arte" exibe o form dentro de um card branco com link de voltar mostrando o nome da arte
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 10-01-PLAN.md — Estilizar _form.html.erb: campos, labels, radio pills, botões e locals
+- [ ] 10-02-PLAN.md — Estender media_type_toggle_controller.js com togglePills() e targets de label
+- [ ] 10-03-PLAN.md — Reescrever new.html.erb e edit.html.erb com card wrapper e back link
 **UI hint**: yes
 
 ### Phase 11: Arte Index Polish
@@ -131,6 +135,6 @@ Plans:
 | 7.1. Fix: media_source + destroy + SC3 UI | v1.1 | 2/2 | Complete | 2026-06-02 |
 | 8. Approval Bug Fix | v1.2 | 1/1 | Complete | 2026-06-03 |
 | 9. Calendar Summary Strip | v1.2 | 1/1 | Complete | 2026-06-03 |
-| 10. Arte Form Polish | v1.3 | 0/? | Not started | - |
+| 10. Arte Form Polish | v1.3 | 0/3 | Not started | - |
 | 11. Arte Index Polish | v1.3 | 0/? | Not started | - |
 | 12. Arte Show & Dashboard Fix | v1.3 | 0/? | Not started | - |
