@@ -10,14 +10,14 @@ Estilizar completamente as páginas de artes do admin usando Tailwind direto, el
 
 ### Form de Artes
 
-- [ ] **FORM-01**: Admin vê os campos do form de artes (text, textarea, date, url, file, select) estilizados com classes Tailwind — border, focus ring verde, height uniforme, placeholder visível
-- [ ] **FORM-02**: Admin vê os botões do form de artes (Criar/Atualizar e Cancelar) estilizados — verde para submit, neutro para cancelar
-- [ ] **FORM-03**: Radio buttons de "Tipo de mídia" têm layout horizontal com gap e labels legíveis
+- [x] **FORM-01**: Admin vê os campos do form de artes (text, textarea, date, url, file, select) estilizados com classes Tailwind — border, focus ring verde, height uniforme, placeholder visível
+- [x] **FORM-02**: Admin vê os botões do form de artes (Criar/Atualizar e Cancelar) estilizados — verde para submit, neutro para cancelar
+- [x] **FORM-03**: Radio buttons de "Tipo de mídia" têm layout horizontal com gap e labels legíveis
 
 ### Páginas new/edit de Artes
 
-- [ ] **PAGE-01**: Página "Nova Arte" envolve o form em card branco com link de voltar (padrão igual ao de clientes)
-- [ ] **PAGE-02**: Página "Editar Arte" envolve o form em card branco com link de voltar com nome da arte
+- [x] **PAGE-01**: Página "Nova Arte" envolve o form em card branco com link de voltar (padrão igual ao de clientes)
+- [x] **PAGE-02**: Página "Editar Arte" envolve o form em card branco com link de voltar com nome da arte
 
 ### Arte Index
 
@@ -51,11 +51,11 @@ Estilizar completamente as páginas de artes do admin usando Tailwind direto, el
 
 | REQ-ID  | Phase    | Status      |
 |---------|----------|-------------|
-| FORM-01 | Phase 10 | Pending     |
-| FORM-02 | Phase 10 | Pending     |
-| FORM-03 | Phase 10 | Pending     |
-| PAGE-01 | Phase 10 | Pending     |
-| PAGE-02 | Phase 10 | Pending     |
+| FORM-01 | Phase 10 | Complete |
+| FORM-02 | Phase 10 | Complete |
+| FORM-03 | Phase 10 | Complete |
+| PAGE-01 | Phase 10 | Complete |
+| PAGE-02 | Phase 10 | Complete |
 | IDX-01  | Phase 11 | Pending     |
 | IDX-02  | Phase 11 | Pending     |
 | SHOW-01 | Phase 12 | Pending     |
