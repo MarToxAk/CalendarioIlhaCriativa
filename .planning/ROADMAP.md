@@ -105,7 +105,9 @@ Plans:
   2. Cada linha da tabela tem padding adequado e destaque visual ao passar o mouse (hover)
   3. O botão "Nova Arte" tem estilo visível e reconhecível como ação primária
   4. O link "Ver" em cada linha da tabela é visível e clicável com estilo consistente
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 11-01-PLAN.md — Reescrever index.html.erb + criar _arte_row.html.erb e _status_badge.html.erb com padrão clients
 **UI hint**: yes
 
 ### Phase 12: Arte Show & Dashboard Fix
@@ -136,5 +138,5 @@ Plans:
 | 8. Approval Bug Fix | v1.2 | 1/1 | Complete | 2026-06-03 |
 | 9. Calendar Summary Strip | v1.2 | 1/1 | Complete | 2026-06-03 |
 | 10. Arte Form Polish | v1.3 | 3/3 | Complete    | 2026-06-03 |
-| 11. Arte Index Polish | v1.3 | 0/? | Not started | - |
+| 11. Arte Index Polish | v1.3 | 0/1 | Not started | - |
 | 12. Arte Show & Dashboard Fix | v1.3 | 0/? | Not started | - |
