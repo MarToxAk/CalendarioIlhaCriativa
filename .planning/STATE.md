@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Calendar Summary & Approval Fix
 status: executing
-last_updated: "2026-06-03T10:35:25.331Z"
-last_activity: 2026-06-03 -- Phase 09 planning complete
+last_updated: "2026-06-03T10:37:54.993Z"
+last_activity: 2026-06-03 -- Phase 09 execution started
 progress:
   total_phases: 2
   completed_phases: 1
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 09 — calendar summary strip
+**Current focus:** Phase 09 — calendar-summary-strip
 
 ## Current Position
 
-Phase: 09
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-06-03 -- Phase 09 planning complete
+Phase: 09 (calendar-summary-strip) — EXECUTING
+Plan: 1 of 1
+Status: Executing Phase 09
+Last activity: 2026-06-03 -- Phase 09 execution started
 
 ## Milestone v1.0 — Shipped
 
