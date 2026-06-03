@@ -1,0 +1,21 @@
+<%# app/views/admin/artes/_status_badge.html.erb %>
+<% case arte.status
+   when "pending"
+     badge_classes = "bg-[#FFFBEB] text-amber-800 border-[#F59E0B]/20"
+     badge_label   = "Pendente"
+   when "approved"
+     badge_classes = "bg-[#F0FDF4] text-[#14A958] border-[#14A958]/20"
+     badge_label   = "Aprovada"
+   when "change_requested"
+     badge_classes = "bg-[#FEF2F2] text-[#EE3537] border-[#EE3537]/20"
+     badge_label   = "Alteração pedida"
+   when "revised"
+     badge_classes = "bg-gray-50 text-slate-600 border-gray-200"
+     badge_label   = "Revisada"
+   else
+     badge_classes = "bg-gray-50 text-slate-600 border-gray-200"
+     badge_label   = arte.status.humanize
+   end %>
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border <%= badge_classes %>">
+  <span aria-hidden="true">●</span> <%= badge_label %>
+</span>
