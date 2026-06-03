@@ -1,7 +1,8 @@
 ---
 phase: 9
 slug: calendar-summary-strip
-status: draft
+status: approved
+reviewed_at: 2026-06-03
 shadcn_initialized: false
 preset: none
 created: 2026-06-03
@@ -35,7 +36,7 @@ Declared values (multiples of 4 only):
 |-------|-------|-------|
 | xs | 4px | Icon gaps, chip internal padding (py-0.5) |
 | sm | 8px | Gap between chips (`gap-2` = 8px) |
-| md | 16px | Horizontal chip padding (`px-3`), section padding |
+| md | 12px | Horizontal chip padding (`px-3`), section padding |
 | lg | 24px | Vertical margin between strip and adjacent blocks (`mb-6` matches header) |
 | xl | 32px | Layout gaps |
 | 2xl | 48px | Major section breaks |
@@ -184,11 +185,11 @@ No shadcn and no third-party component registries used. Plain Tailwind classes o
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS (FLAG resolved — md token corrected to 12px to match px-3)
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-06-03
