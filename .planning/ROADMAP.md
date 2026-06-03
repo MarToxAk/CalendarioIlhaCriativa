@@ -138,8 +138,7 @@ Plans:
   2. O botão Excluir usa cor vermelha para indicar ação destrutiva
   3. No painel de respostas do dashboard, o link "Ver" tem estilo visível (não aparece como texto puro)
 
-**Plans**: 1 plan
-Plans:
+**Plans**: 1 planPlans:
 
 - [ ] 12-01-PLAN.md — Reestruturar barra de ações do show + estilizar link "Ver" do dashboard
 
