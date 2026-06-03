@@ -26,11 +26,11 @@ Estilizar completamente as páginas de artes do admin usando Tailwind direto, el
 
 ### Arte Show
 
-- [ ] **SHOW-01**: Botões de ação no show (Editar, Excluir, Marcar Revisada, Voltar) têm estilos visíveis e semânticos (vermelho para excluir)
+- [x] **SHOW-01**: Botões de ação no show (Editar, Excluir, Marcar Revisada, Voltar) têm estilos visíveis e semânticos (vermelho para excluir)
 
 ### Dashboard
 
-- [ ] **DASH-01**: Link "Ver" no painel de respostas tem estilo visível
+- [x] **DASH-01**: Link "Ver" no painel de respostas tem estilo visível
 
 ---
 
@@ -58,5 +58,5 @@ Estilizar completamente as páginas de artes do admin usando Tailwind direto, el
 | PAGE-02 | Phase 10 | Complete |
 | IDX-01  | Phase 11 | Complete |
 | IDX-02  | Phase 11 | Complete |
-| SHOW-01 | Phase 12 | Pending     |
-| DASH-01 | Phase 12 | Pending     |
+| SHOW-01 | Phase 12 | Complete |
+| DASH-01 | Phase 12 | Complete |
