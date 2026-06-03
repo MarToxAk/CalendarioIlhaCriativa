@@ -93,7 +93,7 @@ Plans:
 Plans:
 - [x] 10-01-PLAN.md — Estilizar _form.html.erb: campos, labels, radio pills, botões e locals
 - [x] 10-02-PLAN.md — Estender media_type_toggle_controller.js com togglePills() e targets de label
-- [ ] 10-03-PLAN.md — Reescrever new.html.erb e edit.html.erb com card wrapper e back link
+- [x] 10-03-PLAN.md — Reescrever new.html.erb e edit.html.erb com card wrapper e back link
 **UI hint**: yes
 
 ### Phase 11: Arte Index Polish
@@ -135,6 +135,6 @@ Plans:
 | 7.1. Fix: media_source + destroy + SC3 UI | v1.1 | 2/2 | Complete | 2026-06-02 |
 | 8. Approval Bug Fix | v1.2 | 1/1 | Complete | 2026-06-03 |
 | 9. Calendar Summary Strip | v1.2 | 1/1 | Complete | 2026-06-03 |
-| 10. Arte Form Polish | v1.3 | 2/3 | In Progress|  |
+| 10. Arte Form Polish | v1.3 | 3/3 | Complete   | 2026-06-03 |
 | 11. Arte Index Polish | v1.3 | 0/? | Not started | - |
 | 12. Arte Show & Dashboard Fix | v1.3 | 0/? | Not started | - |
