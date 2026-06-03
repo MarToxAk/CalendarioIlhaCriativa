@@ -138,7 +138,11 @@ Plans:
   2. O botão Excluir usa cor vermelha para indicar ação destrutiva
   3. No painel de respostas do dashboard, o link "Ver" tem estilo visível (não aparece como texto puro)
 
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+
+- [ ] 12-01-PLAN.md — Reestruturar barra de ações do show + estilizar link "Ver" do dashboard
+
 **UI hint**: yes
 
 ## Progress
@@ -159,4 +163,4 @@ Plans:
 | 9. Calendar Summary Strip | v1.2 | 1/1 | Complete | 2026-06-03 |
 | 10. Arte Form Polish | v1.3 | 3/3 | Complete    | 2026-06-03 |
 | 11. Arte Index Polish | v1.3 | 1/1 | Complete    | 2026-06-03 |
-| 12. Arte Show & Dashboard Fix | v1.3 | 0/? | Not started | - |
+| 12. Arte Show & Dashboard Fix | v1.3 | 0/1 | Not started | - |
