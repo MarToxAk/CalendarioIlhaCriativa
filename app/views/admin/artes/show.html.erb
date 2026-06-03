@@ -14,7 +14,7 @@
     <p><strong>Link externo:</strong> <%= link_to @arte.external_url, @arte.external_url, target: "_blank", rel: "noopener noreferrer" %></p>
   <% end %>
   <%# ===== BARRA DE AÇÕES ===== %>
-  <div class="flex items-center gap-3 mb-6">
+  <div class="flex items-center gap-3 mt-6">
     <%= link_to admin_artes_path,
           aria: { label: "Voltar para lista de artes" },
           class: "text-sm text-slate-600 hover:text-slate-900 transition-colors" do %>
@@ -26,9 +26,8 @@
 
     <%= button_to "Excluir", admin_arte_path(@arte),
           method: :delete,
-          data: { confirm: "Tem certeza?" },
           class: "inline-flex items-center h-9 px-3 bg-[#EE3537] hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors",
-          form: { class: "inline" } if @arte.pending? && @arte.approval_responses.none? %>
+          form: { class: "inline", data: { turbo_confirm: "Tem certeza?" } } if @arte.pending? && @arte.approval_responses.none? %>
 
     <% if @arte.change_requested? %>
       <%= button_to "Marcar como Revisada",
@@ -45,7 +44,6 @@
     <h3 class="text-sm font-semibold text-slate-900 border-b border-gray-100 pb-3 mb-4">Resposta interna ao comentário</h3>
     <%= form_with model: [:admin, @arte], method: :patch do |f| %>
       <%= f.text_area :admin_reply,
-                      value: @arte.admin_reply,
                       rows: 4,
                       placeholder: "Escreva uma nota interna sobre o pedido de alteração do cliente...",
                       class: "block w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0F7949]/20 focus:border-[#0F7949]" %>
