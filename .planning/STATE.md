@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Arte UI Polish
 status: executing
-last_updated: "2026-06-03T20:50:12.794Z"
-last_activity: 2026-06-03 -- Phase 12 planning complete
+last_updated: "2026-06-03T20:57:23.676Z"
+last_activity: 2026-06-03 -- Phase 12 execution started
 progress:
   total_phases: 5
   completed_phases: 4
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 12 — arte show & dashboard fix
+**Current focus:** Phase 12 — arte-show-dashboard-fix
 
 ## Current Position
 
-Phase: 12
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-06-03 -- Phase 12 planning complete
+Phase: 12 (arte-show-dashboard-fix) — EXECUTING
+Plan: 1 of 1
+Status: Executing Phase 12
+Last activity: 2026-06-03 -- Phase 12 execution started
 
 ```
 Progress: [░░░░░░░░░░] 0/3 phases complete

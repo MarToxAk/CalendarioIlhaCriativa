@@ -49,7 +49,7 @@ Full details: [.planning/milestones/v1.2-ROADMAP.md](.planning/milestones/v1.2-R
 
 - [~] **Phase 10: Arte Form Polish** - Form de artes totalmente estilizado + páginas new/edit com card wrapper (3 plans)
 - [x] **Phase 11: Arte Index Polish** - Tabela de artes e botão Nova Arte estilizados (completed 2026-06-03)
-- [ ] **Phase 12: Arte Show & Dashboard Fix** - Botões do show estilizados + link "Ver" do dashboard corrigido
+- [x] **Phase 12: Arte Show & Dashboard Fix** - Botões do show estilizados + link "Ver" do dashboard corrigido (completed 2026-06-03)
 
 ## Phase Details
 
@@ -140,7 +140,7 @@ Plans:
 
 **Plans**: 1 planPlans:
 
-- [ ] 12-01-PLAN.md — Reestruturar barra de ações do show + estilizar link "Ver" do dashboard
+- [x] 12-01-PLAN.md — Reestruturar barra de ações do show + estilizar link "Ver" do dashboard
 
 **UI hint**: yes
 
@@ -162,4 +162,4 @@ Plans:
 | 9. Calendar Summary Strip | v1.2 | 1/1 | Complete | 2026-06-03 |
 | 10. Arte Form Polish | v1.3 | 3/3 | Complete    | 2026-06-03 |
 | 11. Arte Index Polish | v1.3 | 1/1 | Complete    | 2026-06-03 |
-| 12. Arte Show & Dashboard Fix | v1.3 | 0/1 | Not started | - |
+| 12. Arte Show & Dashboard Fix | v1.3 | 1/1 | Complete   | 2026-06-03 |
