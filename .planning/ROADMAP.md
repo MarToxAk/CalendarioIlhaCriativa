@@ -158,5 +158,5 @@ Plans:
 | 8. Approval Bug Fix | v1.2 | 1/1 | Complete | 2026-06-03 |
 | 9. Calendar Summary Strip | v1.2 | 1/1 | Complete | 2026-06-03 |
 | 10. Arte Form Polish | v1.3 | 3/3 | Complete    | 2026-06-03 |
-| 11. Arte Index Polish | v1.3 | 1/1 | Complete   | 2026-06-03 |
+| 11. Arte Index Polish | v1.3 | 1/1 | Complete    | 2026-06-03 |
 | 12. Arte Show & Dashboard Fix | v1.3 | 0/? | Not started | - |

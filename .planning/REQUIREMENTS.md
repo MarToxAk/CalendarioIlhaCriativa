@@ -21,8 +21,8 @@ Estilizar completamente as páginas de artes do admin usando Tailwind direto, el
 
 ### Arte Index
 
-- [ ] **IDX-01**: Tabela de artes tem thead com headers estilizados, td com padding e hover nas rows
-- [ ] **IDX-02**: Botão "Nova Arte" e link "Ver" na index têm estilo visível
+- [x] **IDX-01**: Tabela de artes tem thead com headers estilizados, td com padding e hover nas rows
+- [x] **IDX-02**: Botão "Nova Arte" e link "Ver" na index têm estilo visível
 
 ### Arte Show
 
@@ -56,7 +56,7 @@ Estilizar completamente as páginas de artes do admin usando Tailwind direto, el
 | FORM-03 | Phase 10 | Complete |
 | PAGE-01 | Phase 10 | Complete |
 | PAGE-02 | Phase 10 | Complete |
-| IDX-01  | Phase 11 | Pending     |
-| IDX-02  | Phase 11 | Pending     |
+| IDX-01  | Phase 11 | Complete |
+| IDX-02  | Phase 11 | Complete |
 | SHOW-01 | Phase 12 | Pending     |
 | DASH-01 | Phase 12 | Pending     |
