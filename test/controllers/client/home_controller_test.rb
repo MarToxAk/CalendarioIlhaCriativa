@@ -51,4 +51,82 @@ class Client::HomeControllerTest < ActionDispatch::IntegrationTest
     get client_root_path(token: @client.access_token)
     assert_redirected_to new_client_session_path(token: @client.access_token)
   end
+
+  # CAL2-01: summary strip tests (rendered HTML, sem rails-controller-testing)
+  test "summary strip não aparece quando não há artes no mês corrente" do
+    sign_in_as_client(@client)
+    get client_root_path(token: @client.access_token)
+    assert_response :success
+    assert_no_match(/role="status"/, response.body)
+  end
+
+  test "summary strip aparece quando há artes no mês corrente" do
+    Arte.create!(client: @client, scheduled_on: Date.today.beginning_of_month,
+                 platform: :instagram, media_type: :caption_only,
+                 external_url: "https://example.com/a")
+    sign_in_as_client(@client)
+    get client_root_path(token: @client.access_token)
+    assert_response :success
+    assert_match(/role="status"/, response.body)
+    assert_match(/aria-label="Resumo do mês"/, response.body)
+  end
+
+  test "summary strip exibe contagem total correta" do
+    2.times do |i|
+      Arte.create!(client: @client, scheduled_on: Date.today.beginning_of_month,
+                   platform: :instagram, media_type: :caption_only,
+                   external_url: "https://example.com/#{i}")
+    end
+    sign_in_as_client(@client)
+    get client_root_path(token: @client.access_token)
+    assert_response :success
+    assert_match(/2.*total/m, response.body)
+  end
+
+  test "summary strip conta apenas artes do mês corrente, excluindo outros meses" do
+    this_month = Date.today.beginning_of_month
+    other_month = (Date.today - 2.months).beginning_of_month
+    Arte.create!(client: @client, scheduled_on: this_month, platform: :instagram,
+                 media_type: :caption_only, external_url: "https://example.com/a")
+    Arte.create!(client: @client, scheduled_on: other_month, platform: :instagram,
+                 media_type: :caption_only, external_url: "https://example.com/b")
+    sign_in_as_client(@client)
+    get client_root_path(token: @client.access_token)
+    assert_response :success
+    # Apenas 1 arte do mês corrente
+    assert_match(/1.*total/m, response.body)
+  end
+
+  test "summary strip exibe chip aprovadas para artes approved" do
+    Arte.create!(client: @client, scheduled_on: Date.today.beginning_of_month,
+                 platform: :instagram, media_type: :caption_only,
+                 external_url: "https://example.com/c", status: :approved)
+    sign_in_as_client(@client)
+    get client_root_path(token: @client.access_token)
+    assert_response :success
+    assert_match(/1.*aprovadas/m, response.body)
+  end
+
+  test "summary strip conta status revised junto com pending (D-04)" do
+    Arte.create!(client: @client, scheduled_on: Date.today.beginning_of_month,
+                 platform: :instagram, media_type: :caption_only,
+                 external_url: "https://example.com/e", status: :pending)
+    Arte.create!(client: @client, scheduled_on: Date.today.beginning_of_month,
+                 platform: :instagram, media_type: :caption_only,
+                 external_url: "https://example.com/f", status: :revised)
+    sign_in_as_client(@client)
+    get client_root_path(token: @client.access_token)
+    assert_response :success
+    assert_match(/2.*pendentes/m, response.body)
+  end
+
+  test "summary strip exibe chip pediu alteração para artes change_requested" do
+    Arte.create!(client: @client, scheduled_on: Date.today.beginning_of_month,
+                 platform: :instagram, media_type: :caption_only,
+                 external_url: "https://example.com/g", status: :change_requested)
+    sign_in_as_client(@client)
+    get client_root_path(token: @client.access_token)
+    assert_response :success
+    assert_match(/1.*pediu alteração/m, response.body)
+  end
 end
