@@ -1,0 +1,10 @@
+<%# app/views/admin/artes/_arte_row.html.erb %>
+<tr class="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
+  <td class="py-3 px-4 text-sm text-slate-900"><%= arte.client.name %></td>
+  <td class="py-3 px-4 text-sm text-slate-900"><%= arte.scheduled_on.strftime("%d/%m/%Y") %></td>
+  <td class="py-3 px-4 text-sm text-slate-900"><%= arte.platform.humanize %></td>
+  <td class="py-3 px-4 text-sm text-slate-900"><%= render "status_badge", arte: arte %></td>
+  <td class="py-3 px-4">
+    <%= link_to "Ver", admin_arte_path(arte), class: "h-8 px-3 border border-gray-200 rounded-lg text-xs text-slate-600 hover:bg-gray-50 transition-colors" %>
+  </td>
+</tr>
