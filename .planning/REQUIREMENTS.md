@@ -49,14 +49,14 @@ Estilizar completamente as páginas de artes do admin usando Tailwind direto, el
 
 ## Traceability
 
-| REQ-ID  | Phase | Status |
-|---------|-------|--------|
-| FORM-01 | —     | —      |
-| FORM-02 | —     | —      |
-| FORM-03 | —     | —      |
-| PAGE-01 | —     | —      |
-| PAGE-02 | —     | —      |
-| IDX-01  | —     | —      |
-| IDX-02  | —     | —      |
-| SHOW-01 | —     | —      |
-| DASH-01 | —     | —      |
+| REQ-ID  | Phase    | Status      |
+|---------|----------|-------------|
+| FORM-01 | Phase 10 | Pending     |
+| FORM-02 | Phase 10 | Pending     |
+| FORM-03 | Phase 10 | Pending     |
+| PAGE-01 | Phase 10 | Pending     |
+| PAGE-02 | Phase 10 | Pending     |
+| IDX-01  | Phase 11 | Pending     |
+| IDX-02  | Phase 11 | Pending     |
+| SHOW-01 | Phase 12 | Pending     |
+| DASH-01 | Phase 12 | Pending     |

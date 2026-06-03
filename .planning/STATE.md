@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Arte UI Polish
-status: planning
+status: in_progress
 last_updated: "2026-06-03T12:17:16.854Z"
 last_activity: 2026-06-03
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,14 +20,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Milestone complete
+**Current focus:** v1.3 Arte UI Polish — Phase 10: Arte Form Polish
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 10 — Arte Form Polish
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-03 — Milestone v1.3 started
+Status: Not started
+Last activity: 2026-06-03 — Roadmap v1.3 created (Phases 10, 11, 12)
+
+```
+Progress: [░░░░░░░░░░] 0/3 phases complete
+```
 
 ## Milestone v1.0 — Shipped
 
@@ -77,11 +81,17 @@ Last activity: 2026-06-03 — Milestone v1.3 started
 
 - Phase 07.1 inserted after Phase 7: Fix: media_source params + destroy feedback + SC3 UI (URGENT)
 - v1.2 roadmap defined 2026-06-02: Phase 8 (bug aprovação) + Phase 9 (faixa de resumo)
+- v1.3 roadmap defined 2026-06-03: Phase 10 (form polish) + Phase 11 (index polish) + Phase 12 (show + dashboard)
 
 ### Known Root Cause (Phase 8)
 
 `form_with scope: :approval_response` no portal do cliente possivelmente provoca stripping do wrapper `approval_response`, fazendo o controller falhar em `params.require(:approval_response)` com "Resposta inválida". Fix envolve o formulário de aprovação e possivelmente o controller.
 
+### v1.3 Context
+
+Classes placeholder sem CSS definido a eliminar: `form-input`, `btn`, `btn-primary`, `btn-sm`.
+Padrão de referência para card + back link: páginas new/edit de clientes (`app/views/admin/clients/`).
+
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Run `/gsd-plan-phase 10` to plan Phase 10: Arte Form Polish
