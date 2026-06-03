@@ -133,6 +133,7 @@ This document evolves at phase transitions and milestone boundaries.
 - Phase 07 complete (2026-06-02) — Proteção cross-client em set_arte (SC3), filtragem por client_id no index (SC4), form condicional com selector/hidden_field e erros :base (ARTE-08, ARTE-09, ARTE-10)
 - Phase 07.1 complete (2026-06-02) — CR-01 (set_client guard), CR-02 (destroy feedback), CR-03 (media_source param), WR-01 (radio padrão + SSR fix), WR-02 (botão Editar expandido)
 - 2026-06-02 — v1.1 SHIPPED — 3 requisitos (ARTE-08, ARTE-09, ARTE-10) validados
+- Phase 08 complete (2026-06-03) — Fix "Resposta inválida": scope: :approval_response adicionado nos dois form_with de aprovação (APRO-01, APRO-02 validados)
 
 ## Current Milestone: v1.2 Calendar Summary & Approval Fix
 
@@ -143,4 +144,4 @@ This document evolves at phase transitions and milestone boundaries.
 - Faixa de resumo no topo do calendário: X aprovadas · Y pendentes · Z pediu alteração (CAL2-01)
 
 ---
-*Last updated: 2026-06-02 after v1.2 milestone started*
+*Last updated: 2026-06-03 after Phase 08 complete*
