@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.2
-milestone_name: milestone
-status: Defining requirements
-last_updated: "2026-06-03T00:01:54.363Z"
-last_activity: 2026-06-03 — Milestone v1.2 started
+milestone_name: Calendar Summary & Approval Fix
+status: Roadmap defined
+last_updated: "2026-06-02T00:00:00.000Z"
+last_activity: 2026-06-02 — Roadmap v1.2 criado (Phase 8 + Phase 9)
 progress:
-  total_phases: 10
-  completed_phases: 10
-  total_plans: 28
-  completed_plans: 28
-  percent: 100
+  total_phases: 2
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Milestone complete
+**Current focus:** v1.2 — Fix bug de aprovação + faixa de resumo do calendário
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 8 (próxima a executar)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-03 — Milestone v1.2 started
+Status: Roadmap defined — aguardando /gsd-plan-phase 8
+Last activity: 2026-06-02 — Roadmap v1.2 criado
 
 ## Milestone v1.0 — Shipped
 
@@ -37,19 +37,27 @@ Last activity: 2026-06-03 — Milestone v1.2 started
 - **Plans:** 23/23 complete
 - **Requirements:** 35/35 v1 requirements implemented
 
-## Milestone v1.1 — In Progress
+## Milestone v1.1 — Shipped
+
+- **Shipped:** 2026-06-02
+- **Archived:** 2026-06-02
+- **Phases:** 2 (Phase 7 + Phase 7.1)
+- **Plans:** 5/5 complete
+- **Requirements:** 3/3 (ARTE-08, ARTE-09, ARTE-10)
+
+## Milestone v1.2 — In Progress
 
 - **Started:** 2026-06-02
-- **Phases:** 1 (Phase 7)
+- **Phases:** 2 (Phase 8 + Phase 9)
 - **Plans:** TBD
-- **Requirements:** 3 (ARTE-08, ARTE-09, ARTE-10)
+- **Requirements:** 3 (APRO-01, APRO-02, CAL2-01)
 
 ## Next Steps
 
-Execute Phase 7.1:
+Executar planejamento da Phase 8:
 
 ```
-/gsd-execute-phase 7.1
+/gsd-plan-phase 8
 ```
 
 ## Deferred Items
@@ -71,7 +79,16 @@ Execute Phase 7.1:
 ### Roadmap Evolution
 
 - Phase 07.1 inserted after Phase 7: Fix: media_source params + destroy feedback + SC3 UI (URGENT)
+- v1.2 roadmap defined 2026-06-02: Phase 8 (bug aprovação) + Phase 9 (faixa de resumo)
+
+### Known Root Cause (Phase 8)
+
+`form_with scope: :approval_response` no portal do cliente possivelmente provoca stripping do wrapper `approval_response`, fazendo o controller falhar em `params.require(:approval_response)` com "Resposta inválida". Fix envolve o formulário de aprovação e possivelmente o controller.
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+Planejar a Phase 8:
+
+```
+/gsd-plan-phase 8
+```

@@ -4,7 +4,7 @@
 
 - ✅ **v1.0 MVP** — Fases 1–6 + 2.1 + 3.1 (shipped 2026-05-27) → [Archive](.planning/milestones/v1.0-ROADMAP.md)
 - ✅ **v1.1 Fix Art Upload & Client Association** — Fases 7 + 7.1 (shipped 2026-06-02) → [Archive](.planning/milestones/v1.1-ROADMAP.md)
-- 📋 **v1.2** — Próximo milestone (a definir)
+- 🚧 **v1.2 Calendar Summary & Approval Fix** — Fases 8 + 9 (em andamento)
 
 ## Phases
 
@@ -34,9 +34,36 @@ Full details: [.planning/milestones/v1.1-ROADMAP.md](.planning/milestones/v1.1-R
 
 </details>
 
-### 📋 v1.2 (Planejado)
+### 🚧 v1.2 Calendar Summary & Approval Fix
 
-Próximo milestone a definir. Execute `/gsd-new-milestone` para iniciar o ciclo de questionamento → pesquisa → requisitos → roadmap.
+- [ ] **Phase 8: Approval Bug Fix** — Corrigir bug "Resposta inválida" nos botões Aprovar/Pedir Alteração do portal do cliente
+- [ ] **Phase 9: Calendar Summary Strip** — Faixa de resumo de status das artes no topo do calendário do cliente
+
+## Phase Details
+
+### Phase 8: Approval Bug Fix
+**Goal**: O cliente consegue registrar aprovação ou pedido de alteração sem erros no portal
+**Depends on**: Phase 7.1 (portal do cliente funcional)
+**Requirements**: APRO-01, APRO-02
+**Success Criteria** (what must be TRUE):
+  1. Cliente clica em "Aprovar" e a resposta é gravada sem exibir "Resposta inválida"
+  2. Cliente clica em "Pedir Alteração" (com ou sem comentário) e a resposta é gravada sem exibir "Resposta inválida"
+  3. Após registrar resposta, o status da arte muda visivelmente no calendário (ex: badge atualizado)
+  4. O admin consegue ver a resposta registrada no painel de feedback
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 9: Calendar Summary Strip
+**Goal**: O cliente vê no topo do calendário um resumo dos status das artes do mês
+**Depends on**: Phase 8
+**Requirements**: CAL2-01
+**Success Criteria** (what must be TRUE):
+  1. No topo do calendário aparece uma faixa com contagem de artes por status (total, aprovadas, pendentes, pediu alteração)
+  2. Os números correspondem apenas às artes do mês corrente exibido
+  3. A faixa é visível sem precisar rolar a página
+  4. Ao registrar uma aprovação no mês, o contador da faixa reflete o novo status corretamente
+**Plans**: TBD
+**UI hint**: yes
 
 ## Progress
 
@@ -52,3 +79,5 @@ Próximo milestone a definir. Execute `/gsd-new-milestone` para iniciar o ciclo 
 | 6. Admin Feedback Panel | v1.0 | 4/4 | Complete | 2026-05-27 |
 | 7. Art Upload & Client Scoping Fix | v1.1 | 3/3 | Complete | 2026-06-02 |
 | 7.1. Fix: media_source + destroy + SC3 UI | v1.1 | 2/2 | Complete | 2026-06-02 |
+| 8. Approval Bug Fix | v1.2 | 0/TBD | Not started | - |
+| 9. Calendar Summary Strip | v1.2 | 0/TBD | Not started | - |
