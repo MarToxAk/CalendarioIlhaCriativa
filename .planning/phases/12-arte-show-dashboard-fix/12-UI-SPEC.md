@@ -68,13 +68,12 @@ Fonte base: Inter. Definida em `--font-sans` no `@theme`.
 
 | Role | Size | Weight | Line Height | Uso nesta fase |
 |------|------|--------|-------------|----------------|
-| Body / td content | 14px (`text-sm`) | 400 (regular) | 1.5 | Conteúdo de células da tabela |
 | Label / button | 14px (`text-sm`) | 500 (`font-medium`) | — | Botões Editar e Excluir |
 | CTA / button primary | 14px (`text-sm`) | 600 (`font-semibold`) | — | Botão "Marcar como Revisada" |
-| Link nav / back link | 14px (`text-sm`) | 400 (regular) | — | Text link "← Artes" no topo |
-| Ver link (dashboard) | 12px (`text-xs`) | 400 (regular) | — | Link "Ver" compacto em tabela |
 
-Máximo de pesos em uso: 2 (regular 400 + semibold 600). `font-medium` (500) aparece nos botões secundários como intermediário já estabelecido nas fases anteriores.
+Máximo de pesos em uso: 2 (medium 500 + semibold 600).
+
+**Nota:** Body text (células de tabela) e o back link "← Artes" não aplicam nenhuma classe `font-*` explícita — herdam o peso padrão do browser/font sem declaração no sistema. Esses elementos não constituem pesos declarados.
 
 ---
 
