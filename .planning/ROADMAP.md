@@ -47,7 +47,7 @@ Full details: [.planning/milestones/v1.2-ROADMAP.md](.planning/milestones/v1.2-R
 
 ### v1.3 Arte UI Polish
 
-- [ ] **Phase 10: Arte Form Polish** - Form de artes totalmente estilizado + páginas new/edit com card wrapper
+- [~] **Phase 10: Arte Form Polish** - Form de artes totalmente estilizado + páginas new/edit com card wrapper (3 plans)
 - [ ] **Phase 11: Arte Index Polish** - Tabela de artes e botão Nova Arte estilizados
 - [ ] **Phase 12: Arte Show & Dashboard Fix** - Botões do show estilizados + link "Ver" do dashboard corrigido
 
