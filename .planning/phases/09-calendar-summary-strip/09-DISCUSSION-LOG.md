@@ -5,7 +5,7 @@
 
 **Date:** 2026-06-03
 **Phase:** 09-calendar-summary-strip
-**Areas discussed:** Escopo das contagens, Status exibidos, Layout visual da faixa
+**Areas discussed:** Escopo das contagens, Status exibidos, Layout visual da faixa, Texto mobile, Atualização após aprovação (SC4), Partial vs inline
 
 ---
 
@@ -99,10 +99,46 @@
 
 ---
 
+## Texto mobile
+
+| Option | Description | Selected |
+|--------|-------------|----------|
+| flex-wrap | Faixa usa flex-wrap: wrap — chips que não cabem em uma linha vão para a próxima. Labels íntegros. | ✓ |
+| Abreviar | Mudar label para 'Alteração' nos chips (consistente com badge compact=true). | |
+| Ignorar | Não tratar mobile especificamente — faixa pode transbordar. | |
+
+**User's choice:** flex-wrap (Recomendado)
+**Notes:** Labels intactos em todas as telas. Simples de implementar.
+
+---
+
+## Atualização após aprovação (SC4)
+
+| Option | Description | Selected |
+|--------|-------------|----------|
+| Reload via redirect | Controller recalcula @summary a cada request; após aprovação o redirect existente atualiza a faixa automaticamente. | ✓ |
+| Turbo Stream | Atualizar só a faixa via Turbo Stream após aprovação — sem reload completo. | |
+
+**User's choice:** Reload via redirect (Recomendado)
+**Notes:** SSR-first consistente com o padrão da aplicação. SC4 satisfeito automaticamente.
+
+---
+
+## Partial vs inline
+
+| Option | Description | Selected |
+|--------|-------------|----------|
+| Inline no index | Faixa (~10 linhas) inline no index.html.erb — sem arquivo extra. | ✓ |
+| Partial _summary_strip.html.erb | Extrair para partial em app/views/client/home/_summary_strip.html.erb. | |
+
+**User's choice:** Inline no index (Recomendado)
+**Notes:** Faixa simples; inline mantém tudo legível num lugar só.
+
+---
+
 ## Claude's Discretion
 
-- Formatação exata dos chips (padding, border-radius) — seguir `_arte_status_badge.html.erb` como referência
-- Nome do partial (se extrair faixa) vs. inline no index
+- Formatação exata dos chips (padding, gap, border-radius) — seguir estilo do `_arte_status_badge.html.erb`
 
 ## Deferred Ideas
 

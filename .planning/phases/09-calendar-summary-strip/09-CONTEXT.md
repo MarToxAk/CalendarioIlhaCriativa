@@ -8,7 +8,7 @@
 
 Adicionar uma faixa de resumo acima da grade do calendário no portal do cliente, mostrando a contagem de artes do mês corrente por status: total, aprovadas, pendentes e pediu alteração (CAL2-01).
 
-Requer mudança no controller (`Client::HomeController#index`) para calcular `@summary` e na view (`client/home/index.html.erb`) para renderizar os chips. Nenhuma mudança em models, rotas ou outras views.
+Requer mudança no controller (`Client::HomeController#index`) para calcular `@summary` e na view (`client/home/index.html.erb`) para renderizar os chips inline. Nenhuma mudança em models, rotas, outras views ou partials.
 
 **Fora do escopo desta fase:** Notificações (NOTF-01/02), exportação de relatórios (ADM2-01), duplicar artes (ADM2-02), deploy S3 (INFRA-01).
 
@@ -29,14 +29,18 @@ Requer mudança no controller (`Client::HomeController#index`) para calcular `@s
 
 ### Layout visual da faixa
 
-- **D-05:** Chips coloridos inline entre o header de navegação de mês e a grade do calendário. A faixa é um bloco novo em `index.html.erb`, inserido após o `<div class="flex items-center">` do header e antes do `<%= render partial: "client/home/month_calendar" %>`.
+- **D-05:** Chips coloridos inline entre o header de navegação de mês e a grade do calendário. A faixa é um bloco novo em `index.html.erb`, inserido após o `</div>` do header (linha 23) e antes do `<%= render partial: "client/home/month_calendar" %>` (linha 25).
 - **D-06:** Faixa oculta quando `total = 0` — não renderizar a faixa se não há artes no mês corrente.
-- **D-07:** Cores dos chips seguem o padrão do badge de status existente: total=slate, aprovadas=green-100/green-800, pendentes=amber-100/amber-800, pediu alteração=red-100/red-800.
+- **D-07:** Cores dos chips seguem o padrão do badge de status existente: total=slate-100/slate-700, aprovadas=green-100/green-800, pendentes=amber-100/amber-800, pediu alteração=red-100/red-800.
+- **D-08:** Faixa usa `flex-wrap: wrap` — chips que não cabem em uma linha vão para a próxima. Labels intactos (sem abreviar "pediu alteração" em mobile).
 
-### Claude's Discretion
+### Atualização após aprovação
 
-- Formatação exata dos chips (padding, border-radius, separador entre chips) — seguir o estilo do `_arte_status_badge.html.erb` como referência visual
-- Nome do partial (se extrair a faixa para partial) vs. inline no index
+- **D-09:** SC4 satisfeito via redirect SSR — `@summary` é recalculado a cada request no controller. Após o cliente aprovar ou pedir alteração, o fluxo existente redireciona de volta ao calendário e a faixa atualiza automaticamente. Sem Turbo Stream nem JS extra.
+
+### Estrutura de código
+
+- **D-10:** Faixa implementada inline no `index.html.erb` — sem partial separado. A faixa tem ~10 linhas de HTML; inline mantém tudo legível num lugar só.
 
 </decisions>
 
@@ -47,7 +51,7 @@ Requer mudança no controller (`Client::HomeController#index`) para calcular `@s
 
 ### View principal (ponto de inserção da faixa)
 
-- `app/views/client/home/index.html.erb` — **ARQUIVO CENTRAL**: a faixa é inserida entre o header de navegação de mês (linha ~3-23) e o `render partial: "client/home/month_calendar"` (linha ~25). Adicionar bloco de chips aqui.
+- `app/views/client/home/index.html.erb` — **ARQUIVO CENTRAL**: a faixa é inserida entre o `</div>` do header de navegação de mês (linha 23) e o `<%= render partial: "client/home/month_calendar" %>` (linha 25). Adicionar bloco de chips inline aqui.
 
 ### Controller (ponto de cálculo do @summary)
 
@@ -55,7 +59,7 @@ Requer mudança no controller (`Client::HomeController#index`) para calcular `@s
 
 ### Referência visual (padrão de cores e estilo dos chips)
 
-- `app/views/client/shared/_arte_status_badge.html.erb` — cores de status (green-100/green-800, amber-100/amber-800, red-100/red-800, slate-100/slate-700). Chips da faixa devem seguir o mesmo esquema de cores.
+- `app/views/client/shared/_arte_status_badge.html.erb` — cores de status (green-100/green-800, amber-100/amber-800, red-100/red-800, slate-100/slate-700). Chips da faixa devem seguir o mesmo esquema de cores. Nota: badge tem modos `compact` e normal; chips da faixa seguem estilo próprio (não usam o partial diretamente).
 
 ### Calendário (contexto do layout)
 
@@ -83,17 +87,19 @@ Requer mudança no controller (`Client::HomeController#index`) para calcular `@s
 
 ### Integration Points
 
-- `app/views/client/home/index.html.erb` linhas 24-31 — inserir bloco da faixa entre o `</div>` do header e o `<%= render partial: "client/home/month_calendar" %>`
-- `app/controllers/client/home_controller.rb` linha ~15 (após `@artes_by_date =`) — adicionar `@summary = { ... }` calculado a partir de `@artes`
+- `app/views/client/home/index.html.erb` linha 23→25 — inserir bloco da faixa entre o `</div>` do header e o `<%= render partial: "client/home/month_calendar" %>`
+- `app/controllers/client/home_controller.rb` linha ~17 (após `@artes_by_date =`) — adicionar `@summary = { ... }` calculado a partir de `@artes`
 
 </code_context>
 
 <specifics>
 ## Specific Ideas
 
-- Formato visual escolhido: chips horizontais com separador `·` (conforme preview aprovado pelo usuário)
+- Formato visual: chips horizontais com separador `·` (ponto médio) entre eles
 - Exemplo de output esperado: `12 total · 5 aprovadas · 4 pendentes · 3 pediu alteração`
-- Cores: total sem cor de status (slate ou neutro), demais com cor do status correspondente
+- Cores: total sem cor de status (slate-100/slate-700), demais com cor do status correspondente
+- Faixa usa `flex flex-wrap gap-2` ou similar para mobile responsivo
+- Labels exatos: "total", "aprovadas", "pendentes", "pediu alteração"
 
 </specifics>
 
