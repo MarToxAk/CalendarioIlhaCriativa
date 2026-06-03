@@ -142,13 +142,16 @@ This document evolves at phase transitions and milestone boundaries.
 - 2026-06-02 — v1.1 SHIPPED — 3 requisitos (ARTE-08, ARTE-09, ARTE-10) validados
 - Phase 08 complete (2026-06-03) — Fix "Resposta inválida": scope: :approval_response adicionado nos dois form_with de aprovação (APRO-01, APRO-02 validados)
 
-## Current Milestone: v1.2 Calendar Summary & Approval Fix
+## Current Milestone: v1.3 Arte UI Polish
 
-**Goal:** Corrigir o bug de "Resposta inválida" nos botões de aprovação do portal do cliente e adicionar faixa de resumo de status no topo do calendário.
+**Goal:** Estilizar completamente as páginas de artes do admin usando Tailwind direto, eliminando os placeholders `form-input`/`btn` sem CSS definido e tornando o sistema visualmente consistente.
 
 **Target features:**
-- Fix bug `form_with scope:` nos botões Aprovar e Pedir Alteração (APRO-01, APRO-02)
-- Faixa de resumo no topo do calendário: X aprovadas · Y pendentes · Z pediu alteração (CAL2-01)
+- Form de artes (`_form.html.erb`): substituir `form-input`/`btn`/`btn-primary` por classes Tailwind — inputs com border, focus ring, height uniforme; selects e radio buttons estilizados
+- Arte new/edit wrappers: adicionar card container + back link (padrão dos clients)
+- Arte index: estilizar tabela com thead/td formatados, fix nos botões de ação
+- Arte show: fix nos botões Editar/Excluir/Marcar Revisada/Voltar
+- Dashboard: fix no `btn btn-sm` do link "Ver"
 
 ---
-*Last updated: 2026-06-03 after Phase 08 complete*
+*Last updated: 2026-06-03 — Milestone v1.3 started*
