@@ -13,17 +13,30 @@
   <% elsif @arte.external_url.present? %>
     <p><strong>Link externo:</strong> <%= link_to @arte.external_url, @arte.external_url, target: "_blank", rel: "noopener noreferrer" %></p>
   <% end %>
-  <div class="mt-4 flex gap-2">
-    <%= link_to "Editar", edit_admin_arte_path(@arte), class: "btn btn-secondary" if @arte.pending? || @arte.revised? || @arte.change_requested? %>
-    <%= button_to "Excluir", admin_arte_path(@arte), method: :delete, data: { confirm: "Tem certeza?" }, class: "btn btn-danger" if @arte.pending? && @arte.approval_responses.none? %>
+  <%# ===== BARRA DE AÇÕES ===== %>
+  <div class="flex items-center gap-3 mb-6">
+    <%= link_to admin_artes_path,
+          aria: { label: "Voltar para lista de artes" },
+          class: "text-sm text-slate-600 hover:text-slate-900 transition-colors" do %>
+      &larr; Artes
+    <% end %>
+
+    <%= link_to "Editar", edit_admin_arte_path(@arte),
+          class: "inline-flex items-center h-9 px-3 border border-gray-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-gray-50 transition-colors" if @arte.pending? || @arte.revised? || @arte.change_requested? %>
+
+    <%= button_to "Excluir", admin_arte_path(@arte),
+          method: :delete,
+          data: { confirm: "Tem certeza?" },
+          class: "inline-flex items-center h-9 px-3 bg-[#EE3537] hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors",
+          form: { class: "inline" } if @arte.pending? && @arte.approval_responses.none? %>
+
     <% if @arte.change_requested? %>
       <%= button_to "Marcar como Revisada",
                     mark_revised_admin_arte_path(@arte),
                     method: :patch,
-                    class: "btn btn-secondary",
-                    form: { data: { turbo_confirm: "Confirmar: marcar esta arte como revisada?" } } %>
+                    class: "inline-flex items-center h-9 px-4 bg-[#0F7949] hover:bg-[#0a5c37] text-white text-sm font-semibold rounded-lg transition-colors",
+                    form: { class: "inline", data: { turbo_confirm: "Confirmar: marcar esta arte como revisada?" } } %>
     <% end %>
-    <%= link_to "Voltar", admin_artes_path, class: "btn" %>
   </div>
 </div>
 
