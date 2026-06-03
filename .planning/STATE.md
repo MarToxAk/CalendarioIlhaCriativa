@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Calendar Summary & Approval Fix
-status: Ready to execute — Phase 8 planned (1 plan)
-last_updated: "2026-06-02"
-last_activity: 2026-06-02 — Phase 8 planejada (1 plano)
+status: ready_to_plan
+last_updated: 2026-06-03T02:15:29.291Z
+last_activity: 2026-06-03 -- Phase 08 execution started
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 1
-  completed_plans: 0
+  completed_plans: 29
   percent: 0
+stopped_at: Phase 08 complete (1/1) — ready to discuss Phase 09
 ---
 
 # Project State
@@ -20,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** v1.2 — Fix bug de aprovação + faixa de resumo do calendário
+**Current focus:** Phase 09 — calendar summary strip
 
 ## Current Position
 
-Phase: 8 (planejada — pronta para executar)
-Plan: 08-01
-Status: Ready to execute
-Last activity: 2026-06-02 — Phase 8 planejada (1 plano, verificação aprovada)
+Phase: 09
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-06-03
 
 ## Milestone v1.0 — Shipped
 

@@ -7,8 +7,8 @@
 
 ### Aprovação — Correção de Bug
 
-- [ ] **APRO-01**: Cliente consegue aprovar uma arte clicando em "Aprovar" sem receber erro "Resposta inválida"
-- [ ] **APRO-02**: Cliente consegue pedir alteração (com ou sem comentário) sem receber erro "Resposta inválida"
+- [x] **APRO-01**: Cliente consegue aprovar uma arte clicando em "Aprovar" sem receber erro "Resposta inválida"
+- [x] **APRO-02**: Cliente consegue pedir alteração (com ou sem comentário) sem receber erro "Resposta inválida"
 
 ### Calendário — Faixa de Resumo
 
