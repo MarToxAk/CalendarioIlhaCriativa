@@ -15,6 +15,18 @@ class Client::HomeController < ClientController
                     .order(:scheduled_on)
 
     @artes_by_date = @artes.group_by(&:scheduled_on)
+
+    artes_do_mes = @artes.select { |a|
+      a.scheduled_on.month == @current_month.month &&
+        a.scheduled_on.year == @current_month.year
+    }
+    @summary = {
+      total:            artes_do_mes.count,
+      approved:         artes_do_mes.count { |a| a.status.to_s == "approved" },
+      pending:          artes_do_mes.count { |a| %w[pending revised].include?(a.status.to_s) },
+      change_requested: artes_do_mes.count { |a| a.status.to_s == "change_requested" }
+    }
+
     @grid_dates    = (grid_start..grid_end).to_a
   end
 
