@@ -10,6 +10,8 @@ Sistema web em Ruby on Rails para agências e freelancers de social media gerenc
 
 **v1.2 shipped 2026-06-03** — bug "Resposta inválida" nos botões de aprovação corrigido; faixa de resumo de status (4 chips coloridos) adicionada ao topo do calendário do cliente.
 
+**v1.3 em andamento (2026-06-03):** Phase 11 completa — listagem de artes (`/admin/artes`) reescrita com Tailwind puro: tabela desktop formatada, cards mobile responsivos, empty state, badges de status coloridas por status e enums com `.humanize`.
+
 ## Core Value
 
 O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
@@ -46,6 +48,11 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - ✓ Cliente consegue aprovar arte sem receber erro "Resposta inválida" — APRO-01 — v1.2 Phase 8
 - ✓ Cliente consegue pedir alteração (com ou sem comentário) sem erro — APRO-02 — v1.2 Phase 8
 - ✓ Faixa de resumo no topo do calendário com contagem por status — CAL2-01 — v1.2 Phase 9
+
+### Validated (v1.3)
+
+- ✓ Admin vê listagem de artes com thead formatado, hover nas linhas e espaçamento consistente — IDX-01 — v1.3 Phase 11
+- ✓ Botão "Nova Arte" verde `#0F7949` e link "Ver" outline discreto na listagem de artes — IDX-02 — v1.3 Phase 11
 
 ### Backlog (v1.3+)
 
