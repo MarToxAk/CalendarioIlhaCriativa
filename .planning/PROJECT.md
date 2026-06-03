@@ -154,4 +154,4 @@ This document evolves at phase transitions and milestone boundaries.
 - Dashboard: fix no `btn btn-sm` do link "Ver"
 
 ---
-*Last updated: 2026-06-03 — Milestone v1.3 started*
+*Last updated: 2026-06-03 — Phase 10 complete (arte form polish: Tailwind styling, Stimulus pills, page wrappers)*
