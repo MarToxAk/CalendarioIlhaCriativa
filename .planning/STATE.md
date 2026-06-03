@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Calendar Summary & Approval Fix
-status: milestone_complete
-last_updated: 2026-06-03T11:21:40.502Z
-last_activity: 2026-06-03 -- Phase 09 execution started
+status: Awaiting next milestone
+last_updated: "2026-06-03T11:44:50.951Z"
+last_activity: 2026-06-03 — Milestone v1.2 completed and archived
 progress:
   total_phases: 2
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 2
-  completed_plans: 30
-  percent: 50
-stopped_at: Milestone complete (Phase 09 was final phase)
+  completed_plans: 2
+  percent: 100
 ---
 
 # Project State
@@ -25,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-02)
 
 ## Current Position
 
-Phase: 09
-Plan: Not started
-Status: Milestone complete
-Last activity: 2026-06-03
+Phase: Milestone v1.2 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-03 — Milestone v1.2 completed and archived
 
 ## Milestone v1.0 — Shipped
 
@@ -46,20 +45,14 @@ Last activity: 2026-06-03
 - **Plans:** 5/5 complete
 - **Requirements:** 3/3 (ARTE-08, ARTE-09, ARTE-10)
 
-## Milestone v1.2 — In Progress
+## Milestone v1.2 — Shipped
 
-- **Started:** 2026-06-02
+- **Shipped:** 2026-06-03
+- **Archived:** 2026-06-03
 - **Phases:** 2 (Phase 8 + Phase 9)
-- **Plans:** TBD
-- **Requirements:** 3 (APRO-01, APRO-02, CAL2-01)
-
-## Next Steps
-
-Executar a Phase 8:
-
-```
-/gsd-execute-phase 8
-```
+- **Plans:** 2/2 complete
+- **Requirements:** 3/3 (APRO-01, APRO-02, CAL2-01)
+- **Known deferred items at close:** 2 (see Deferred Items below)
 
 ## Deferred Items
 
@@ -74,6 +67,9 @@ Executar a Phase 8:
 | verification | Phase 02: 02-VERIFICATION.md [human_needed] (fase v1.0 já arquivada) | deferred | v1.1 close 2026-06-02 |
 | verification | Phase 03.1: 03.1-01-VERIFICATION.md [human_needed] (fase v1.0 já arquivada) | deferred | v1.1 close 2026-06-02 |
 | verification | Phase 05: 05-VERIFICATION.md [human_needed] (fase v1.0 já arquivada) | deferred | v1.1 close 2026-06-02 |
+| uat | Phase 08: 08-HUMAN-UAT.md — SC3 badge calendário (validação visual) | deferred | v1.2 close 2026-06-03 |
+| uat | Phase 09: 09-HUMAN-UAT.md — SC3 mobile, SC4 pós-aprovação, mês vazio (validação visual) | deferred | v1.2 close 2026-06-03 |
+| code-quality | Phase 09: CR-01 parse_month_param não faz rescue TypeError (array param → 500) | deferred | v1.2 close 2026-06-03 |
 
 ## Accumulated Context
 
@@ -88,8 +84,4 @@ Executar a Phase 8:
 
 ## Operator Next Steps
 
-Executar a Phase 8:
-
-```
-/gsd-execute-phase 8
-```
+- Start the next milestone with /gsd-new-milestone

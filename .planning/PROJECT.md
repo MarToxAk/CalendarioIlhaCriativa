@@ -8,6 +8,8 @@ Sistema web em Ruby on Rails para agências e freelancers de social media gerenc
 
 **v1.1 shipped 2026-06-02** — upload via ActiveStorage funcional, associação correta de cliente ao criar artes, proteção cross-client, rádio de mídia honrado no controller, feedback de destroy, e consistência SSR no formulário.
 
+**v1.2 shipped 2026-06-03** — bug "Resposta inválida" nos botões de aprovação corrigido; faixa de resumo de status (4 chips coloridos) adicionada ao topo do calendário do cliente.
+
 ## Core Value
 
 O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
@@ -39,11 +41,16 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - ✓ Arte não pode ser criada sem client_id válido — selector condicional garante associação correta — ARTE-09 — v1.1 Phase 7
 - ✓ set_arte/set_client garantem que arte pertence ao cliente esperado, evitando acesso cross-client — ARTE-10 — v1.1 Phase 7 + 7.1
 
-### Backlog (v1.2+)
+### Validated (v1.2)
+
+- ✓ Cliente consegue aprovar arte sem receber erro "Resposta inválida" — APRO-01 — v1.2 Phase 8
+- ✓ Cliente consegue pedir alteração (com ou sem comentário) sem erro — APRO-02 — v1.2 Phase 8
+- ✓ Faixa de resumo no topo do calendário com contagem por status — CAL2-01 — v1.2 Phase 9
+
+### Backlog (v1.3+)
 
 - [ ] Notificações por e-mail ao admin quando cliente aprova ou pede alteração (NOTF-01)
 - [ ] Notificações por e-mail ao cliente quando arte é revisada (NOTF-02)
-- [ ] Faixa de resumo no topo do calendário (X aprovados, Y pendentes) (CAL2-01)
 - [ ] Exportar relatório de aprovações de um cliente em PDF ou CSV (ADM2-01)
 - [ ] Duplicar uma arte para outro cliente ou data (ADM2-02)
 - [ ] Deploy em produção com Active Storage S3 (INFRA-01)
@@ -62,7 +69,7 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 
 ## Context
 
-**Estado atual (v1.1 shipped 2026-06-02):**
+**Estado atual (v1.2 shipped 2026-06-03):**
 - Carteira de 10–30 clientes ativos
 - Conteúdo para Instagram, Facebook e LinkedIn
 - Admin faz upload direto de arquivos OU cola links externos (Google Drive, Dropbox)

@@ -1,5 +1,15 @@
 # Milestones
 
+## v1.2 Calendar Summary & Approval Fix (Shipped: 2026-06-03)
+
+**Phases completed:** 2 phases, 2 plans, 2 tasks
+
+**Key accomplishments:**
+
+- Faixa de resumo com 4 chips coloridos (total/aprovadas/pendentes/pediu alteração) calculada em memória via select sobre @artes, renderizada inline entre header de mês e grade do calendário
+
+---
+
 ## v1.1 Fix Art Upload & Client Association (Shipped: 2026-06-02)
 
 **Phases completed:** 2 phases, 5 plans, 5 tasks
