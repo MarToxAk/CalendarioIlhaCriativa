@@ -10,9 +10,6 @@ class Admin::ArtesController < Admin::BaseController
     else
       Arte.includes(:client).order(scheduled_on: :desc)
     end
-    @clients = Client.all
-    @status_options = Arte.statuses.keys
-    @platform_options = Arte.platforms.keys
   end
 
   def show
