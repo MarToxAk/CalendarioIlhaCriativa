@@ -1,5 +1,19 @@
 # Milestones
 
+## v1.3 Arte UI Polish (Shipped: 2026-06-03)
+
+**Phases completed:** 5 phases, 7 plans, 10 tasks
+
+**Key accomplishments:**
+
+- Faixa de resumo com 4 chips coloridos (total/aprovadas/pendentes/pediu alteração) calculada em memória via select sobre @artes, renderizada inline entre header de mês e grade do calendário
+- Form partial de artes completamente estilizado com Tailwind puro: zero `form-input`/`btn`/`btn-primary`, radio pills interativos com targets Stimulus, locals `button_label`/`cancel_path` com fallback, e controller atualizado com `togglePills()`
+- Stimulus controller extendido com togglePills() que aplica classes Tailwind border-[#0F7949]/bg-green-50/text-[#0F7949] no pill ativo e border-gray-200/text-slate-700 no inativo, sincronizado na carga e na troca via toggleFields()
+- Pages new/edit de artes reescritas com back link e card container (shadow-card max-w-2xl), replicando exatamente o padrão visual das páginas de clients com adaptações de path e locals
+- Tabela de artes reescrita com Tailwind puro: thead bg-gray-50, hover nas rows, botão verde #0F7949, link Ver outline h-8, empty state com SVG e cards responsivos para mobile
+
+---
+
 ## v1.2 Calendar Summary & Approval Fix (Shipped: 2026-06-03)
 
 **Phases completed:** 2 phases, 2 plans, 2 tasks

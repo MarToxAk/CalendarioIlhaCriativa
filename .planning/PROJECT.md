@@ -10,7 +10,7 @@ Sistema web em Ruby on Rails para agências e freelancers de social media gerenc
 
 **v1.2 shipped 2026-06-03** — bug "Resposta inválida" nos botões de aprovação corrigido; faixa de resumo de status (4 chips coloridos) adicionada ao topo do calendário do cliente.
 
-**v1.3 em andamento (2026-06-03):** Phase 11 completa — listagem de artes (`/admin/artes`) reescrita com Tailwind puro: tabela desktop formatada, cards mobile responsivos, empty state, badges de status coloridas por status e enums com `.humanize`.
+**v1.3 shipped 2026-06-03** — painel admin totalmente estilizado com Tailwind puro: form de artes (fields, radio pills Stimulus, locals), pages new/edit (card + back link), index (tabela formatada, mobile cards, empty state), show (barra de ações semântica com turbo_confirm) e dashboard (link "Ver" com borda visível).
 
 ## Core Value
 
@@ -51,8 +51,12 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 
 ### Validated (v1.3)
 
+- ✓ Admin vê form de artes totalmente estilizado com Tailwind (fields, radio pills, botões) — FORM-01, FORM-02, FORM-03 — v1.3 Phase 10
+- ✓ Pages new/edit de artes com card container e back link (padrão visual dos clients) — PAGE-01, PAGE-02 — v1.3 Phase 10
 - ✓ Admin vê listagem de artes com thead formatado, hover nas linhas e espaçamento consistente — IDX-01 — v1.3 Phase 11
 - ✓ Botão "Nova Arte" verde `#0F7949` e link "Ver" outline discreto na listagem de artes — IDX-02 — v1.3 Phase 11
+- ✓ Botões de ação visíveis e semânticos no show de artes (Excluir vermelho, Marcar Revisada verde, back link) — SHOW-01 — v1.3 Phase 12
+- ✓ Link "Ver" com borda visível no dashboard (não aparece como texto puro) — DASH-01 — v1.3 Phase 12
 
 ### Backlog (v1.3+)
 
@@ -149,16 +153,11 @@ This document evolves at phase transitions and milestone boundaries.
 - 2026-06-02 — v1.1 SHIPPED — 3 requisitos (ARTE-08, ARTE-09, ARTE-10) validados
 - Phase 08 complete (2026-06-03) — Fix "Resposta inválida": scope: :approval_response adicionado nos dois form_with de aprovação (APRO-01, APRO-02 validados)
 
-## Current Milestone: v1.3 Arte UI Polish
+## Current State: v1.3 Shipped — Aguardando próximo milestone
 
-**Goal:** Estilizar completamente as páginas de artes do admin usando Tailwind direto, eliminando os placeholders `form-input`/`btn` sem CSS definido e tornando o sistema visualmente consistente.
+**Estado atual (2026-06-03):** Todas as 4 milestones concluídas. Sistema completo e visualmente consistente. Pronto para próximo ciclo de features.
 
-**Target features:**
-- Form de artes (`_form.html.erb`): substituir `form-input`/`btn`/`btn-primary` por classes Tailwind — inputs com border, focus ring, height uniforme; selects e radio buttons estilizados
-- Arte new/edit wrappers: adicionar card container + back link (padrão dos clients)
-- Arte index: estilizar tabela com thead/td formatados, fix nos botões de ação
-- Arte show: fix nos botões Editar/Excluir/Marcar Revisada/Voltar
-- Dashboard: fix no `btn btn-sm` do link "Ver"
+**Deferred (v1.3 close):** Verificações visuais de browser (turbo_confirm, renderização Tailwind) documentadas em STATE.md — requerem teste manual com servidor rodando.
 
 ---
-*Last updated: 2026-06-03 — Phase 12 complete (arte show & dashboard fix: Tailwind puro em show de artes e link "Ver" no dashboard — Milestone v1.3 Arte UI Polish concluído)*
+*Last updated: 2026-06-03 — v1.3 Arte UI Polish SHIPPED. Sistema com Tailwind consistente em todas as páginas do painel admin.*
