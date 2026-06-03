@@ -134,5 +134,13 @@ This document evolves at phase transitions and milestone boundaries.
 - Phase 07.1 complete (2026-06-02) — CR-01 (set_client guard), CR-02 (destroy feedback), CR-03 (media_source param), WR-01 (radio padrão + SSR fix), WR-02 (botão Editar expandido)
 - 2026-06-02 — v1.1 SHIPPED — 3 requisitos (ARTE-08, ARTE-09, ARTE-10) validados
 
+## Current Milestone: v1.2 Calendar Summary & Approval Fix
+
+**Goal:** Corrigir o bug de "Resposta inválida" nos botões de aprovação do portal do cliente e adicionar faixa de resumo de status no topo do calendário.
+
+**Target features:**
+- Fix bug `form_with scope:` nos botões Aprovar e Pedir Alteração (APRO-01, APRO-02)
+- Faixa de resumo no topo do calendário: X aprovadas · Y pendentes · Z pediu alteração (CAL2-01)
+
 ---
-*Last updated: 2026-06-02 after v1.1 milestone shipped*
+*Last updated: 2026-06-02 after v1.2 milestone started*
