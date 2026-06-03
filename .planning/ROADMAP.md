@@ -50,7 +50,9 @@ Full details: [.planning/milestones/v1.1-ROADMAP.md](.planning/milestones/v1.1-R
   2. Cliente clica em "Pedir Alteração" (com ou sem comentário) e a resposta é gravada sem exibir "Resposta inválida"
   3. Após registrar resposta, o status da arte muda visivelmente no calendário (ex: badge atualizado)
   4. O admin consegue ver a resposta registrada no painel de feedback
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 08-01-PLAN.md — Adicionar scope: :approval_response nos dois form_with e verificação visual
 **UI hint**: yes
 
 ### Phase 9: Calendar Summary Strip
@@ -79,5 +81,5 @@ Full details: [.planning/milestones/v1.1-ROADMAP.md](.planning/milestones/v1.1-R
 | 6. Admin Feedback Panel | v1.0 | 4/4 | Complete | 2026-05-27 |
 | 7. Art Upload & Client Scoping Fix | v1.1 | 3/3 | Complete | 2026-06-02 |
 | 7.1. Fix: media_source + destroy + SC3 UI | v1.1 | 2/2 | Complete | 2026-06-02 |
-| 8. Approval Bug Fix | v1.2 | 0/TBD | Not started | - |
+| 8. Approval Bug Fix | v1.2 | 0/1 | Not started | - |
 | 9. Calendar Summary Strip | v1.2 | 0/TBD | Not started | - |
