@@ -36,7 +36,7 @@ Full details: [.planning/milestones/v1.1-ROADMAP.md](.planning/milestones/v1.1-R
 
 ### 🚧 v1.2 Calendar Summary & Approval Fix
 
-- [ ] **Phase 8: Approval Bug Fix** — Corrigir bug "Resposta inválida" nos botões Aprovar/Pedir Alteração do portal do cliente
+- [ ] **Phase 8: Approval Bug Fix** (1/1 plans) — Corrigir bug "Resposta inválida" nos botões Aprovar/Pedir Alteração do portal do cliente
 - [ ] **Phase 9: Calendar Summary Strip** — Faixa de resumo de status das artes no topo do calendário do cliente
 
 ## Phase Details
@@ -81,5 +81,5 @@ Plans:
 | 6. Admin Feedback Panel | v1.0 | 4/4 | Complete | 2026-05-27 |
 | 7. Art Upload & Client Scoping Fix | v1.1 | 3/3 | Complete | 2026-06-02 |
 | 7.1. Fix: media_source + destroy + SC3 UI | v1.1 | 2/2 | Complete | 2026-06-02 |
-| 8. Approval Bug Fix | v1.2 | 0/1 | Not started | - |
+| 8. Approval Bug Fix | v1.2 | 0/1 | Planned | - |
 | 9. Calendar Summary Strip | v1.2 | 0/TBD | Not started | - |

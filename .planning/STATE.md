@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Calendar Summary & Approval Fix
-status: Roadmap defined — aguardando /gsd-plan-phase 8
-last_updated: "2026-06-03T01:16:26.701Z"
-last_activity: 2026-06-02 — Roadmap v1.2 criado
+status: Ready to execute — Phase 8 planned (1 plan)
+last_updated: "2026-06-02"
+last_activity: 2026-06-02 — Phase 8 planejada (1 plano)
 progress:
   total_phases: 2
   completed_phases: 0
-  total_plans: 0
+  total_plans: 1
   completed_plans: 0
   percent: 0
 ---
@@ -24,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-02)
 
 ## Current Position
 
-Phase: 8 (próxima a executar)
-Plan: —
-Status: Roadmap defined — aguardando /gsd-plan-phase 8
-Last activity: 2026-06-02 — Roadmap v1.2 criado
+Phase: 8 (planejada — pronta para executar)
+Plan: 08-01
+Status: Ready to execute
+Last activity: 2026-06-02 — Phase 8 planejada (1 plano, verificação aprovada)
 
 ## Milestone v1.0 — Shipped
 
@@ -54,10 +54,10 @@ Last activity: 2026-06-02 — Roadmap v1.2 criado
 
 ## Next Steps
 
-Executar planejamento da Phase 8:
+Executar a Phase 8:
 
 ```
-/gsd-plan-phase 8
+/gsd-execute-phase 8
 ```
 
 ## Deferred Items
@@ -87,8 +87,8 @@ Executar planejamento da Phase 8:
 
 ## Operator Next Steps
 
-Planejar a Phase 8:
+Executar a Phase 8:
 
 ```
-/gsd-plan-phase 8
+/gsd-execute-phase 8
 ```
