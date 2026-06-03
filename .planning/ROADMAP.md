@@ -82,4 +82,4 @@ Plans:
 | 7. Art Upload & Client Scoping Fix | v1.1 | 3/3 | Complete | 2026-06-02 |
 | 7.1. Fix: media_source + destroy + SC3 UI | v1.1 | 2/2 | Complete | 2026-06-02 |
 | 8. Approval Bug Fix | v1.2 | 1/1 | Complete    | 2026-06-03 |
-| 9. Calendar Summary Strip | v1.2 | 1/1 | Complete   | 2026-06-03 |
+| 9. Calendar Summary Strip | v1.2 | 1/1 | Complete    | 2026-06-03 |

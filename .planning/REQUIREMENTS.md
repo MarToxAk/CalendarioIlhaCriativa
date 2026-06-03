@@ -12,7 +12,7 @@
 
 ### Calendário — Faixa de Resumo
 
-- [ ] **CAL2-01**: Cliente vê no topo do calendário a contagem de artes do mês por status (total, aprovadas, pendentes, pediu alteração)
+- [x] **CAL2-01**: Cliente vê no topo do calendário a contagem de artes do mês por status (total, aprovadas, pendentes, pediu alteração)
 
 ## Backlog (v1.3+)
 
