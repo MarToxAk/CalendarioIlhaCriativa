@@ -161,4 +161,4 @@ This document evolves at phase transitions and milestone boundaries.
 - Dashboard: fix no `btn btn-sm` do link "Ver"
 
 ---
-*Last updated: 2026-06-03 — Phase 10 complete (arte form polish: Tailwind styling, Stimulus pills, page wrappers)*
+*Last updated: 2026-06-03 — Phase 12 complete (arte show & dashboard fix: Tailwind puro em show de artes e link "Ver" no dashboard — Milestone v1.3 Arte UI Polish concluído)*
