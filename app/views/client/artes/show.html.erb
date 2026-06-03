@@ -107,7 +107,7 @@
       <div class="p-6 border-t border-gray-100" data-controller="approval">
         <div class="flex gap-3 items-start flex-wrap">
           <%# Botão Aprovar — form_with POST direto, sem toggle (D-05) %>
-          <%= form_with url: client_arte_responses_path(token: @client.access_token, arte_id: @arte.id), method: :post, class: "inline" do |f| %>
+          <%= form_with url: client_arte_responses_path(token: @client.access_token, arte_id: @arte.id), method: :post, scope: :approval_response, class: "inline" do |f| %>
             <%= f.hidden_field :decision, value: "approved" %>
             <%= f.submit "Aprovar", class: "px-5 py-2 bg-[#10B981] hover:bg-[#059669] text-white text-sm font-semibold rounded-lg cursor-pointer transition-colors" %>
           <% end %>
@@ -120,7 +120,7 @@
         </div>
         <%# Formulário inline — oculto por default (D-03, D-04) %>
         <div data-approval-target="commentForm" class="hidden mt-4">
-          <%= form_with url: client_arte_responses_path(token: @client.access_token, arte_id: @arte.id), method: :post do |f| %>
+          <%= form_with url: client_arte_responses_path(token: @client.access_token, arte_id: @arte.id), method: :post, scope: :approval_response do |f| %>
             <%= f.hidden_field :decision, value: "change_requested" %>
             <%= f.text_area :comment,
                   placeholder: "Descreva o que precisa ser alterado (opcional)",
