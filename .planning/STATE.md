@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Calendar Summary & Approval Fix
-status: Roadmap defined
-last_updated: "2026-06-02T00:00:00.000Z"
-last_activity: 2026-06-02 — Roadmap v1.2 criado (Phase 8 + Phase 9)
+status: Roadmap defined — aguardando /gsd-plan-phase 8
+last_updated: "2026-06-03T01:16:26.701Z"
+last_activity: 2026-06-02 — Roadmap v1.2 criado
 progress:
   total_phases: 2
   completed_phases: 0
