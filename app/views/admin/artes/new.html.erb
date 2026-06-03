@@ -1,3 +1,16 @@
-<%# app/views/admin/artes/new.html.erb %>
 <% content_for(:page_title) { "Nova Arte" } %>
-<%= render "form", arte: @arte %>
+
+<div class="mb-6">
+  <%= link_to admin_artes_path,
+        class: "text-sm text-slate-600 hover:text-slate-900 transition-colors",
+        aria: { label: "Voltar para lista de artes" } do %>
+    &larr; Voltar para Artes
+  <% end %>
+</div>
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-card p-8 max-w-2xl">
+  <%= render "form",
+        arte: @arte,
+        button_label: "Criar arte",
+        cancel_path: admin_artes_path %>
+</div>
