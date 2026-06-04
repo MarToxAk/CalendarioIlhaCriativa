@@ -32,9 +32,9 @@
 
 ### Feriados Brasileiros
 
-- [ ] **FERI-01**: Sistema contém lista hardcoded dos feriados nacionais brasileiros e dias comemorativos de marketing (Dia das Mães, Namorados, Pais, etc.) para os anos correntes
-- [ ] **FERI-02**: Calendário do cliente exibe dias de feriado/comemorativo com fundo destacado e nome visível na célula
-- [ ] **FERI-03**: Calendário do admin exibe dias de feriado/comemorativo com fundo destacado e nome visível na célula
+- [x] **FERI-01**: Sistema contém lista hardcoded dos feriados nacionais brasileiros e dias comemorativos de marketing (Dia das Mães, Namorados, Pais, etc.) para os anos correntes
+- [x] **FERI-02**: Calendário do cliente exibe dias de feriado/comemorativo com fundo destacado e nome visível na célula
+- [x] **FERI-03**: Calendário do admin exibe dias de feriado/comemorativo com fundo destacado e nome visível na célula
 
 ---
 
@@ -76,6 +76,6 @@
 | CONF-01 | Phase 15 | Complete |
 | CONF-02 | Phase 15 | Complete |
 | CONF-03 | Phase 15 | Complete |
-| FERI-01 | Phase 16 | Pending |
-| FERI-02 | Phase 16 | Pending |
-| FERI-03 | Phase 16 | Pending |
+| FERI-01 | Phase 16 | Complete |
+| FERI-02 | Phase 16 | Complete |
+| FERI-03 | Phase 16 | Complete |

@@ -182,4 +182,4 @@ Full details: [.planning/milestones/v1.3-ROADMAP.md](.planning/milestones/v1.3-R
 | 13. Página Aprovações | v1.4 | 3/3 | Complete    | 2026-06-04 |
 | 14. Calendário Admin | v1.4 | 3/3 | Complete    | 2026-06-04 |
 | 15. Configurações | v1.4 | 3/3 | Complete    | 2026-06-04 |
-| 16. Feriados Brasileiros | v1.4 | 2/2 | Complete   | 2026-06-04 |
+| 16. Feriados Brasileiros | v1.4 | 2/2 | Complete    | 2026-06-04 |
