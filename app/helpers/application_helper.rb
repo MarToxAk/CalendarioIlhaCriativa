@@ -14,4 +14,8 @@ module ApplicationHelper
     ]
     palette[client.id % palette.size]
   end
+
+  def brazilian_holiday_for(date)
+    BrazilianHolidays.for(date.year)[date]
+  end
 end
