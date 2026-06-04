@@ -26,9 +26,9 @@
 
 ### Configurações
 
-- [ ] **CONF-01**: Admin acessa a página "Configurações" pelo link do sidebar (wired)
-- [ ] **CONF-02**: Admin altera sua própria senha pelo formulário de configurações
-- [ ] **CONF-03**: Admin edita o nome da agência visível no painel
+- [x] **CONF-01**: Admin acessa a página "Configurações" pelo link do sidebar (wired)
+- [x] **CONF-02**: Admin altera sua própria senha pelo formulário de configurações
+- [x] **CONF-03**: Admin edita o nome da agência visível no painel
 
 ### Feriados Brasileiros
 
@@ -73,9 +73,9 @@
 | CADM-03 | Phase 14 | Complete |
 | CADM-04 | Phase 14 | Complete |
 | CADM-05 | Phase 14 | Complete |
-| CONF-01 | Phase 15 | Pending |
-| CONF-02 | Phase 15 | Pending |
-| CONF-03 | Phase 15 | Pending |
+| CONF-01 | Phase 15 | Complete |
+| CONF-02 | Phase 15 | Complete |
+| CONF-03 | Phase 15 | Complete |
 | FERI-01 | Phase 16 | Pending |
 | FERI-02 | Phase 16 | Pending |
 | FERI-03 | Phase 16 | Pending |
