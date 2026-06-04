@@ -19,5 +19,50 @@ class Admin::ApprovalsControllerTest < ActionDispatch::IntegrationTest
     @approval_response = ApprovalResponse.create!(arte: @arte, decision: :approved)
   end
 
-  # Testes adicionados no plano 13-02
+  test "test_should_get_index" do
+    get admin_approvals_url
+    assert_response :success
+  end
+
+  test "test_redirects_when_unauthenticated" do
+    delete session_path
+    get admin_approvals_url
+    assert_response :redirect
+  end
+
+  test "test_displays_approval_data" do
+    get admin_approvals_url
+    assert_response :success
+    assert_includes response.body, @client.name
+    assert_includes response.body, @arte.title
+  end
+
+  test "test_filter_by_client_id" do
+    get admin_approvals_url, params: { client_id: @client.id }
+    assert_response :success
+    assert_includes response.body, @client.name
+  end
+
+  test "test_filter_by_decision_approved" do
+    get admin_approvals_url, params: { decision: "approved" }
+    assert_response :success
+    assert_includes response.body, @arte.title
+  end
+
+  test "test_filter_by_decision_change_requested" do
+    get admin_approvals_url, params: { decision: "change_requested" }
+    assert_response :success
+  end
+
+  test "test_filter_by_invalid_decision" do
+    get admin_approvals_url, params: { decision: "nonexistent" }
+    assert_response :success
+    assert_includes response.body, @arte.title
+  end
+
+  test "test_link_to_arte_present" do
+    get admin_approvals_url
+    assert_response :success
+    assert_includes response.body, admin_arte_path(@arte)
+  end
 end
