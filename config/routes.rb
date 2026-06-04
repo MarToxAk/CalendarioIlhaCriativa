@@ -17,6 +17,7 @@ Rails.application.routes.draw do
       end
     end
     resources :approvals, only: [ :index ]
+    resources :calendar,  only: [ :index ]
   end
 
   # Portal do cliente
