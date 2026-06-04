@@ -1,61 +1,88 @@
 <% content_for(:page_title) { "Aprovações" } %>
 
-<h1 class="text-2xl font-bold text-slate-900 mb-6">Aprovações</h1>
+<h1 class="text-2xl font-semibold text-slate-900 mb-6">Aprovações</h1>
 
-<div class="mb-6">
-  <%= form_with url: admin_approvals_path, method: :get, class: "flex items-center gap-3" do |f| %>
-    <%= f.select :client_id,
-          [["Todos os clientes", ""]] + @clients.map { |c| [c.name, c.id] },
-          { selected: params[:client_id] },
-          class: "h-9 px-3 border border-gray-200 rounded-lg text-sm text-slate-700 bg-white" %>
+<%# Barra de filtros FORA do turbo-frame %>
+<%= form_with url: admin_approvals_path, method: :get, data: { turbo_frame: "approvals-content" }, class: "flex items-center gap-3 mb-6" do |f| %>
+  <%= f.select :client_id,
+        [["Todos os clientes", ""]] + @clients.map { |c| [c.name, c.id] },
+        { selected: params[:client_id] },
+        class: "h-9 px-3 border border-gray-200 rounded-lg text-sm text-slate-700 bg-white" %>
 
-    <%
-      decision_labels = {
-        "approved"         => "Aprovado",
-        "change_requested" => "Pediu Alteração"
-      }
-      decision_options = [["Todas as decisões", ""]] + ApprovalResponse.decisions.keys.map { |d| [decision_labels[d], d] }
-    %>
-    <%= f.select :decision,
-          decision_options,
-          { selected: params[:decision] },
-          class: "h-9 px-3 border border-gray-200 rounded-lg text-sm text-slate-700 bg-white" %>
+  <%= f.select :decision,
+        [["Todas as decisões", ""], ["Aprovado", "approved"], ["Pediu Alteração", "change_requested"]],
+        { selected: params[:decision] },
+        class: "h-9 px-3 border border-gray-200 rounded-lg text-sm text-slate-700 bg-white" %>
 
-    <%= f.submit "Filtrar",
-          class: "h-9 px-4 bg-[#0F7949] hover:bg-[#0a5c37] text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer" %>
-  <% end %>
-</div>
-
-<% if @approval_responses.empty? %>
-  <p class="text-sm text-slate-500 py-4">Nenhuma resposta encontrada.</p>
-<% else %>
-  <table class="min-w-full bg-white border border-gray-200 rounded-xl shadow-card">
-    <thead>
-      <tr>
-        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Arte</th>
-        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Cliente</th>
-        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Decisão</th>
-        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Data</th>
-        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Ações</th>
-      </tr>
-    </thead>
-    <tbody class="divide-y divide-gray-100">
-      <% @approval_responses.each do |response| %>
-        <tr class="hover:bg-slate-50">
-          <td class="px-4 py-3 text-sm text-slate-900"><%= response.arte.title.presence || "Sem título" %></td>
-          <td class="px-4 py-3 text-sm text-slate-600"><%= response.arte.client.name %></td>
-          <td class="px-4 py-3 text-sm text-slate-600"><%= response.decision %></td>
-          <td class="px-4 py-3 text-sm text-slate-600">
-            <%= response.responded_at&.strftime("%d/%m/%Y %H:%M") %>
-          </td>
-          <td class="px-4 py-3">
-            <%= link_to "Ver Arte", admin_arte_path(response.arte),
-                  class: "inline-flex items-center h-8 px-3 border border-gray-200 rounded-lg text-xs text-slate-600 hover:bg-gray-50 transition-colors" %>
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
+  <%= f.submit "Filtrar",
+        class: "h-9 px-4 bg-[#0F7949] hover:bg-[#0a5c37] text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer" %>
 <% end %>
 
-<%= pagy_nav(@pagy) if @pagy.pages > 1 %>
+<turbo-frame id="approvals-content">
+  <% if @approval_responses.empty? %>
+    <div class="py-16 text-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto text-slate-300 mb-4" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+      </svg>
+      <h2 class="text-lg font-semibold text-slate-900 mb-1">Nenhuma aprovação encontrada</h2>
+      <% if params[:client_id].present? || params[:decision].present? %>
+        <p class="text-sm text-slate-500">Nenhuma aprovação corresponde aos filtros selecionados.</p>
+      <% else %>
+        <p class="text-sm text-slate-500">Ainda não há respostas de aprovação registradas.</p>
+      <% end %>
+    </div>
+  <% else %>
+    <%# Tabela desktop %>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-card overflow-hidden hidden sm:block">
+      <table aria-label="Lista de aprovações" class="w-full">
+        <caption class="sr-only">Respostas de aprovação — clique em Ver arte para ver os detalhes</caption>
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th scope="col" class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wide text-left">Cliente</th>
+            <th scope="col" class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wide text-left">Arte</th>
+            <th scope="col" class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wide text-left">Decisão</th>
+            <th scope="col" class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wide text-left">Data da Resposta</th>
+            <th scope="col" class="py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wide text-left">Comentário</th>
+            <th scope="col" class="py-3 px-4 w-[48px]"><span class="sr-only">Ações</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @approval_responses.each do |ar| %>
+            <%= render "approval_row", approval_response: ar %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%# Lista de cards mobile %>
+    <div class="block sm:hidden space-y-3 mt-4">
+      <% @approval_responses.each do |ar| %>
+        <%= link_to admin_arte_path(ar.arte), class: "block bg-white rounded-xl border border-gray-200 shadow-card px-4 py-3" do %>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-sm font-semibold text-slate-900"><%= ar.arte.client.name %></span>
+              <%= render "decision_badge", approval_response: ar %>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="text-slate-400 flex-shrink-0" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">
+            <%= ar.arte.title.presence || "Sem título" %>
+            <% if ar.responded_at %>
+              · <%= ar.responded_at.strftime("%d/%m/%Y") %>
+            <% end %>
+          </p>
+          <% if ar.comment.present? %>
+            <p class="text-xs text-slate-400 italic mt-1"><%= truncate(ar.comment, length: 60) %></p>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+
+    <%# Paginação dentro do turbo-frame %>
+    <div class="flex justify-center mt-6">
+      <%== pagy_nav(@pagy) %>
+    </div>
+  <% end %>
+</turbo-frame>
