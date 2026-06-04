@@ -1,0 +1,40 @@
+<div class="grid grid-cols-7 gap-px bg-gray-200 rounded-xl overflow-hidden">
+  <% %w[Seg Ter Qua Qui Sex Sáb Dom].each do |day| %>
+    <div class="bg-gray-50 py-2 text-center text-xs font-medium text-slate-500 uppercase tracking-wide">
+      <%= day %>
+    </div>
+  <% end %>
+
+  <% grid_dates.each do |date| %>
+    <%
+      artes_do_dia = artes_by_date[date] || []
+      is_current_month = date.month == current_month.month
+    %>
+    <div class="<%= is_current_month ? 'bg-white' : 'bg-gray-50' %> min-h-[80px] p-1.5">
+      <% if date == Date.today %>
+        <span class="text-xs font-medium bg-[#EA580C] text-white rounded-full w-5 h-5 inline-flex items-center justify-center">
+          <%= date.day %>
+        </span>
+      <% else %>
+        <span class="text-xs font-medium <%= artes_do_dia.any? ? 'text-slate-700' : 'text-gray-300' %>">
+          <%= date.day %>
+        </span>
+      <% end %>
+
+      <% visible = artes_do_dia.first(3) %>
+      <% overflow = artes_do_dia.size - 3 %>
+
+      <% visible.each do |arte| %>
+        <% color = client_color(arte.client) %>
+        <%= link_to admin_arte_path(arte),
+              class: "mt-1 flex items-center justify-center rounded px-1 py-0.5 text-xs font-semibold #{color[:bg]} #{color[:text]} hover:opacity-80 transition-opacity" do %>
+          <%= arte.client.name.split.map(&:first).first(2).join.upcase %>
+        <% end %>
+      <% end %>
+
+      <% if overflow > 0 %>
+        <span class="mt-1 block text-xs text-gray-400 text-center">+<%= overflow %></span>
+      <% end %>
+    </div>
+  <% end %>
+</div>
