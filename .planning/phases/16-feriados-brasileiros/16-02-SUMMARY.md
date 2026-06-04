@@ -3,7 +3,7 @@ phase: 16-feriados-brasileiros
 plan: "02"
 subsystem: ui
 tags: [erb, tailwind, holidays, calendar, tdd, integration-tests]
-status: checkpoint
+status: complete
 
 requires:
   - phase: 16-01
@@ -103,19 +103,14 @@ None - plan executed exactly as written.
 - GREEN commit: `06c7bcc` — `feat(16-02): insert holiday span in both calendar ERB views`
 - Gate sequence: RED antes de GREEN — PASSED
 
-## Checkpoint: Verificação Visual Pendente
+## Checkpoint: Verificação Visual
 
-**Status:** Aguardando aprovação humana do visual no browser.
+**Status:** APROVADO pelo usuário em 2026-06-04.
 
-O Task 2 é um `checkpoint:human-verify` — requer que o usuário acesse os calendários em abril de 2026 e confirme:
-
-1. Célula do dia 5 de abril exibe "Páscoa" em vermelho (text-red-400 / #F87171) abaixo do número
-2. Célula do dia 21 de abril exibe "Tiradentes" em vermelho abaixo do número
-3. Células sem feriado não têm texto extra
-4. Chips de artes (se houver) aparecem abaixo do nome do feriado
-5. Layout não quebrado em ambos os calendários (cliente e admin)
-
-Para verificar: acessar `/admin/calendar?month=2026-04` e calendário do cliente com `?month=2026-04`.
+Confirmado visualmente no browser:
+- Páscoa (dia 5) e Tiradentes (dia 21) aparecem em vermelho nos calendários cliente e admin
+- Layout das células preservado
+- Chips de artes abaixo do nome do feriado
 
 ## Known Stubs
 
