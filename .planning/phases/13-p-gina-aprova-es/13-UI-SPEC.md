@@ -55,7 +55,7 @@ Fonte base: Inter. Sem shadcn — classes Tailwind aplicadas diretamente.
 | Body | 14px | 400 (regular) | 1.5 | `text-sm text-slate-900` |
 | Label / Meta | 12px | 400 (regular) | 1.5 | `text-xs text-slate-500` (ou `text-slate-600`) |
 | Heading de página | 24px | 600 (semibold) | 1.2 | `text-2xl font-semibold text-slate-900` |
-| Thead de tabela | 12px | 500 (medium) | 1.2 | `text-xs font-medium text-slate-500 uppercase tracking-wide` |
+| Thead de tabela | 12px | 600 (semibold) | 1.2 | `text-xs font-semibold text-slate-500 uppercase tracking-wide` |
 
 > Source: padrão Phase 11 (`app/views/admin/artes/index.html.erb`) e Phase 12 (dashboard).
 
@@ -178,7 +178,7 @@ change_requested:
 
 Estrutura do span:
 ```
-<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border {badge_classes}">
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold border {badge_classes}">
   <span aria-hidden="true">●</span> {label}
 </span>
 ```
