@@ -1,8 +1,7 @@
 <nav class="w-60 bg-[#0F7949] flex flex-col min-h-screen">
   <%# Branding %>
   <div class="px-4 py-5 border-b border-white/20">
-    <span class="text-white font-semibold text-sm block">Ilha Criativa</span>
-    <span class="text-white/70 text-xs">by Bom Custo</span>
+    <span class="text-white font-semibold text-sm block"><%= Current.user&.agency_name || "Ilha Criativa" %></span>
   </div>
 
   <%# Nav items %>
@@ -14,7 +13,7 @@
         { label: "Clientes",      path: admin_clients_path },
         { label: "Artes",         path: admin_artes_path },
         { label: "Calendário",    path: admin_calendar_index_path },
-        { label: "Configurações", path: "#" },
+        { label: "Configurações", path: admin_settings_path },
       ]
     %>
     <% nav_items.each do |item| %>

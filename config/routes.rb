@@ -18,6 +18,10 @@ Rails.application.routes.draw do
     end
     resources :approvals, only: [ :index ]
     resources :calendar,  only: [ :index ]
+    resource :settings, only: [ :show ] do
+      patch :update_password, on: :member
+      patch :update_agency,   on: :member
+    end
   end
 
   # Portal do cliente
