@@ -153,11 +153,15 @@ This document evolves at phase transitions and milestone boundaries.
 - 2026-06-02 — v1.1 SHIPPED — 3 requisitos (ARTE-08, ARTE-09, ARTE-10) validados
 - Phase 08 complete (2026-06-03) — Fix "Resposta inválida": scope: :approval_response adicionado nos dois form_with de aprovação (APRO-01, APRO-02 validados)
 
-## Current State: v1.3 Shipped — Aguardando próximo milestone
+## Current Milestone: v1.4 Admin Pages + Brazilian Calendar
 
-**Estado atual (2026-06-03):** Todas as 4 milestones concluídas. Sistema completo e visualmente consistente. Pronto para próximo ciclo de features.
+**Goal:** Completar as páginas inacabadas do painel admin (Aprovações, Calendário, Configurações) e marcar feriados e dias comemorativos brasileiros nos calendários do admin e do cliente.
 
-**Deferred (v1.3 close):** Verificações visuais de browser (turbo_confirm, renderização Tailwind) documentadas em STATE.md — requerem teste manual com servidor rodando.
+**Target features:**
+- Página "Aprovações" com histórico completo de todas as respostas, com filtros por cliente e status
+- Calendário admin unificado mostrando artes de todos os clientes com cor e nome por cliente
+- Página "Configurações" para alterar senha e dados da agência
+- Feriados nacionais e dias comemorativos brasileiros destacados visualmente nos calendários
 
 ---
-*Last updated: 2026-06-03 — v1.3 Arte UI Polish SHIPPED. Sistema com Tailwind consistente em todas as páginas do painel admin.*
+*Last updated: 2026-06-03 — v1.4 Admin Pages + Brazilian Calendar iniciado.*
