@@ -20,8 +20,8 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
   # ───── show ─────
 
   test "GET settings — autenticado: 200" do
-    # View created in Wave 3 — will pass after 15-03-PLAN.md executes
-    skip "View not yet created (Wave 3)"
+    get admin_settings_path
+    assert_response :success
   end
 
   test "GET settings — não autenticado: redireciona para login" do
