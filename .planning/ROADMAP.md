@@ -62,7 +62,7 @@ Full details: [.planning/milestones/v1.3-ROADMAP.md](.planning/milestones/v1.3-R
 - [x] **Phase 13: Página Aprovações** — Histórico completo de respostas com filtros por cliente e status (completed 2026-06-04)
 - [x] **Phase 14: Calendário Admin** — Calendário unificado com artes de todos os clientes, cor por cliente, navegação e links (completed 2026-06-04)
 - [x] **Phase 15: Configurações** — Página de configurações com alteração de senha e dados da agência (completed 2026-06-04)
-- [ ] **Phase 16: Feriados Brasileiros** — Lista hardcoded de feriados e comemorativos visível nos calendários do admin e do cliente
+- [x] **Phase 16: Feriados Brasileiros** — Lista hardcoded de feriados e comemorativos visível nos calendários do admin e do cliente (completed 2026-06-04)
 
 ## Phase Details
 
@@ -156,7 +156,7 @@ Full details: [.planning/milestones/v1.3-ROADMAP.md](.planning/milestones/v1.3-R
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 16-02-PLAN.md — Views ERB dos dois calendários + testes de integração + checkpoint visual
+- [x] 16-02-PLAN.md — Views ERB dos dois calendários + testes de integração + checkpoint visual
 
 **UI hint**: yes
 
@@ -182,4 +182,4 @@ Full details: [.planning/milestones/v1.3-ROADMAP.md](.planning/milestones/v1.3-R
 | 13. Página Aprovações | v1.4 | 3/3 | Complete    | 2026-06-04 |
 | 14. Calendário Admin | v1.4 | 3/3 | Complete    | 2026-06-04 |
 | 15. Configurações | v1.4 | 3/3 | Complete    | 2026-06-04 |
-| 16. Feriados Brasileiros | v1.4 | 1/2 | In Progress|  |
+| 16. Feriados Brasileiros | v1.4 | 2/2 | Complete   | 2026-06-04 |
