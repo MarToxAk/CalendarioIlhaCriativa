@@ -65,6 +65,11 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - ✓ Admin filtra aprovações por cliente — APRO-05 — v1.4 Phase 13
 - ✓ Admin filtra aprovações por decisão (Aprovado / Pediu Alteração) — APRO-06 — v1.4 Phase 13
 - ✓ Filtros e paginação funcionam via Turbo Frame sem full page reload — APRO-07 — v1.4 Phase 13
+- ✓ Admin acessa Calendário unificado via sidebar (link wired para admin_calendar_index_path) — CADM-01 — v1.4 Phase 14
+- ✓ Calendário admin exibe artes de todos os clientes na grade mensal — CADM-02 — v1.4 Phase 14
+- ✓ Cada cliente tem cor e iniciais distintas nos chips do calendário admin — CADM-03 — v1.4 Phase 14
+- ✓ Admin navega por meses via setas com Turbo Frame (sem full page reload) — CADM-04 — v1.4 Phase 14
+- ✓ Chip do calendário admin é link direto para a arte — CADM-05 — v1.4 Phase 14
 
 ### Backlog (v1.4+)
 
@@ -73,7 +78,6 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - [ ] Exportar relatório de aprovações de um cliente em PDF ou CSV (ADM2-01)
 - [ ] Duplicar uma arte para outro cliente ou data (ADM2-02)
 - [ ] Deploy em produção com Active Storage S3 (INFRA-01)
-- [ ] Sidebar link "Calendário" wired (atualmente aponta para `#`) (INFRA-02)
 
 ### Out of Scope
 
@@ -172,4 +176,4 @@ This document evolves at phase transitions and milestone boundaries.
 - Feriados nacionais e dias comemorativos brasileiros destacados visualmente nos calendários
 
 ---
-*Last updated: 2026-06-03 — v1.4 Admin Pages + Brazilian Calendar iniciado.*
+*Last updated: 2026-06-04 — Phase 14 complete: Calendário Admin com chips coloridos por cliente, turbo-frame navigation e suite de testes.*
