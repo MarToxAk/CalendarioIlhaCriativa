@@ -1,17 +1,11 @@
 class Admin::CalendarController < Admin::BaseController
-  MONTH_NAMES_PT = %w[janeiro fevereiro março abril maio junho julho agosto setembro outubro novembro dezembro].freeze
-
   def index
     @current_month = parse_month_param
 
     @prev_month = (@current_month - 1.month).strftime("%Y-%m")
     @next_month = (@current_month + 1.month).strftime("%Y-%m")
 
-    begin
-      @month_label = I18n.l(@current_month, format: "%B %Y")
-    rescue I18n::MissingTranslationData
-      @month_label = "#{MONTH_NAMES_PT[@current_month.month - 1].capitalize} #{@current_month.year}"
-    end
+    @month_label = I18n.l(@current_month, format: "%B %Y")
 
     grid_start = @current_month.beginning_of_week   # Monday (Rails default)
     grid_end   = @current_month.end_of_month.end_of_week
