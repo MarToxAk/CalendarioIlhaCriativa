@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: Admin Pages + Brazilian Calendar
-status: planning
-last_updated: "2026-06-04T02:56:56.593Z"
+status: roadmap_ready
+last_updated: "2026-06-04T00:00:00.000Z"
 last_activity: 2026-06-04
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,17 +17,24 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-02)
+See: .planning/PROJECT.md (updated 2026-06-03)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Milestone complete
+**Current focus:** v1.4 — Admin Pages + Brazilian Calendar — Roadmap definido, aguardando planejamento da Phase 13
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 13 (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-04 — Milestone v1.4 started
+Status: Roadmap ready — next: `/gsd-plan-phase 13`
+Last activity: 2026-06-04 — Roadmap v1.4 criado (4 fases, 16 requisitos mapeados)
+
+## Progress Bar
+
+```
+v1.4: [ ] Phase 13  [ ] Phase 14  [ ] Phase 15  [ ] Phase 16
+       0/4 phases complete
+```
 
 ## Milestone v1.0 — Shipped
 
@@ -52,13 +59,33 @@ Last activity: 2026-06-04 — Milestone v1.4 started
 - **Phases:** 2 (Phase 8 + Phase 9)
 - **Plans:** 2/2 complete
 - **Requirements:** 3/3 (APRO-01, APRO-02, CAL2-01)
-- **Known deferred items at close:** 2 (see Deferred Items below)
+
+## Milestone v1.3 — Shipped
+
+- **Shipped:** 2026-06-03
+- **Archived:** 2026-06-03
+- **Phases:** 3 (Phase 10, 11, 12)
+- **Plans:** 5/5 complete
+- **Requirements:** 6/6 (FORM-01..03, PAGE-01..02, IDX-01..02, SHOW-01, DASH-01)
+
+## Milestone v1.4 — In Progress
+
+- **Started:** 2026-06-04
+- **Phases:** 4 (Phase 13–16)
+- **Requirements:** 16 total
+
+| Phase | Requirements | Status |
+|-------|--------------|--------|
+| 13. Página Aprovações | APRO-03..07 (5 req) | Not started |
+| 14. Calendário Admin | CADM-01..05 (5 req) | Not started |
+| 15. Configurações | CONF-01..03 (3 req) | Not started |
+| 16. Feriados Brasileiros | FERI-01..03 (3 req) | Not started |
 
 ## Deferred Items
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| tech-debt | Sidebar links "Aprovações" e "Calendário" apontam para `#` | deferred | v1.0 close |
+| tech-debt | Sidebar links "Aprovações" e "Calendário" apontam para `#` | deferred (resolvido em v1.4 fase 13+14) | v1.0 close |
 | tech-debt | Nyquist validation ausente em fases 1, 2, 3 | deferred | v1.0 close |
 | tech-debt | Active Storage S3 para produção | deferred | v1.0 close |
 | uat | Phase 02: 02-HUMAN-UAT.md [partial] — 4 cenários pendentes (fases v1.0 já arquivadas) | deferred | v1.1 close 2026-06-02 |
@@ -86,10 +113,15 @@ Last activity: 2026-06-04 — Milestone v1.4 started
 - Phase 07.1 inserted after Phase 7: Fix: media_source params + destroy feedback + SC3 UI (URGENT)
 - v1.2 roadmap defined 2026-06-02: Phase 8 (bug aprovação) + Phase 9 (faixa de resumo)
 - v1.3 roadmap defined 2026-06-03: Phase 10 (form polish) + Phase 11 (index polish) + Phase 12 (show + dashboard)
+- v1.4 roadmap defined 2026-06-04: Phase 13 (aprovações) + Phase 14 (calendário admin) + Phase 15 (configurações) + Phase 16 (feriados brasileiros)
 
-### Known Root Cause (Phase 8)
+### v1.4 Context
 
-`form_with scope: :approval_response` no portal do cliente possivelmente provoca stripping do wrapper `approval_response`, fazendo o controller falhar em `params.require(:approval_response)` com "Resposta inválida". Fix envolve o formulário de aprovação e possivelmente o controller.
+- Sidebar links "Aprovações" e "Calendário" apontam para `#` desde v1.0 — serão wired nas fases 13 e 14 respectivamente
+- Calendário do cliente usa simple_calendar gem — fase 16 precisa estender a view para destacar feriados sem quebrar o layout existente
+- Padrão de filtros com Turbo Frame já estabelecido na fase 6 (dashboard) — fase 13 deve replicar o mesmo padrão para filtros de aprovações
+- Cor por cliente (fase 14): não há campo de cor no model Client ainda — pode ser necessário adicionar coluna ou derivar cor determinística do id/nome
+- Configurações (fase 15): Rails 8 auth generator gera `passwords_controller` e `sessions_controller` — verificar o que já existe antes de criar novo controller
 
 ### v1.3 Context
 
@@ -98,4 +130,4 @@ Padrão de referência para card + back link: páginas new/edit de clientes (`ap
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Run `/gsd-plan-phase 13` to plan Phase 13: Página Aprovações

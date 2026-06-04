@@ -63,19 +63,19 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| APRO-03 | — | Pending |
-| APRO-04 | — | Pending |
-| APRO-05 | — | Pending |
-| APRO-06 | — | Pending |
-| APRO-07 | — | Pending |
-| CADM-01 | — | Pending |
-| CADM-02 | — | Pending |
-| CADM-03 | — | Pending |
-| CADM-04 | — | Pending |
-| CADM-05 | — | Pending |
-| CONF-01 | — | Pending |
-| CONF-02 | — | Pending |
-| CONF-03 | — | Pending |
-| FERI-01 | — | Pending |
-| FERI-02 | — | Pending |
-| FERI-03 | — | Pending |
+| APRO-03 | Phase 13 | Pending |
+| APRO-04 | Phase 13 | Pending |
+| APRO-05 | Phase 13 | Pending |
+| APRO-06 | Phase 13 | Pending |
+| APRO-07 | Phase 13 | Pending |
+| CADM-01 | Phase 14 | Pending |
+| CADM-02 | Phase 14 | Pending |
+| CADM-03 | Phase 14 | Pending |
+| CADM-04 | Phase 14 | Pending |
+| CADM-05 | Phase 14 | Pending |
+| CONF-01 | Phase 15 | Pending |
+| CONF-02 | Phase 15 | Pending |
+| CONF-03 | Phase 15 | Pending |
+| FERI-01 | Phase 16 | Pending |
+| FERI-02 | Phase 16 | Pending |
+| FERI-03 | Phase 16 | Pending |

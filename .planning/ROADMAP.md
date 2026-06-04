@@ -6,6 +6,7 @@
 - ✅ **v1.1 Fix Art Upload & Client Association** — Fases 7 + 7.1 (shipped 2026-06-02) → [Archive](.planning/milestones/v1.1-ROADMAP.md)
 - ✅ **v1.2 Calendar Summary & Approval Fix** — Fases 8 + 9 (shipped 2026-06-03) → [Archive](.planning/milestones/v1.2-ROADMAP.md)
 - ✅ **v1.3 Arte UI Polish** — Fases 10–12 (shipped 2026-06-03) → [Archive](.planning/milestones/v1.3-ROADMAP.md)
+- 🔄 **v1.4 Admin Pages + Brazilian Calendar** — Fases 13–16 (in progress)
 
 ## Phases
 
@@ -56,6 +57,63 @@ Full details: [.planning/milestones/v1.3-ROADMAP.md](.planning/milestones/v1.3-R
 
 </details>
 
+### v1.4 Admin Pages + Brazilian Calendar
+
+- [ ] **Phase 13: Página Aprovações** — Histórico completo de respostas com filtros por cliente e status
+- [ ] **Phase 14: Calendário Admin** — Calendário unificado com artes de todos os clientes, cor por cliente, navegação e links
+- [ ] **Phase 15: Configurações** — Página de configurações com alteração de senha e dados da agência
+- [ ] **Phase 16: Feriados Brasileiros** — Lista hardcoded de feriados e comemorativos visível nos calendários do admin e do cliente
+
+## Phase Details
+
+### Phase 13: Página Aprovações
+**Goal**: Admin consegue consultar o histórico completo de todas as respostas de aprovação num único lugar, com filtros e link direto para cada arte
+**Depends on**: Phase 12 (painel admin estilizado)
+**Requirements**: APRO-03, APRO-04, APRO-05, APRO-06, APRO-07
+**Success Criteria** (what must be TRUE):
+  1. Admin clica em "Aprovações" no sidebar e é levado à página (link não aponta mais para `#`)
+  2. Admin vê lista paginada de respostas ordenada da mais recente para a mais antiga
+  3. Cada item da lista exibe: nome do cliente, título/identificação da arte, status da resposta, data e comentário quando presente
+  4. Admin seleciona um cliente ou um status no filtro e a lista atualiza mostrando apenas os itens correspondentes
+  5. Admin clica num item da lista e acessa a página da arte correspondente diretamente
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 14: Calendário Admin
+**Goal**: Admin visualiza num único calendário mensal as artes de todos os clientes, diferenciadas por cor e nome de cliente, e navega entre meses e acessa artes diretamente
+**Depends on**: Phase 13
+**Requirements**: CADM-01, CADM-02, CADM-03, CADM-04, CADM-05
+**Success Criteria** (what must be TRUE):
+  1. Admin clica em "Calendário" no sidebar e é levado à página do calendário admin (link não aponta mais para `#`)
+  2. Admin vê calendário mensal com todas as artes de todos os clientes distribuídas nos dias corretos
+  3. Cada arte exibe cor de fundo distinta por cliente e o nome ou iniciais do cliente visível na célula do dia
+  4. Admin clica nas setas de navegação (mês anterior / próximo) e o calendário atualiza sem recarregar a página completa
+  5. Admin clica numa arte do calendário e é levado à página de show da arte correspondente
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 15: Configurações
+**Goal**: Admin consegue alterar sua senha e o nome da agência através de uma página de configurações acessível pelo sidebar
+**Depends on**: Phase 14
+**Requirements**: CONF-01, CONF-02, CONF-03
+**Success Criteria** (what must be TRUE):
+  1. Admin clica em "Configurações" no sidebar e é levado à página de configurações (link não aponta mais para `#`)
+  2. Admin preenche formulário de troca de senha (senha atual + nova + confirmação) e a senha é atualizada com feedback de sucesso ou erro
+  3. Admin edita o nome da agência e salva, o novo nome aparece refletido no painel
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 16: Feriados Brasileiros
+**Goal**: Feriados nacionais e dias comemorativos de marketing brasileiros ficam visualmente destacados nos calendários do admin e do cliente, sem depender de API externa
+**Depends on**: Phase 15
+**Requirements**: FERI-01, FERI-02, FERI-03
+**Success Criteria** (what must be TRUE):
+  1. O sistema possui lista hardcoded com feriados nacionais e comemorativos de marketing (Dia das Mães, Namorados, Pais, etc.) para os anos em uso
+  2. No calendário do cliente, dias com feriado ou comemorativo exibem fundo destacado e o nome do evento legível na célula
+  3. No calendário do admin, dias com feriado ou comemorativo exibem fundo destacado e o nome do evento legível na célula
+**Plans**: TBD
+**UI hint**: yes
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -75,3 +133,7 @@ Full details: [.planning/milestones/v1.3-ROADMAP.md](.planning/milestones/v1.3-R
 | 10. Arte Form Polish | v1.3 | 3/3 | Complete | 2026-06-03 |
 | 11. Arte Index Polish | v1.3 | 1/1 | Complete | 2026-06-03 |
 | 12. Arte Show & Dashboard Fix | v1.3 | 1/1 | Complete | 2026-06-03 |
+| 13. Página Aprovações | v1.4 | 0/? | Not started | - |
+| 14. Calendário Admin | v1.4 | 0/? | Not started | - |
+| 15. Configurações | v1.4 | 0/? | Not started | - |
+| 16. Feriados Brasileiros | v1.4 | 0/? | Not started | - |
