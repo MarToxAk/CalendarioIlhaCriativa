@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: Admin Pages + Brazilian Calendar
-status: ready_to_plan
-last_updated: 2026-06-04T11:47:57.874Z
-last_activity: 2026-06-04 -- Phase 14 execution started
+status: planning
+last_updated: "2026-06-04T12:40:00.000Z"
+last_activity: 2026-06-04
 progress:
   total_phases: 4
-  completed_phases: 1
-  total_plans: 6
-  completed_plans: 41
-  percent: 25
-stopped_at: Phase 14 complete (3/3) — ready to discuss Phase 15
+  completed_phases: 2
+  total_plans: 9
+  completed_plans: 7
+  percent: 50
 ---
 
 # Project State
@@ -26,8 +25,8 @@ See: .planning/PROJECT.md (updated 2026-06-03)
 ## Current Position
 
 Phase: 15
-Plan: Not started
-Status: Ready to plan
+Plan: 02 complete (Wave 2 done)
+Status: In progress — Wave 3 pending
 Last activity: 2026-06-04
 
 ## Progress Bar
@@ -79,7 +78,7 @@ v1.4: [ ] Phase 13  [ ] Phase 14  [ ] Phase 15  [ ] Phase 16
 |-------|--------------|--------|
 | 13. Página Aprovações | APRO-03..07 (5 req) | Not started |
 | 14. Calendário Admin | CADM-01..05 (5 req) | Not started |
-| 15. Configurações | CONF-01..03 (3 req) | Not started |
+| 15. Configurações | CONF-01..03 (3 req) | In progress (Wave 2/3 done) |
 | 16. Feriados Brasileiros | FERI-01..03 (3 req) | Not started |
 
 ## Deferred Items
