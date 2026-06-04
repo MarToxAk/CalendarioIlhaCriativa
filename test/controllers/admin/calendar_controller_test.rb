@@ -18,5 +18,24 @@ class Admin::CalendarControllerTest < ActionDispatch::IntegrationTest
     )
   end
 
-  # Testes adicionados no plano 14-03
+  test "GET /admin/calendar retorna 200 quando autenticado" do
+    get admin_calendar_index_url
+    assert_response :success
+  end
+
+  test "GET /admin/calendar redireciona quando nao autenticado" do
+    delete session_path
+    get admin_calendar_index_url
+    assert_response :redirect
+  end
+
+  test "GET /admin/calendar com parametro month valido retorna 200" do
+    get admin_calendar_index_url, params: { month: "2026-06" }
+    assert_response :success
+  end
+
+  test "GET /admin/calendar com parametro month invalido retorna 200 sem 500" do
+    get admin_calendar_index_url, params: { month: "invalid" }
+    assert_response :success
+  end
 end
