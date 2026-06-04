@@ -11,7 +11,7 @@
       is_current_month = date.month == current_month.month
     %>
     <div class="<%= is_current_month ? 'bg-white' : 'bg-gray-50' %> min-h-[80px] p-1.5">
-      <% if date == Date.today %>
+      <% if date == Time.zone.today %>
         <span class="text-xs font-medium bg-[#EA580C] text-white rounded-full w-5 h-5 inline-flex items-center justify-center">
           <%= date.day %>
         </span>

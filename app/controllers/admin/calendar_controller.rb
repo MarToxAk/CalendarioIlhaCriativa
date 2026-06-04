@@ -27,9 +27,9 @@ class Admin::CalendarController < Admin::BaseController
   private
 
   def parse_month_param
-    return Date.today.beginning_of_month unless params[:month].present?
+    return Time.zone.today.beginning_of_month unless params[:month].present?
     Date.strptime(params[:month], "%Y-%m").beginning_of_month
   rescue Date::Error
-    Date.today.beginning_of_month
+    Time.zone.today.beginning_of_month
   end
 end
