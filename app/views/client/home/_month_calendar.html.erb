@@ -23,6 +23,12 @@
         </span>
       <% end %>
 
+      <% if (holiday = brazilian_holiday_for(date)) %>
+        <span class="text-xs text-red-400 block truncate leading-snug mt-0.5">
+          <%= truncate(holiday, length: 15) %>
+        </span>
+      <% end %>
+
       <% artes_do_dia.each do |arte| %>
         <%= link_to client_arte_path(token: client.access_token, id: arte),
               class: "mt-1 flex items-center gap-1 p-1 rounded bg-gray-50 hover:bg-orange-50 transition-colors" do %>
