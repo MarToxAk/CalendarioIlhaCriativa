@@ -121,7 +121,20 @@ Full details: [.planning/milestones/v1.3-ROADMAP.md](.planning/milestones/v1.3-R
   2. Admin preenche formulário de troca de senha (senha atual + nova + confirmação) e a senha é atualizada com feedback de sucesso ou erro
   3. Admin edita o nome da agência e salva, o novo nome aparece refletido no painel
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+**Wave 1**
+
+- [ ] 15-01-PLAN.md — Migração agency_name + rota settings + sidebar wired + scaffold testes
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 15-02-PLAN.md — Controller Admin::SettingsController + testes de integração
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 15-03-PLAN.md — View: show com cards de senha e dados da agência
+
 **UI hint**: yes
 
 ### Phase 16: Feriados Brasileiros

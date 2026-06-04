@@ -1,32 +1,121 @@
 <% content_for(:page_title) { "Calendário" } %>
 
-<turbo-frame id="calendar-content">
-  <div class="flex items-center justify-center gap-4 mb-6">
-    <%= link_to admin_calendar_index_path(month: @prev_month),
-          aria: { label: "Mês anterior" },
-          class: "p-2 rounded-lg hover:bg-gray-100 transition-colors text-slate-600" do %>
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M15 19l-7-7 7-7"/>
-      </svg>
-    <% end %>
+<div data-controller="arte-preview">
 
-    <h2 class="text-lg font-semibold text-slate-900 min-w-[160px] text-center">
-      <%= @month_label %>
-    </h2>
+  <turbo-frame id="calendar-content">
+    <div class="flex items-center justify-center gap-4 mb-6">
+      <%= link_to admin_calendar_index_path(month: @prev_month),
+            aria: { label: "Mês anterior" },
+            class: "p-2 rounded-lg hover:bg-gray-100 transition-colors text-slate-600" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 19l-7-7 7-7"/>
+        </svg>
+      <% end %>
 
-    <%= link_to admin_calendar_index_path(month: @next_month),
-          aria: { label: "Próximo mês" },
-          class: "p-2 rounded-lg hover:bg-gray-100 transition-colors text-slate-600" do %>
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M9 5l7 7-7 7"/>
-      </svg>
-    <% end %>
+      <h2 class="text-lg font-semibold text-slate-900 min-w-[160px] text-center">
+        <%= @month_label %>
+      </h2>
+
+      <%= link_to admin_calendar_index_path(month: @next_month),
+            aria: { label: "Próximo mês" },
+            class: "p-2 rounded-lg hover:bg-gray-100 transition-colors text-slate-600" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 5l7 7-7 7"/>
+        </svg>
+      <% end %>
+    </div>
+
+    <%= render "calendar_grid",
+          grid_dates: @grid_dates,
+          artes_by_date: @artes_by_date,
+          current_month: @current_month %>
+  </turbo-frame>
+
+  <%# Tooltip flutuante — aparece no hover das chips %>
+  <div data-arte-preview-target="tooltip"
+       class="fixed z-50 hidden pointer-events-none bg-white border border-gray-200 rounded-xl shadow-lg p-3 w-52"
+       role="tooltip">
+    <img data-arte-preview-target="ttImg"
+         class="hidden w-full h-24 object-cover rounded-lg mb-2"
+         alt="" />
+    <p data-arte-preview-target="ttClient" class="text-xs font-semibold text-slate-900 truncate"></p>
+    <p data-arte-preview-target="ttTitle"  class="text-xs text-slate-600 mt-0.5 truncate"></p>
+    <p data-arte-preview-target="ttMeta"   class="text-xs text-slate-400 mt-1"></p>
+    <span data-arte-preview-target="ttStatus"
+          class="mt-2 inline-block text-xs px-2 py-0.5 rounded-full font-medium"></span>
   </div>
 
-  <%= render "calendar_grid",
-        grid_dates: @grid_dates,
-        artes_by_date: @artes_by_date,
-        current_month: @current_month %>
-</turbo-frame>
+  <%# Modal de detalhes — aparece no clique das chips %>
+  <div data-arte-preview-target="modal"
+       class="hidden fixed inset-0 z-40 flex items-center justify-center"
+       role="dialog" aria-modal="true" aria-labelledby="arte-modal-title">
+    <div data-action="click->arte-preview#closeModal"
+         class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+    <div class="relative bg-white rounded-xl border border-gray-200 shadow-xl p-6 w-full max-w-sm mx-4">
+      <button data-action="click->arte-preview#closeModal"
+              aria-label="Fechar"
+              class="absolute top-3 right-3 p-1 text-slate-400 hover:text-slate-600 rounded transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+      <h3 id="arte-modal-title"
+          data-arte-preview-target="mdTitle"
+          class="text-base font-semibold text-slate-900 pr-8 mb-4 truncate"></h3>
+
+      <%# Área de prévia da arte %>
+      <div data-arte-preview-target="mdPreview" class="hidden mb-4">
+        <img data-arte-preview-target="mdImg"
+             class="hidden w-full max-h-48 object-contain rounded-lg bg-gray-50"
+             alt="Prévia da arte" />
+        <video data-arte-preview-target="mdVideo"
+               controls
+               class="hidden w-full max-h-48 rounded-lg bg-gray-900"></video>
+        <a data-arte-preview-target="mdExternal"
+           href="#"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="hidden items-center gap-2 text-sm text-[#0F7949] hover:underline">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+          Ver arquivo externo
+        </a>
+      </div>
+
+      <dl class="space-y-2">
+        <div class="flex gap-3">
+          <dt class="text-xs text-slate-500 w-20 shrink-0">Cliente</dt>
+          <dd data-arte-preview-target="mdClient" class="text-xs font-medium text-slate-900"></dd>
+        </div>
+        <div class="flex gap-3">
+          <dt class="text-xs text-slate-500 w-20 shrink-0">Data</dt>
+          <dd data-arte-preview-target="mdDate" class="text-xs text-slate-900"></dd>
+        </div>
+        <div class="flex gap-3">
+          <dt class="text-xs text-slate-500 w-20 shrink-0">Plataforma</dt>
+          <dd data-arte-preview-target="mdPlatform" class="text-xs text-slate-900"></dd>
+        </div>
+        <div class="flex items-center gap-3">
+          <dt class="text-xs text-slate-500 w-20 shrink-0">Status</dt>
+          <dd>
+            <span data-arte-preview-target="mdStatus"
+                  class="inline-block text-xs px-2 py-0.5 rounded-full font-medium border border-transparent"></span>
+          </dd>
+        </div>
+      </dl>
+      <a data-arte-preview-target="mdLink"
+         href="#"
+         class="mt-5 flex items-center justify-center h-9 bg-[#0F7949] hover:bg-[#0a5c37] text-white text-sm font-semibold rounded-lg transition-colors">
+        Ver detalhes completos →
+      </a>
+    </div>
+  </div>
+
+</div>

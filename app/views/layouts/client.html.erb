@@ -2,6 +2,7 @@
 <html lang="pt-BR">
   <head>
     <title><%= content_for(:title) || "Ilha Criativa · Calendário" %></title>
+    <link rel="icon" href="/icon.png" type="image/png">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -13,7 +14,7 @@
   <body class="min-h-screen bg-white flex flex-col">
     <header class="sticky top-0 bg-white border-b border-gray-100 z-10">
       <div class="px-4 sm:px-6 py-4 flex items-center justify-between">
-        <span class="font-semibold text-[#0F7949]">Ilha Criativa · Bom Custo</span>
+        <%= image_tag "/logo-livia.svg", alt: "Ilha Criativa", class: "h-8 w-auto object-contain" %>
         <span class="text-sm text-slate-600 font-medium"><%= @client&.name %></span>
         <%= button_to "Sair", client_session_path(token: @client&.access_token),
               method: :delete,

@@ -25,9 +25,41 @@
       <% overflow = artes_do_dia.size - 3 %>
 
       <% visible.each do |arte| %>
-        <% color = client_color(arte.client) %>
+        <%
+          color = client_color(arte.client)
+          if arte.media_file.attached?
+            ct = arte.media_file.content_type.to_s
+            if ct.start_with?("image/")
+              preview_source = "image"
+              preview_url    = url_for(arte.media_file)
+            elsif ct.start_with?("video/")
+              preview_source = "video"
+              preview_url    = url_for(arte.media_file)
+            else
+              preview_source = "none"
+              preview_url    = ""
+            end
+          elsif arte.external_url.present?
+            preview_source = "external"
+            preview_url    = arte.external_url
+          else
+            preview_source = "none"
+            preview_url    = ""
+          end
+        %>
         <%= link_to admin_arte_path(arte),
-              title: arte.client.name,
+              data: {
+                action:             "mouseenter->arte-preview#showTooltip mouseleave->arte-preview#hideTooltip click->arte-preview#openModal",
+                arte_client:        arte.client.name,
+                arte_title:         arte.title.presence || "Sem título",
+                arte_date:          arte.scheduled_on.strftime("%d/%m/%Y"),
+                arte_platform:      arte.platform.humanize,
+                arte_status:        arte.status,
+                arte_url:           admin_arte_path(arte),
+                arte_preview_source: preview_source,
+                arte_preview_url:    preview_url,
+                turbo_frame:        "_top"
+              },
               class: "mt-1 flex items-center justify-center rounded px-1 py-0.5 text-xs font-semibold #{color[:bg]} #{color[:text]} hover:opacity-80 transition-opacity" do %>
           <%= arte.client.name.split.map(&:first).first(2).join.upcase %>
         <% end %>

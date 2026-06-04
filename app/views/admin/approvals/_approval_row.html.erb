@@ -11,6 +11,7 @@
   <% end %>
   <td class="py-3 px-4">
     <%= link_to "Ver arte", admin_arte_path(approval_response.arte),
-          class: "h-8 px-3 border border-gray-200 rounded-lg text-xs text-slate-600 hover:bg-gray-50 transition-colors" %>
+          class: "h-8 px-3 border border-gray-200 rounded-lg text-xs text-slate-600 hover:bg-gray-50 transition-colors",
+          data: { turbo_frame: "_top" } %>
   </td>
 </tr>
