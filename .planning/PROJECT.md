@@ -58,14 +58,22 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - ✓ Botões de ação visíveis e semânticos no show de artes (Excluir vermelho, Marcar Revisada verde, back link) — SHOW-01 — v1.3 Phase 12
 - ✓ Link "Ver" com borda visível no dashboard (não aparece como texto puro) — DASH-01 — v1.3 Phase 12
 
-### Backlog (v1.3+)
+### Validated (v1.4)
+
+- ✓ Admin acessa Página Aprovações via sidebar (link wired para admin_approvals_path) — APRO-03 — v1.4 Phase 13
+- ✓ Admin vê listagem de todas as respostas de aprovação com paginação de 25 itens — APRO-04 — v1.4 Phase 13
+- ✓ Admin filtra aprovações por cliente — APRO-05 — v1.4 Phase 13
+- ✓ Admin filtra aprovações por decisão (Aprovado / Pediu Alteração) — APRO-06 — v1.4 Phase 13
+- ✓ Filtros e paginação funcionam via Turbo Frame sem full page reload — APRO-07 — v1.4 Phase 13
+
+### Backlog (v1.4+)
 
 - [ ] Notificações por e-mail ao admin quando cliente aprova ou pede alteração (NOTF-01)
 - [ ] Notificações por e-mail ao cliente quando arte é revisada (NOTF-02)
 - [ ] Exportar relatório de aprovações de um cliente em PDF ou CSV (ADM2-01)
 - [ ] Duplicar uma arte para outro cliente ou data (ADM2-02)
 - [ ] Deploy em produção com Active Storage S3 (INFRA-01)
-- [ ] Sidebar links "Aprovações" e "Calendário" wired (atualmente apontam para `#`) (INFRA-02)
+- [ ] Sidebar link "Calendário" wired (atualmente aponta para `#`) (INFRA-02)
 
 ### Out of Scope
 
@@ -80,7 +88,7 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 
 ## Context
 
-**Estado atual (v1.2 shipped 2026-06-03):**
+**Estado atual (v1.4 shipped 2026-06-04):**
 - Carteira de 10–30 clientes ativos
 - Conteúdo para Instagram, Facebook e LinkedIn
 - Admin faz upload direto de arquivos OU cola links externos (Google Drive, Dropbox)
