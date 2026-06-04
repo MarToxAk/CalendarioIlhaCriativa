@@ -76,7 +76,11 @@ Full details: [.planning/milestones/v1.3-ROADMAP.md](.planning/milestones/v1.3-R
   3. Cada item da lista exibe: nome do cliente, título/identificação da arte, status da resposta, data e comentário quando presente
   4. Admin seleciona um cliente ou um status no filtro e a lista atualiza mostrando apenas os itens correspondentes
   5. Admin clica num item da lista e acessa a página da arte correspondente diretamente
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 13-01-PLAN.md — Infraestrutura Pagy + rota + sidebar wired + arquivo de testes
+- [ ] 13-02-PLAN.md — Controller ApprovalsController + testes de integração
+- [ ] 13-03-PLAN.md — Views: index, _approval_row, _decision_badge
 **UI hint**: yes
 
 ### Phase 14: Calendário Admin
@@ -133,7 +137,7 @@ Full details: [.planning/milestones/v1.3-ROADMAP.md](.planning/milestones/v1.3-R
 | 10. Arte Form Polish | v1.3 | 3/3 | Complete | 2026-06-03 |
 | 11. Arte Index Polish | v1.3 | 1/1 | Complete | 2026-06-03 |
 | 12. Arte Show & Dashboard Fix | v1.3 | 1/1 | Complete | 2026-06-03 |
-| 13. Página Aprovações | v1.4 | 0/? | Not started | - |
+| 13. Página Aprovações | v1.4 | 0/3 | Not started | - |
 | 14. Calendário Admin | v1.4 | 0/? | Not started | - |
 | 15. Configurações | v1.4 | 0/? | Not started | - |
 | 16. Feriados Brasileiros | v1.4 | 0/? | Not started | - |
