@@ -60,7 +60,7 @@ Full details: [.planning/milestones/v1.3-ROADMAP.md](.planning/milestones/v1.3-R
 ### v1.4 Admin Pages + Brazilian Calendar
 
 - [x] **Phase 13: Página Aprovações** — Histórico completo de respostas com filtros por cliente e status (completed 2026-06-04)
-- [ ] **Phase 14: Calendário Admin** — Calendário unificado com artes de todos os clientes, cor por cliente, navegação e links
+- [x] **Phase 14: Calendário Admin** — Calendário unificado com artes de todos os clientes, cor por cliente, navegação e links (completed 2026-06-04)
 - [ ] **Phase 15: Configurações** — Página de configurações com alteração de senha e dados da agência
 - [ ] **Phase 16: Feriados Brasileiros** — Lista hardcoded de feriados e comemorativos visível nos calendários do admin e do cliente
 
@@ -158,6 +158,6 @@ Full details: [.planning/milestones/v1.3-ROADMAP.md](.planning/milestones/v1.3-R
 | 11. Arte Index Polish | v1.3 | 1/1 | Complete | 2026-06-03 |
 | 12. Arte Show & Dashboard Fix | v1.3 | 1/1 | Complete | 2026-06-03 |
 | 13. Página Aprovações | v1.4 | 3/3 | Complete    | 2026-06-04 |
-| 14. Calendário Admin | v1.4 | 2/3 | In Progress|  |
+| 14. Calendário Admin | v1.4 | 3/3 | Complete   | 2026-06-04 |
 | 15. Configurações | v1.4 | 0/? | Not started | - |
 | 16. Feriados Brasileiros | v1.4 | 0/? | Not started | - |
