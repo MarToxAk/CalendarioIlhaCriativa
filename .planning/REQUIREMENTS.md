@@ -18,11 +18,11 @@
 
 ### Calendário Admin (Todos os clientes)
 
-- [ ] **CADM-01**: Admin acessa a página "Calendário" pelo link do sidebar (wired, não mais `#`)
-- [ ] **CADM-02**: Admin vê calendário mensal com artes de todos os clientes agrupadas por dia
-- [ ] **CADM-03**: Cada arte no calendário admin exibe cor de fundo única por cliente e nome/iniciais do cliente visível
-- [ ] **CADM-04**: Admin navega entre meses no calendário admin
-- [ ] **CADM-05**: Admin clica numa arte no calendário admin e acessa a página da arte diretamente
+- [x] **CADM-01**: Admin acessa a página "Calendário" pelo link do sidebar (wired, não mais `#`)
+- [x] **CADM-02**: Admin vê calendário mensal com artes de todos os clientes agrupadas por dia
+- [x] **CADM-03**: Cada arte no calendário admin exibe cor de fundo única por cliente e nome/iniciais do cliente visível
+- [x] **CADM-04**: Admin navega entre meses no calendário admin
+- [x] **CADM-05**: Admin clica numa arte no calendário admin e acessa a página da arte diretamente
 
 ### Configurações
 
@@ -68,11 +68,11 @@
 | APRO-05 | Phase 13 | Complete |
 | APRO-06 | Phase 13 | Complete |
 | APRO-07 | Phase 13 | Complete |
-| CADM-01 | Phase 14 | Pending |
-| CADM-02 | Phase 14 | Pending |
-| CADM-03 | Phase 14 | Pending |
-| CADM-04 | Phase 14 | Pending |
-| CADM-05 | Phase 14 | Pending |
+| CADM-01 | Phase 14 | Complete |
+| CADM-02 | Phase 14 | Complete |
+| CADM-03 | Phase 14 | Complete |
+| CADM-04 | Phase 14 | Complete |
+| CADM-05 | Phase 14 | Complete |
 | CONF-01 | Phase 15 | Pending |
 | CONF-02 | Phase 15 | Pending |
 | CONF-03 | Phase 15 | Pending |

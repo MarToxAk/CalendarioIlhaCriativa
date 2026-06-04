@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: Admin Pages + Brazilian Calendar
-status: executing
-last_updated: "2026-06-04T11:16:10.714Z"
+status: ready_to_plan
+last_updated: 2026-06-04T11:47:57.874Z
 last_activity: 2026-06-04 -- Phase 14 execution started
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 6
-  completed_plans: 3
+  completed_plans: 41
   percent: 25
+stopped_at: Phase 14 complete (3/3) — ready to discuss Phase 15
 ---
 
 # Project State
@@ -20,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-03)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 14 — calend-rio-admin
+**Current focus:** Phase 15 — configurações
 
 ## Current Position
 
-Phase: 14 (calend-rio-admin) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 14
-Last activity: 2026-06-04 -- Phase 14 execution started
+Phase: 15
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-06-04
 
 ## Progress Bar
 
