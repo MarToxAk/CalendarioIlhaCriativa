@@ -70,6 +70,9 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - ✓ Cada cliente tem cor e iniciais distintas nos chips do calendário admin — CADM-03 — v1.4 Phase 14
 - ✓ Admin navega por meses via setas com Turbo Frame (sem full page reload) — CADM-04 — v1.4 Phase 14
 - ✓ Chip do calendário admin é link direto para a arte — CADM-05 — v1.4 Phase 14
+- ✓ Admin acessa Configurações via sidebar (link wired para admin_settings_path) — CONF-01 — v1.4 Phase 15
+- ✓ Admin altera senha com validação (senha atual + nova + confirmação) e feedback — CONF-02 — v1.4 Phase 15
+- ✓ Admin edita nome da agência e o novo nome aparece refletido no sidebar — CONF-03 — v1.4 Phase 15
 
 ### Backlog (v1.4+)
 
