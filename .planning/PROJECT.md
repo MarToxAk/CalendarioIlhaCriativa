@@ -179,4 +179,4 @@ This document evolves at phase transitions and milestone boundaries.
 - Feriados nacionais e dias comemorativos brasileiros destacados visualmente nos calendários
 
 ---
-*Last updated: 2026-06-04 — Phase 14 complete: Calendário Admin com chips coloridos por cliente, turbo-frame navigation e suite de testes.*
+*Last updated: 2026-06-04 — Phase 16 complete: Feriados brasileiros (nacionais + comemorativos de marketing) visíveis nos calendários admin e cliente via módulo BrazilianHolidays hardcoded 2025–2027.*
