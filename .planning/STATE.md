@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: Admin Pages + Brazilian Calendar
-status: executing
-last_updated: "2026-06-04T03:45:48.534Z"
+status: ready_to_plan
+last_updated: 2026-06-04T04:12:27.235Z
 last_activity: 2026-06-04 -- Phase 13 execution started
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 3
-  completed_plans: 0
+  completed_plans: 38
   percent: 0
+stopped_at: Phase 13 complete (3/3) — ready to discuss Phase 14
 ---
 
 # Project State
@@ -20,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-03)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 13 — p-gina-aprova-es
+**Current focus:** Phase 14 — calendário admin
 
 ## Current Position
 
-Phase: 13 (p-gina-aprova-es) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 13
-Last activity: 2026-06-04 -- Phase 13 execution started
+Phase: 14
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-06-04
 
 ## Progress Bar
 

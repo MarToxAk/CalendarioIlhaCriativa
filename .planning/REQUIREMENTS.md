@@ -10,11 +10,11 @@
 
 ### Aprovações (Histórico de aprovações)
 
-- [ ] **APRO-03**: Admin acessa a página "Aprovações" pelo link do sidebar (wired, não mais `#`)
-- [ ] **APRO-04**: Admin vê lista paginada de todas as respostas de aprovação, ordenada pela mais recente
-- [ ] **APRO-05**: Cada item da lista exibe: cliente, arte, status, data da resposta e comentário (se houver)
-- [ ] **APRO-06**: Admin filtra a lista de aprovações por cliente e por status
-- [ ] **APRO-07**: Admin acessa a arte correspondente diretamente a partir de um item da lista
+- [x] **APRO-03**: Admin acessa a página "Aprovações" pelo link do sidebar (wired, não mais `#`)
+- [x] **APRO-04**: Admin vê lista paginada de todas as respostas de aprovação, ordenada pela mais recente
+- [x] **APRO-05**: Cada item da lista exibe: cliente, arte, status, data da resposta e comentário (se houver)
+- [x] **APRO-06**: Admin filtra a lista de aprovações por cliente e por status
+- [x] **APRO-07**: Admin acessa a arte correspondente diretamente a partir de um item da lista
 
 ### Calendário Admin (Todos os clientes)
 
@@ -63,11 +63,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| APRO-03 | Phase 13 | Pending |
-| APRO-04 | Phase 13 | Pending |
-| APRO-05 | Phase 13 | Pending |
-| APRO-06 | Phase 13 | Pending |
-| APRO-07 | Phase 13 | Pending |
+| APRO-03 | Phase 13 | Complete |
+| APRO-04 | Phase 13 | Complete |
+| APRO-05 | Phase 13 | Complete |
+| APRO-06 | Phase 13 | Complete |
+| APRO-07 | Phase 13 | Complete |
 | CADM-01 | Phase 14 | Pending |
 | CADM-02 | Phase 14 | Pending |
 | CADM-03 | Phase 14 | Pending |
