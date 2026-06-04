@@ -1,0 +1,13 @@
+<%# app/views/admin/approvals/_decision_badge.html.erb %>
+<%
+  badge_config = {
+    "approved"          => { classes: "bg-[#F0FDF4] text-[#14A958] border-[#14A958]/20",   label: "Aprovado" },
+    "change_requested"  => { classes: "bg-[#FEF2F2] text-[#EE3537] border-[#EE3537]/20",   label: "Pediu Alteração" }
+  }
+  config        = badge_config[approval_response.decision.to_s]
+  badge_classes = config ? config[:classes] : "bg-gray-50 text-slate-600 border-gray-200"
+  badge_label   = config ? config[:label]   : approval_response.decision.to_s
+%>
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold border <%= badge_classes %>">
+  <span aria-hidden="true">●</span> <%= badge_label %>
+</span>

@@ -1,0 +1,16 @@
+<%# app/views/admin/approvals/_approval_row.html.erb %>
+<tr class="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
+  <td class="py-3 px-4 text-sm text-slate-900"><%= approval_response.arte.client.name %></td>
+  <td class="py-3 px-4 text-sm text-slate-900"><%= approval_response.arte.title.presence || "Sem título" %></td>
+  <td class="py-3 px-4"><%= render "decision_badge", approval_response: approval_response %></td>
+  <td class="py-3 px-4 text-sm text-slate-600"><%= approval_response.responded_at&.strftime("%d/%m/%Y") || "—" %></td>
+  <% if approval_response.comment.present? %>
+    <td class="py-3 px-4 text-sm text-slate-500"><%= truncate(approval_response.comment, length: 80) %></td>
+  <% else %>
+    <td class="py-3 px-4 text-sm text-slate-400 italic">—</td>
+  <% end %>
+  <td class="py-3 px-4">
+    <%= link_to "Ver arte", admin_arte_path(approval_response.arte),
+          class: "h-8 px-3 border border-gray-200 rounded-lg text-xs text-slate-600 hover:bg-gray-50 transition-colors" %>
+  </td>
+</tr>
