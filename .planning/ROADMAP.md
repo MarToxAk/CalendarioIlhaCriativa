@@ -79,7 +79,7 @@ Full details: [.planning/milestones/v1.3-ROADMAP.md](.planning/milestones/v1.3-R
   4. Admin seleciona um cliente ou um status no filtro e a lista atualiza mostrando apenas os itens correspondentes
   5. Admin clica num item da lista e acessa a página da arte correspondente diretamente
 
-**Plans**: 3 plansPlans:
+**Plans**: 3 plans
 **Wave 1**
 
 - [x] 13-01-PLAN.md — Infraestrutura Pagy + rota + sidebar wired + arquivo de testes
@@ -145,10 +145,19 @@ Full details: [.planning/milestones/v1.3-ROADMAP.md](.planning/milestones/v1.3-R
 **Success Criteria** (what must be TRUE):
 
   1. O sistema possui lista hardcoded com feriados nacionais e comemorativos de marketing (Dia das Mães, Namorados, Pais, etc.) para os anos em uso
-  2. No calendário do cliente, dias com feriado ou comemorativo exibem fundo destacado e o nome do evento legível na célula
-  3. No calendário do admin, dias com feriado ou comemorativo exibem fundo destacado e o nome do evento legível na célula
+  2. No calendário do cliente, dias com feriado ou comemorativo exibem o nome do evento em texto vermelho legível na célula
+  3. No calendário do admin, dias com feriado ou comemorativo exibem o nome do evento em texto vermelho legível na célula
 
-**Plans**: TBD
+**Plans**: 2 plans
+
+**Wave 1**
+
+- [ ] 16-01-PLAN.md — Módulo BrazilianHolidays + helper brazilian_holiday_for + testes unitários
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 16-02-PLAN.md — Views ERB dos dois calendários + testes de integração + checkpoint visual
+
 **UI hint**: yes
 
 ## Progress
@@ -173,4 +182,4 @@ Full details: [.planning/milestones/v1.3-ROADMAP.md](.planning/milestones/v1.3-R
 | 13. Página Aprovações | v1.4 | 3/3 | Complete    | 2026-06-04 |
 | 14. Calendário Admin | v1.4 | 3/3 | Complete    | 2026-06-04 |
 | 15. Configurações | v1.4 | 3/3 | Complete    | 2026-06-04 |
-| 16. Feriados Brasileiros | v1.4 | 0/? | Not started | - |
+| 16. Feriados Brasileiros | v1.4 | 0/2 | Not started | - |
