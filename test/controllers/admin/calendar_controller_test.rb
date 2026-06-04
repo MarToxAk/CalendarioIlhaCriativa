@@ -38,4 +38,64 @@ class Admin::CalendarControllerTest < ActionDispatch::IntegrationTest
     get admin_calendar_index_url, params: { month: "invalid" }
     assert_response :success
   end
+
+  # Testes adicionados no plano 14-03
+
+  test "test_returns_200_when_authenticated" do
+    get admin_calendar_index_url
+    assert_response :success
+  end
+
+  test "test_redirects_when_unauthenticated" do
+    delete session_path
+    get admin_calendar_index_url
+    assert_response :redirect
+  end
+
+  test "test_displays_client_name" do
+    get admin_calendar_index_url, params: { month: @arte.scheduled_on.strftime("%Y-%m") }
+    assert_response :success
+    assert_includes response.body, @client.name
+  end
+
+  test "test_navigates_to_specific_month" do
+    get admin_calendar_index_url, params: { month: @arte.scheduled_on.strftime("%Y-%m") }
+    assert_response :success
+  end
+
+  test "test_invalid_month_param_does_not_crash" do
+    get admin_calendar_index_url, params: { month: "invalid" }
+    assert_response :success
+  end
+
+  test "test_chip_contains_client_initials" do
+    get admin_calendar_index_url, params: { month: @arte.scheduled_on.strftime("%Y-%m") }
+    assert_response :success
+    initials = @client.name.split.map(&:first).first(2).join.upcase
+    assert_includes response.body, initials
+  end
+
+  test "test_chip_links_to_arte" do
+    get admin_calendar_index_url, params: { month: @arte.scheduled_on.strftime("%Y-%m") }
+    assert_response :success
+    assert_includes response.body, admin_arte_path(@arte)
+  end
+
+  test "test_overflow_shows_plus_n" do
+    4.times do |i|
+      Arte.create!(
+        client: @client,
+        scheduled_on: @arte.scheduled_on,
+        platform: :instagram,
+        media_type: :image,
+        status: :pending,
+        caption: "cap",
+        approval_deadline: Date.current + 5,
+        external_url: "https://drive.google.com/file/extra#{i}"
+      )
+    end
+    get admin_calendar_index_url, params: { month: @arte.scheduled_on.strftime("%Y-%m") }
+    assert_response :success
+    assert_includes response.body, "+2"
+  end
 end

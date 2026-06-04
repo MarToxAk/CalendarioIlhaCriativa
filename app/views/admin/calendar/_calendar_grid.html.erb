@@ -27,6 +27,7 @@
       <% visible.each do |arte| %>
         <% color = client_color(arte.client) %>
         <%= link_to admin_arte_path(arte),
+              title: arte.client.name,
               class: "mt-1 flex items-center justify-center rounded px-1 py-0.5 text-xs font-semibold #{color[:bg]} #{color[:text]} hover:opacity-80 transition-opacity" do %>
           <%= arte.client.name.split.map(&:first).first(2).join.upcase %>
         <% end %>
