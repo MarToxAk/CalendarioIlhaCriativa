@@ -1,9 +1,10 @@
 <nav class="w-60 bg-[#0F7949] flex flex-col min-h-screen">
   <%# Branding %>
-  <div class="px-4 py-4 border-b border-white/20 flex items-center justify-center">
+  <div class="px-4 py-4 border-b border-white/20 flex flex-col items-center gap-2">
     <%= image_tag "/logo-livia.svg",
           alt: Current.user&.agency_name || "Logo",
           class: "h-10 w-auto object-contain" %>
+    <span class="text-white font-semibold text-sm"><%= Current.user&.agency_name || "Ilha Criativa" %></span>
   </div>
 
   <%# Nav items %>
