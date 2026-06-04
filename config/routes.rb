@@ -16,6 +16,7 @@ Rails.application.routes.draw do
         patch :mark_revised
       end
     end
+    resources :approvals, only: [ :index ]
   end
 
   # Portal do cliente
