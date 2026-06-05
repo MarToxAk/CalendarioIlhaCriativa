@@ -4,13 +4,16 @@ one:
   name: Client One
   password_digest: <%= password_digest %>
   active: true
+  access_token: fixture_token_client_one_abcdef1234
 
 two:
   name: Client Two
   password_digest: <%= password_digest %>
   active: true
+  access_token: fixture_token_client_two_abcdef5678
 
 inactive:
   name: Inactive Client
   password_digest: <%= password_digest %>
   active: false
+  access_token: fixture_token_inactive_client_9012
