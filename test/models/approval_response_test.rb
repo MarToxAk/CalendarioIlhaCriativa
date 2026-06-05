@@ -65,4 +65,100 @@ class ApprovalResponseTest < ActiveSupport::TestCase
     assert_not ar.valid?
     assert_includes ar.errors[:arte], "não está em estado aprovável"
   end
+
+  # ===========================================================================
+  # Fase 18 — Testes RED para broadcasts_to_admin (Plan 00)
+  # Esses testes falham intencionalmente até Plan 02 adicionar o método.
+  # ===========================================================================
+
+  # Test A: broadcasts_to_admin deve ser método privado no model ApprovalResponse
+  test "broadcasts_to_admin eh metodo privado definido no model" do
+    ar = ApprovalResponse.new(arte: @arte_pending, decision: :change_requested)
+    assert ar.respond_to?(:broadcasts_to_admin, true),
+           "ApprovalResponse deve ter método privado broadcasts_to_admin (Plan 02 o implementa)"
+  end
+
+  # Test B: after_create_commit deve registrar :broadcasts_to_admin como callback
+  test "after_create_commit registra broadcasts_to_admin" do
+    assert_includes ApprovalResponse._commit_callbacks.map(&:filter), :broadcasts_to_admin,
+                    "after_create_commit deve registrar :broadcasts_to_admin (Plan 02 o adiciona)"
+  end
+
+  # Test C: AdminNotificationsChannel.broadcast_to é chamado exatamente 1x para change_requested
+  test "change_requested cria approval e chama broadcast_to uma vez" do
+    @broadcast_calls = []
+    stub_fn = ->(user, **kwargs) { @broadcast_calls << { user: user, kwargs: kwargs } }
+    AdminNotificationsChannel.stub(:broadcast_to, stub_fn) do
+      ApprovalResponse.create!(arte: @arte_pending, decision: :change_requested)
+    end
+    assert_equal 1, @broadcast_calls.length,
+                 "AdminNotificationsChannel.broadcast_to deve ser chamado exatamente 1 vez para change_requested"
+  end
+
+  # Test D: AdminNotificationsChannel.broadcast_to é chamado exatamente 1x para approved
+  test "approved cria approval e chama broadcast_to uma vez" do
+    arte_revised = Arte.create!(
+      client: @client,
+      scheduled_on: Date.current,
+      platform: :instagram,
+      media_type: :image,
+      status: :revised,
+      external_url: "https://drive.google.com/file/revised_for_approved"
+    )
+    @broadcast_calls = []
+    stub_fn = ->(user, **kwargs) { @broadcast_calls << { user: user, kwargs: kwargs } }
+    AdminNotificationsChannel.stub(:broadcast_to, stub_fn) do
+      ApprovalResponse.create!(arte: arte_revised, decision: :approved)
+    end
+    assert_equal 1, @broadcast_calls.length,
+                 "AdminNotificationsChannel.broadcast_to deve ser chamado exatamente 1 vez para approved"
+  end
+
+  # Test E: change_requested deve gerar 4 Turbo Streams (toast + badge + dashboard + approvals)
+  test "change_requested broadcast gera 4 turbo streams" do
+    @broadcast_calls = []
+    stub_fn = ->(user, **kwargs) { @broadcast_calls << { user: user, kwargs: kwargs } }
+    AdminNotificationsChannel.stub(:broadcast_to, stub_fn) do
+      ApprovalResponse.create!(arte: @arte_pending, decision: :change_requested)
+    end
+    assert_equal 4, @broadcast_calls.first[:kwargs][:turbo_stream].length,
+                 "change_requested deve gerar 4 turbo streams: toast, badge, dashboard row e approvals prepend"
+  end
+
+  # Test F: approved deve gerar 3 Turbo Streams (sem badge — D-12)
+  test "approved broadcast gera 3 turbo streams sem badge" do
+    arte_revised = Arte.create!(
+      client: @client,
+      scheduled_on: Date.current,
+      platform: :instagram,
+      media_type: :image,
+      status: :revised,
+      external_url: "https://drive.google.com/file/revised_for_streams"
+    )
+    @broadcast_calls = []
+    stub_fn = ->(user, **kwargs) { @broadcast_calls << { user: user, kwargs: kwargs } }
+    AdminNotificationsChannel.stub(:broadcast_to, stub_fn) do
+      ApprovalResponse.create!(arte: arte_revised, decision: :approved)
+    end
+    assert_equal 3, @broadcast_calls.first[:kwargs][:turbo_stream].length,
+                 "approved deve gerar 3 turbo streams (sem badge stream — D-12)"
+  end
+
+  # Test G: broadcasts_to_admin não deve disparar N+1 para arte.client
+  test "broadcasts_to_admin nao dispara N+1 para arte.client" do
+    queries = []
+    subscriber = ->(name, started, finished, unique_id, payload) { queries << payload[:sql].to_s }
+    @broadcast_calls = []
+    stub_fn = ->(user, **kwargs) { @broadcast_calls << { user: user, kwargs: kwargs } }
+    ActiveSupport::Notifications.subscribed(subscriber, "sql.active_record") do
+      AdminNotificationsChannel.stub(:broadcast_to, stub_fn) do
+        ApprovalResponse.create!(arte: @arte_pending, decision: :change_requested)
+      end
+    end
+    arte_queries = queries.grep(/SELECT.*artes/i)
+    assert(
+      arte_queries.any? { |q| q.include?("JOIN") || q.include?("IN") },
+      "Arte deve ser carregada com includes(:client) via JOIN/IN — não via N+1 queries separadas"
+    )
+  end
 end
