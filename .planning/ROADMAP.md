@@ -118,10 +118,14 @@ Full details: [.planning/milestones/v1.4-ROADMAP.md](.planning/milestones/v1.4-R
   4. Badge do sidebar incrementa em 1 quando nova resposta "Pediu Alteração" chega (sem recarregar)
 
 **Plans**: 3 plans
-
 Plans:
+**Wave 1**
+
 - [x] 18-00-PLAN.md — RED tests para broadcasts_to_admin (callback, streams, eager-load)
 - [x] 18-01-PLAN.md — Cirurgia nas views: sidebar badge sempre no DOM, toast partial, approvals ids
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [x] 18-02-PLAN.md — Dashboard partial + model after_create_commit → GREEN
 
 **UI hint**: yes
