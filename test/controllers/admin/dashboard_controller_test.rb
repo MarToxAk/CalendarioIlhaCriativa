@@ -16,6 +16,7 @@ class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
       approval_deadline: Date.current + 5,
       external_url: "https://drive.google.com/file/exemplo"
     )
+    Rack::Attack.cache.store.clear if defined?(Rack::Attack)
   end
 
   test "should get index" do
@@ -37,5 +38,35 @@ class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
     get admin_root_url, params: { status: "nonexistent_status" }
     assert_response :success
     assert_includes response.body, @arte.title
+  end
+
+  # Testes de infraestrutura real-time (Phase 17 Plan 03)
+
+  test "renders admin toast region in layout" do
+    get admin_root_url
+    assert_response :success
+    assert_select "div#admin-toast-region"
+  end
+
+  test "renders turbo stream from for admin notifications in layout" do
+    get admin_root_url
+    assert_response :success
+    assert_select "turbo-cable-stream-source"
+  end
+
+  # Testes de badge no sidebar (Phase 17 Plan 03)
+
+  test "sidebar badge present when change_requested artes exist" do
+    @arte.update!(status: :change_requested)
+    get admin_root_url
+    assert_response :success
+    assert_select "span#sidebar-badge"
+  end
+
+  test "sidebar badge absent when no change_requested artes" do
+    @arte.update!(status: :pending)
+    get admin_root_url
+    assert_response :success
+    assert_select "span#sidebar-badge", count: 0
   end
 end
