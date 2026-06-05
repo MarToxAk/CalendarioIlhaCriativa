@@ -1,0 +1,7 @@
+<%# app/views/admin/shared/_sidebar_badge.html.erb %>
+<%# Partial isolado do span#sidebar-badge para Turbo Stream replace (RTUP-01) %>
+<%# Locals: badge_count (Integer) — sempre renderizado; hidden quando count == 0 %>
+<span id="sidebar-badge"
+      class="ml-auto bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full <%= 'hidden' if badge_count == 0 %>">
+  <%= badge_count %>
+</span>
