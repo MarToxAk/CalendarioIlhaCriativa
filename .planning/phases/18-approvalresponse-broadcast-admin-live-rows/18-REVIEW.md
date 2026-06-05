@@ -1,27 +1,27 @@
 ---
 phase: 18-approvalresponse-broadcast-admin-live-rows
-reviewed: 2026-06-05T00:00:00Z
+reviewed: 2026-06-05T03:00:00Z
 depth: standard
 files_reviewed: 9
 files_reviewed_list:
-  - app/views/admin/shared/_sidebar_badge.html.erb
-  - app/views/admin/shared/_approval_toast.html.erb
-  - app/views/admin/shared/_sidebar.html.erb
+  - app/models/approval_response.rb
   - app/views/admin/approvals/_approval_row.html.erb
   - app/views/admin/approvals/index.html.erb
   - app/views/admin/dashboard/_arte_dashboard_row.html.erb
   - app/views/admin/dashboard/index.html.erb
-  - app/models/approval_response.rb
+  - app/views/admin/shared/_approval_toast.html.erb
+  - app/views/admin/shared/_sidebar_badge.html.erb
+  - app/views/admin/shared/_sidebar.html.erb
   - test/models/approval_response_test.rb
 findings:
-  critical: 2
+  critical: 1
   warning: 3
   info: 2
-  total: 7
+  total: 6
 status: issues_found
 ---
 
-# Phase 18: Code Review Report
+# Phase 18: Code Review Report (Post-Gap-Closure)
 
 **Reviewed:** 2026-06-05
 **Depth:** standard
@@ -30,175 +30,145 @@ status: issues_found
 
 ## Summary
 
-Phase 18 adds an `after_create_commit :broadcasts_to_admin` callback on `ApprovalResponse` and the associated view partials for admin sidebar badge, toast notification, approval row, and dashboard row. The integration is structurally sound but contains two blockers: a crash-level nil dereference in the custom validator and a stale badge count that permanently misleads the admin when a client approves an arte (as opposed to requesting a change). Three warnings address an N+1 in the broadcast path, an unsafe assumption about which user receives notifications, and an inconsistent nil-safety pattern in a partial. Two info items cover a raw DB query embedded in a sidebar view and an incomplete N+1 test assertion.
+This is the post-gap-closure review for Phase 18. The three previously identified fixes in plan 18-03 were verified as correctly applied: the nil guard in `arte_must_be_pending` is present (line 16), the badge is always broadcast (4 streams in all decision paths), and `arte_with_client` is passed as a local to the approvals prepend partial (line 48). The custom `turbo_stream_tag` string builder introduced in 18-03 has one new critical defect: it calls `dom_id` as an unqualified instance method that is not available in the model context — this will raise `NoMethodError` at runtime for every `ApprovalResponse` creation. Three warnings remain around N+1 query risk in the broadcast path, fragile admin user lookup, and inconsistent nil-safety in the approval row partial. Two info-level items address a raw DB query in the sidebar view and a weak N+1 test assertion.
 
 ---
 
 ## Critical Issues
 
-### CR-01: `arte_must_be_pending` crashes with `NoMethodError` when `arte` is nil
+### CR-01: `dom_id` called as instance method in model context — `NoMethodError` at runtime
 
-**File:** `app/models/approval_response.rb:16`
+**File:** `app/models/approval_response.rb:54`
 
-**Issue:** `belongs_to :arte` is required by default (Rails 5+), but the `belongs_to` presence validation runs in the same validation pass as `arte_must_be_pending`. When `arte` is not set — e.g., `ApprovalResponse.new(decision: :approved).valid?` — `arte` returns `nil` and calling `arte.pending?` raises `NoMethodError` before the `belongs_to` error is ever recorded. The validator does not guard against nil.
+**Issue:** The model calls `dom_id(arte_with_client)` inside `broadcasts_to_admin`. `dom_id` is defined in `ActionView::RecordIdentifier`, which is included into views and helpers but **not** into ActiveRecord model instances. `Turbo::Broadcastable` (auto-included in all ActiveRecord models by turbo-rails engine line 71) does not delegate or re-export `dom_id`. The call therefore raises `NoMethodError: undefined method 'dom_id' for an instance of ApprovalResponse` on every `ApprovalResponse` creation in production. The tests in the file stub `AdminNotificationsChannel.broadcast_to` before `broadcasts_to_admin` is entered, so they do not exercise this line and will not catch the crash.
 
-**Fix:**
+**Fix:** Replace the bare `dom_id` call with the fully-qualified module reference, which is callable without including the module:
+
 ```ruby
-def arte_must_be_pending
-  return unless arte  # guard against nil arte before calling status methods
-  errors.add(:arte, "não está em estado aprovável") unless arte.pending? || arte.revised?
+# app/models/approval_response.rb, line 54
+turbo_stream_tag("replace",
+  ActionView::RecordIdentifier.dom_id(arte_with_client),
+  dashboard_html),
+```
+
+Alternatively, include the module at the top of the class:
+
+```ruby
+class ApprovalResponse < ApplicationRecord
+  include ActionView::RecordIdentifier
+  # ...
 end
 ```
 
----
-
-### CR-02: Sidebar badge never updates when decision is `approved` — stale count shown to admin
-
-**File:** `app/models/approval_response.rb:39-43`
-
-**Issue:** The `sidebar-badge` Turbo Stream replace is only emitted when `decision == "change_requested"`. However, when a client subsequently creates an `ApprovalResponse` with `decision: :approved`, `sync_arte_status` transitions the arte to `:approved`, which removes it from `Arte.change_requested` scope. No badge refresh is broadcast for this path. The admin sidebar badge then shows a count that is **permanently too high** until the next full page load.
-
-The symmetrical case — a client approving a previously change-requested arte — is a normal, expected workflow and should trigger a badge decrement.
-
-**Fix:** Always compute and broadcast the badge update, regardless of decision:
-
-```ruby
-streams = [
-  turbo_stream.append(
-    "admin-toast-region",
-    partial: "admin/shared/approval_toast",
-    locals:  { approval_response: self, arte: arte_with_client }
-  ),
-  turbo_stream.replace(       # always broadcast — count may decrease on :approved
-    "sidebar-badge",
-    partial: "admin/shared/sidebar_badge",
-    locals:  { badge_count: badge_count }
-  ),
-  turbo_stream.replace(
-    dom_id(arte_with_client),
-    partial: "admin/dashboard/arte_dashboard_row",
-    locals:  { arte: arte_with_client }
-  ),
-  turbo_stream.prepend(
-    "approvals-tbody",
-    partial: "admin/approvals/approval_row",
-    locals:  { approval_response: self }
-  )
-]
-```
-
-Also update Test F expectation from 3 to 4 streams, and remove Test E/F distinction (both should be 4).
+The second option makes `dom_id` available as an instance method throughout the class, which is cleaner if the method is called in more than one place.
 
 ---
 
 ## Warnings
 
-### WR-01: N+1 query for `client` when `_approval_row` partial is rendered via broadcast
+### WR-01: N+1 query for `arte.client` in `_approval_row` when rendered via broadcast in controller-driven page loads
 
-**File:** `app/models/approval_response.rb:49-53` / `app/views/admin/approvals/_approval_row.html.erb:3`
+**File:** `app/views/admin/approvals/_approval_row.html.erb:3`
 
-**Issue:** The broadcast passes `approval_response: self` to the `_approval_row` partial. Inside the partial, line 3 accesses `approval_response.arte&.client&.name`. While `self.arte` is typically cached in the association target after the record is built, `self.arte.client` is **not** pre-loaded. This fires an additional SELECT for `clients` every time the partial is rendered via broadcast, contradicting the partial's own comment ("caller MUST eager-load arte: :client via joins").
+**Issue:** The partial is called from `index.html.erb` via `render "approval_row", approval_response: ar` (line 53) without an explicit `arte:` local. Inside the partial, `approval_response.arte&.client&.name` on line 3 and `approval_response.arte.title` on line 4 reach through the `approval_response -> arte -> client` association chain. The controller at `Admin::ApprovalsController` does eager-load `arte: :client` with `.includes(arte: :client)`, so the page-load path avoids N+1. However, the partial comment states "caller MUST eager-load arte: :client via joins" — this contract is enforced only for the broadcast path (where `arte: arte_with_client` is passed), not for the controller-driven render which passes only `approval_response:`. If the controller ever changes the scope or if a new caller uses this partial, the silent N+1 will reappear. The partial itself has no defensive include and no documented fallback.
 
-`arte_with_client` is already fetched with `Arte.includes(:client).find(arte_id)` above but is never passed to `_approval_row` — only the undecorated `self` is.
-
-**Fix:** Pass `arte_with_client` to the partial and use it:
-
-```ruby
-# in broadcasts_to_admin
-turbo_stream.prepend(
-  "approvals-tbody",
-  partial: "admin/approvals/approval_row",
-  locals:  { approval_response: self, arte: arte_with_client }
-)
-```
+**Fix:** Accept `arte` as an optional local in the partial and default to `approval_response.arte` if absent, removing the ambiguity and making the partial self-documenting:
 
 ```erb
-<%# _approval_row.html.erb — use explicit arte local when available %>
-<%
-  _arte = local_assigns.fetch(:arte, approval_response.arte)
-%>
-<tr id="<%= dom_id(approval_response) %>" ...>
+<%# _approval_row.html.erb %>
+<% _arte = local_assigns.fetch(:arte, approval_response.arte) %>
+<tr id="<%= dom_id(approval_response) %>" class="...">
   <td ...><%= _arte&.client&.name || "—" %></td>
   <td ...><%= _arte.title.presence || "Sem título" %></td>
   ...
   <%= link_to "Ver arte", admin_arte_path(_arte), ... %>
+</tr>
 ```
 
 ---
 
-### WR-02: `User.first` is non-deterministic for multi-admin setups and couples broadcast to insertion order
+### WR-02: Fragile admin user lookup — broadcasts sent to first-inserted user regardless of role
 
-**File:** `app/models/approval_response.rb:27`
+**File:** `app/models/approval_response.rb:28`
 
-**Issue:** `User.first` returns the user with the lowest primary-key, with no ordering guarantee beyond database default. If this system ever has more than one admin user (or if database row ordering differs from creation order), the wrong user receives notifications — or a non-admin user receives them. There is no `admin` flag on `User` and no scoping to restrict which user is the recipient.
+**Issue:** `User.order(:id).first` selects the user with the lowest primary key. The `users` table has no `role` or `admin` flag (confirmed via schema). For the current single-admin scenario this is functional, but the selection is purely positional. Any second user record inserted (e.g., during seeding, testing, or a future multi-admin scenario) silently redirects all admin notifications without any error. The model has no guard against `User` being `nil` only when `admin` is nil — the nil guard on line 29 (`return unless admin`) prevents the crash, but the wrong user receiving (or missing) broadcasts is a data correctness bug, not just style.
 
-Even for a single-admin system today, the choice is fragile: any accidental seeding of a second `User` record silently misdirects all notifications.
-
-**Fix:** Introduce either a scope or a configuration constant:
+**Fix:** Name the intent explicitly. At minimum, document that only one `User` row should ever exist. For robustness, add a named scope or constant:
 
 ```ruby
-# Option A: named scope on User
 # app/models/user.rb
-scope :admin, -> { order(:id).first }  # deterministic
+scope :notification_recipient, -> { order(:id).first }
 
-# approval_response.rb
-admin = User.admin
+# app/models/approval_response.rb
+admin = User.notification_recipient
+return unless admin
 ```
 
-```ruby
-# Option B: dedicated method
-# approval_response.rb
-admin = User.order(:id).first   # at minimum, make ordering explicit
-```
+This makes the selection strategy visible and easy to change when the requirement changes.
 
 ---
 
 ### WR-03: Inconsistent nil-safety on `approval_response.arte` within `_approval_row`
 
-**File:** `app/views/admin/approvals/_approval_row.html.erb:3-4`
+**File:** `app/views/admin/approvals/_approval_row.html.erb:3-4,13`
 
-**Issue:** Line 3 uses safe navigation (`approval_response.arte&.client&.name`), but line 4 calls `approval_response.arte.title.presence` without any guard. If `arte` were nil for any reason (e.g., orphaned record after dependent destroy completes mid-broadcast), line 3 silently renders "—" while line 4 raises `NoMethodError: undefined method 'title' for nil`.
+**Issue:** Line 3 guards against nil arte with `approval_response.arte&.client&.name`. Line 4 calls `approval_response.arte.title.presence` without any nil guard. Line 13 passes `approval_response.arte` directly to `admin_arte_path` without guarding. If `arte` is nil (orphaned record, destroyed mid-request, or partial called without eager-loaded association present), line 3 silently renders "—" while line 4 immediately raises `NoMethodError: undefined method 'title' for nil`. The inconsistency means the partial fails in a less predictable way than it would with a consistent approach.
 
-The same unguarded reference appears on line 13 (`admin_arte_path(approval_response.arte)`), which would raise `ActionController::UrlGenerationError` if `arte` is nil.
-
-**Fix:** Either use consistent safe navigation throughout, or assert non-nil once at the top of the partial:
+**Fix:** Establish a single nil check at the top of the partial and use a local variable throughout:
 
 ```erb
-<%# At the top of _approval_row.html.erb %>
-<% _arte = approval_response.arte || raise("_approval_row requires a persisted arte") %>
-<td ...><%= _arte.client&.name || "—" %></td>
-<td ...><%= _arte.title.presence || "Sem título" %></td>
-...
-<%= link_to "Ver arte", admin_arte_path(_arte), ... %>
+<% _arte = approval_response.arte %>
+<% return if _arte.nil? %> <%# or raise, depending on tolerance %>
+<tr id="<%= dom_id(approval_response) %>" ...>
+  <td ...><%= _arte.client&.name || "—" %></td>
+  <td ...><%= _arte.title.presence || "Sem título" %></td>
+  ...
+  <%= link_to "Ver arte", admin_arte_path(_arte), ... %>
+</tr>
 ```
 
 ---
 
 ## Info
 
-### IN-01: Raw DB query (`Arte.where(status:).count`) embedded directly in sidebar view
+### IN-01: Raw DB query embedded in sidebar view partial on every admin page render
 
 **File:** `app/views/admin/shared/_sidebar.html.erb:21`
 
-**Issue:** `badge_count = Arte.where(status: :change_requested).count` runs a database query inline in the view on every admin page render. The sidebar is included in the admin layout, so this query executes on every admin page load. The real-time badge is already kept fresh via Turbo Stream replace (RTUP-01), so the initial value only needs to be correct at layout render time — but the query should live in a controller or helper, not in a view partial.
+**Issue:** `badge_count = Arte.where(status: :change_requested).count` runs a database query inline in the view partial. The sidebar is included in the admin layout, so this SELECT runs on every admin page load. The real-time badge is kept fresh via Turbo Stream replace (RTUP-01), but the initial count query belongs in a controller or layout-level `before_action`, not in a view partial.
 
-**Fix:** Compute `badge_count` in `Admin::BaseController` (or a before_action helper) and expose it as an instance variable or `content_for` slot, keeping the view free of DB calls.
+**Fix:** Move `badge_count` computation to `Admin::BaseController`:
+
+```ruby
+# app/controllers/admin/base_controller.rb
+before_action :set_badge_count
+
+def set_badge_count
+  @badge_count = Arte.change_requested.count
+end
+```
+
+Then in the sidebar partial:
+
+```erb
+<%= render "admin/shared/sidebar_badge", badge_count: @badge_count %>
+```
 
 ---
 
-### IN-02: Test G N+1 assertion does not verify `client` pre-loading — only checks `artes` queries
+### IN-02: Test G N+1 assertion does not verify `client` pre-loading — only checks queries against `artes`
 
-**File:** `test/models/approval_response_test.rb:158-162`
+**File:** `test/models/approval_response_test.rb:158-165`
 
-**Issue:** Test G subscribes to `sql.active_record` notifications and asserts that at least one query against `artes` uses a JOIN or IN clause. This validates that `Arte` is loaded with `includes(:client)` on the SQL level. However, the actual N+1 risk described in WR-01 is a **separate** query against the `clients` table when `approval_response.arte.client` is accessed inside `_approval_row`. The test does not grep for `clients` queries and would pass even if the client association is loaded lazily.
+**Issue:** Test G asserts that at least one query against the `artes` table uses a JOIN or IN clause. This confirms that `Arte` itself is not loaded row-by-row. However, the N+1 that WR-01 describes concerns the `clients` table — a subsequent lazy load of `approval_response.arte.client` during partial rendering. The test does not filter for `clients` queries and will pass even if client is loaded via a separate single-row SELECT, making the N+1 guarantee weaker than the comment implies.
 
-**Fix:** Extend the assertion to verify no isolated single-row `clients` SELECT is fired:
+**Fix:** Add an assertion on client-table queries:
 
 ```ruby
-client_queries = queries.grep(/SELECT.*FROM.*"clients"/i)
-# No single-row lookup should occur; client must be batch-loaded with arte
-assert_empty client_queries.select { |q| !q.include?("JOIN") && !q.include?(" IN ") },
-             "clients must not be loaded via separate N+1 queries"
+client_queries = queries.grep(/SELECT.*FROM.*"?clients"?/i)
+isolated_client_queries = client_queries.reject { |q| q.match?(/JOIN|\ IN\ /i) }
+assert_empty isolated_client_queries,
+  "clients must not be fetched via isolated N+1 queries — use includes(:client)"
 ```
 
 ---
