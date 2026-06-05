@@ -89,7 +89,12 @@ Full details: [.planning/milestones/v1.4-ROADMAP.md](.planning/milestones/v1.4-R
   3. Badge exibe "0" (ou some) quando não há artes pendentes de revisão
   4. Região de toast `id="admin-toast-region"` existe no layout admin pronta para receber broadcasts
   5. Stimulus toast_controller está registrado e responde ao evento de append de toast no DOM
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 17-00-PLAN.md — Infraestrutura de testes: ApplicationCable::Channel base class, fixtures clients/sessions, stubs RED
+- [ ] 17-01-PLAN.md — connection.rb: autenticação dual admin (cookie) + cliente (token URL)
+- [ ] 17-02-PLAN.md — AdminNotificationsChannel: canal per-user com stream_for e defesa em profundidade
+- [ ] 17-03-PLAN.md — Badge sidebar + toast region no layout + toast_controller.js
 **UI hint**: yes
 
 ### Phase 18: ApprovalResponse Broadcast + Admin Live Rows
@@ -151,7 +156,7 @@ Full details: [.planning/milestones/v1.4-ROADMAP.md](.planning/milestones/v1.4-R
 | 14. Calendário Admin | v1.4 | 3/3 | Complete    | 2026-06-04 |
 | 15. Configurações | v1.4 | 3/3 | Complete    | 2026-06-04 |
 | 16. Feriados Brasileiros | v1.4 | 2/2 | Complete    | 2026-06-04 |
-| 17. Cable Foundation + Admin Channel + Badge + Toast | v1.5 | 0/3 | Not started | - |
+| 17. Cable Foundation + Admin Channel + Badge + Toast | v1.5 | 0/4 | Not started | - |
 | 18. ApprovalResponse Broadcast + Admin Live Rows | v1.5 | 0/3 | Not started | - |
 | 19. Client Real-time + Arte Status Broadcast | v1.5 | 0/3 | Not started | - |
 | 20. Admin Calendar Chips Real-time | v1.5 | 0/2 | Not started | - |
