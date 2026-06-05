@@ -10,8 +10,8 @@
 
 ### Infraestrutura Cable
 
-- [ ] **CABLE-01**: ActionCable WebSocket conecta para admin (via sessão Rails) e para cliente (via token de URL) sem erro de conexão
-- [ ] **CABLE-02**: Sidebar do admin exibe badge numérico com contagem de artes com "Pediu Alteração" não revisadas
+- [x] **CABLE-01**: ActionCable WebSocket conecta para admin (via sessão Rails) e para cliente (via token de URL) sem erro de conexão
+- [x] **CABLE-02**: Sidebar do admin exibe badge numérico com contagem de artes com "Pediu Alteração" não revisadas
 
 ### Notificações do Admin (acionadas por: cliente envia resposta de aprovação)
 

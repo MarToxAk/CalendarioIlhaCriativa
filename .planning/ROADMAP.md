@@ -72,7 +72,7 @@ Full details: [.planning/milestones/v1.4-ROADMAP.md](.planning/milestones/v1.4-R
 
 ### v1.5 Real-time & Notifications
 
-- [ ] **Phase 17: Cable Foundation + Admin Channel + Badge + Toast** - Estabelece a infraestrutura WebSocket e monta o sistema de badge e toast no painel admin
+- [x] **Phase 17: Cable Foundation + Admin Channel + Badge + Toast** - Estabelece a infraestrutura WebSocket e monta o sistema de badge e toast no painel admin (completed 2026-06-05)
 - [ ] **Phase 18: ApprovalResponse Broadcast + Admin Live Rows** - Broadcasts em tempo real das novas respostas de aprovação para o dashboard e página Aprovações do admin
 - [ ] **Phase 19: Client Real-time + Arte Status Broadcast** - Canal do cliente e broadcasts quando admin marca arte como revisada
 - [ ] **Phase 20: Admin Calendar Chips Real-time** - Chips do calendário admin atualizam em tempo real quando status de arte muda
@@ -95,13 +95,13 @@ Full details: [.planning/milestones/v1.4-ROADMAP.md](.planning/milestones/v1.4-R
 **Plans**: 4 plansPlans:
 **Wave 1**
 
-- [ ] 17-00-PLAN.md — Infraestrutura de testes: ApplicationCable::Channel base class, fixtures clients/sessions, stubs RED
-- [ ] 17-01-PLAN.md — connection.rb: autenticação dual admin (cookie) + cliente (token URL)
-- [ ] 17-02-PLAN.md — AdminNotificationsChannel: canal per-user com stream_for e defesa em profundidade
+- [x] 17-00-PLAN.md — Infraestrutura de testes: ApplicationCable::Channel base class, fixtures clients/sessions, stubs RED
+- [x] 17-01-PLAN.md — connection.rb: autenticação dual admin (cookie) + cliente (token URL)
+- [x] 17-02-PLAN.md — AdminNotificationsChannel: canal per-user com stream_for e defesa em profundidade
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 17-03-PLAN.md — Badge sidebar + toast region no layout + toast_controller.js
+- [x] 17-03-PLAN.md — Badge sidebar + toast region no layout + toast_controller.js
 
 **UI hint**: yes
 
@@ -173,7 +173,7 @@ Full details: [.planning/milestones/v1.4-ROADMAP.md](.planning/milestones/v1.4-R
 | 14. Calendário Admin | v1.4 | 3/3 | Complete    | 2026-06-04 |
 | 15. Configurações | v1.4 | 3/3 | Complete    | 2026-06-04 |
 | 16. Feriados Brasileiros | v1.4 | 2/2 | Complete    | 2026-06-04 |
-| 17. Cable Foundation + Admin Channel + Badge + Toast | v1.5 | 0/4 | Not started | - |
+| 17. Cable Foundation + Admin Channel + Badge + Toast | v1.5 | 4/4 | Complete    | 2026-06-05 |
 | 18. ApprovalResponse Broadcast + Admin Live Rows | v1.5 | 0/3 | Not started | - |
 | 19. Client Real-time + Arte Status Broadcast | v1.5 | 0/3 | Not started | - |
 | 20. Admin Calendar Chips Real-time | v1.5 | 0/2 | Not started | - |

@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Real-time & Notifications
-status: executing
-last_updated: "2026-06-05T11:05:00.214Z"
-last_activity: 2026-06-05 -- Phase 17 planning complete
+status: ready_to_plan
+last_updated: 2026-06-05T11:53:31.751Z
+last_activity: 2026-06-05 -- Phase 17 execution started
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 4
-  completed_plans: 0
+  completed_plans: 50
   percent: 0
+stopped_at: Phase 17 complete (4/4) — ready to discuss Phase 18
 ---
 
 # Project State
@@ -20,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-05)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** v1.5 Real-time & Notifications — roadmap pronto, aguardando Phase 17
+**Current focus:** Phase 18 — approvalresponse broadcast + admin live rows
 
 ## Current Position
 
-Phase: 17 (not started)
-Plan: —
-Status: Ready to execute
-Last activity: 2026-06-05 -- Phase 17 planning complete
+Phase: 18
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-06-05
 
 ## Progress Bar
 
