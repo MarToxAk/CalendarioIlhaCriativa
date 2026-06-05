@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Real-time & Notifications
-status: roadmap_ready
-last_updated: "2026-06-05T00:00:00.000Z"
-last_activity: 2026-06-05
+status: Roadmap ready — run `/gsd-plan-phase 17`
+last_updated: "2026-06-05T10:37:44.041Z"
+last_activity: 2026-06-05 — Roadmap v1.5 criado (Phases 17–20)
 progress:
   total_phases: 4
   completed_phases: 0
