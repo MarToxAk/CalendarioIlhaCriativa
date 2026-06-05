@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Real-time & Notifications
-status: planning
+status: roadmap_ready
 last_updated: "2026-06-05T00:00:00.000Z"
 last_activity: 2026-06-05
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
-  total_plans: 0
+  total_plans: 11
   completed_plans: 0
   percent: 0
 ---
@@ -20,19 +20,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-05)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** v1.5 Real-time & Notifications — defining requirements
+**Current focus:** v1.5 Real-time & Notifications — roadmap pronto, aguardando Phase 17
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 17 (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-05 — Milestone v1.5 started
+Status: Roadmap ready — run `/gsd-plan-phase 17`
+Last activity: 2026-06-05 — Roadmap v1.5 criado (Phases 17–20)
 
 ## Progress Bar
 
 ```
-v1.5: (phases TBD — roadmap em construção)
+v1.5: [░░░░░░░░░░░░░░░░░░░░] 0% (0/4 phases)
+Phase 17: Cable Foundation + Admin Channel + Badge + Toast — Not started
+Phase 18: ApprovalResponse Broadcast + Admin Live Rows — Not started
+Phase 19: Client Real-time + Arte Status Broadcast — Not started
+Phase 20: Admin Calendar Chips Real-time — Not started
 ```
 
 ## Milestone v1.0 — Shipped
@@ -67,11 +71,6 @@ v1.5: (phases TBD — roadmap em construção)
 - **Plans:** 5/5 complete
 - **Requirements:** 6/6 (FORM-01..03, PAGE-01..02, IDX-01..02, SHOW-01, DASH-01)
 
-## Milestone v1.5 — In Progress
-
-- **Started:** 2026-06-05
-- **Goal:** Real-time & Notifications via ActionCable/Turbo Streams
-
 ## Milestone v1.4 — Shipped
 
 - **Shipped:** 2026-06-04
@@ -79,6 +78,14 @@ v1.5: (phases TBD — roadmap em construção)
 - **Phases:** 4 (Phase 13–16)
 - **Plans:** 11/11 complete
 - **Requirements:** 16/16 (APRO-03..07, CADM-01..05, CONF-01..03, FERI-01..03)
+
+## Milestone v1.5 — In Progress
+
+- **Started:** 2026-06-05
+- **Goal:** Real-time & Notifications via ActionCable/Turbo Streams
+- **Phases:** 4 (Phase 17–20)
+- **Plans:** 0/11 complete
+- **Requirements:** 0/10 (CABLE-01, CABLE-02, RTUP-01..08)
 
 ## Deferred Items
 
@@ -117,15 +124,22 @@ v1.5: (phases TBD — roadmap em construção)
 - v1.2 roadmap defined 2026-06-02: Phase 8 (bug aprovação) + Phase 9 (faixa de resumo)
 - v1.3 roadmap defined 2026-06-03: Phase 10 (form polish) + Phase 11 (index polish) + Phase 12 (show + dashboard)
 - v1.4 roadmap defined 2026-06-04: Phase 13 (aprovações) + Phase 14 (calendário admin) + Phase 15 (configurações) + Phase 16 (feriados brasileiros)
+- v1.5 roadmap defined 2026-06-05: Phase 17 (cable foundation + badge + toast) + Phase 18 (approval broadcasts) + Phase 19 (client real-time) + Phase 20 (admin calendar chips)
 
 ### v1.5 Context
 
 - ActionCable disponível no Rails 8.1.3 — sem gem adicional necessária
 - Adapter PostgreSQL para ActionCable (sem Redis) — config: `config/cable.yml`
-- Autenticação ActionCable: admin usa Session (cookie), cliente usa token de URL
+- Autenticação ActionCable: admin usa Session (cookie), cliente usa token de URL via params[:token]
+- connection.rb deve permitir admin e cliente; canais individuais fazem reject se não autorizado
 - Turbo Streams via cable_ready: broadcast direto do model callback
-- Toast system: Stimulus controller global montado no layout admin e no layout do cliente
-- Badge sidebar: counter calculado via Arte.where(decision: :change_requested, status: not :revised)
+- Toast system: Stimulus controller global (toast_controller.js) montado no layout admin e no layout do cliente
+- Badge sidebar: counter calculado via ApprovalResponse com decision :change_requested onde arte.status != :revised
+- solid_cable já instalado — usa PostgreSQL sem Redis
+- _approval_row.html.erb já existe (Phase 13) — reutilizar
+- id="sidebar-badge", id="admin-toast-region", id="client-toast-region" — IDs de target para broadcasts
+- turbo_stream_from "admin_notifications" vai no layout admin (Phase 17)
+- ClientCalendarChannel subscribing a "client_calendar_#{client.access_token}"
 
 ### v1.4 Context (SHIPPED 2026-06-04)
 
@@ -137,4 +151,4 @@ v1.5: (phases TBD — roadmap em construção)
 
 ## Operator Next Steps
 
-- Roadmap em construção — run `/gsd-plan-phase 17` quando roadmap estiver pronto
+- Roadmap v1.5 pronto — run `/gsd-plan-phase 17`

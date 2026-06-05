@@ -56,7 +56,7 @@
 |-------------|-------|--------|
 | CABLE-01 | Phase 17 | Not started |
 | CABLE-02 | Phase 17 | Not started |
-| RTUP-01 | Phase 17–19 | Not started |
+| RTUP-01 | Phase 18 (incremento), Phase 19 (decremento), Phase 20 (finalizado) | Not started |
 | RTUP-02 | Phase 18 | Not started |
 | RTUP-03 | Phase 18 | Not started |
 | RTUP-04 | Phase 18 | Not started |
