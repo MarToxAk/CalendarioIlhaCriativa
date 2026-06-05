@@ -18,6 +18,7 @@
         { label: "Calendário",    path: admin_calendar_index_path },
         { label: "Configurações", path: admin_settings_path },
       ]
+      badge_count = Arte.where(status: :change_requested).count
     %>
     <% nav_items.each do |item| %>
       <%= link_to item[:path],
@@ -27,6 +28,12 @@
               'text-white/70 hover:bg-white/10 hover:text-white'
             }" do %>
         <%= item[:label] %>
+        <% if item[:path] == admin_approvals_path && badge_count > 0 %>
+          <span id="sidebar-badge"
+                class="ml-auto bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+            <%= badge_count %>
+          </span>
+        <% end %>
       <% end %>
     <% end %>
   </div>
