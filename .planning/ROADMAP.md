@@ -117,7 +117,13 @@ Full details: [.planning/milestones/v1.4-ROADMAP.md](.planning/milestones/v1.4-R
   3. Página Aprovações do admin exibe nova linha no topo da lista em tempo real quando nova resposta chega
   4. Badge do sidebar incrementa em 1 quando nova resposta "Pediu Alteração" chega (sem recarregar)
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 18-00-PLAN.md — RED tests para broadcasts_to_admin (callback, streams, eager-load)
+- [ ] 18-01-PLAN.md — Cirurgia nas views: sidebar badge sempre no DOM, toast partial, approvals ids
+- [ ] 18-02-PLAN.md — Dashboard partial + model after_create_commit → GREEN
+
 **UI hint**: yes
 
 ### Phase 19: Client Real-time + Arte Status Broadcast
