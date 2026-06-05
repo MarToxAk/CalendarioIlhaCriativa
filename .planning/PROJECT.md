@@ -76,7 +76,15 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - ✓ Admin altera senha com validação (senha atual + nova + confirmação) e feedback — CONF-02 — v1.4 Phase 15
 - ✓ Admin edita nome da agência e o novo nome aparece refletido no sidebar — CONF-03 — v1.4 Phase 15
 
-### Backlog (v1.4+)
+### Validated (v1.5)
+
+- ✓ AdminNotificationsChannel com stream per-user e defesa de autenticação — CABLE-01 — v1.5 Phase 17
+- ✓ WebSocket dual-auth: admin via cookie de sessão, cliente via token de URL — CABLE-01 — v1.5 Phase 17
+- ✓ Badge numérico sidebar exibe contagem de artes com mudança solicitada — CABLE-02 — v1.5 Phase 17
+- ✓ Layout admin com turbo_stream_from e toast region fixo (bottom-right) — CABLE-02 — v1.5 Phase 17
+- ✓ toast_controller.js com auto-dismiss 5s e limite MAX_TOASTS=3 — CABLE-02 — v1.5 Phase 17
+
+### Backlog (v1.5+)
 
 - [ ] Notificações por e-mail ao admin quando cliente aprova ou pede alteração (NOTF-01)
 - [ ] Notificações por e-mail ao cliente quando arte é revisada (NOTF-02)
@@ -93,11 +101,11 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - White-labeling / domínio personalizado — complexidade sem benefício imediato v1
 - IA para geração de legendas — fora do escopo de aprovação
 - Drag-and-drop de artes no calendário — v2+ UX
-- Real-time collaboration — WebSockets desnecessário neste volume
+- Real-time collaboration — WebSockets sendo implementado no v1.5 para notificações admin (não para colaboração multi-usuário)
 
 ## Context
 
-**Estado atual (v1.4 shipped 2026-06-04):**
+**Estado atual (v1.5 em progresso — Phase 17 completa 2026-06-05):**
 - Carteira de 10–30 clientes ativos
 - Conteúdo para Instagram, Facebook e LinkedIn
 - Admin faz upload direto de arquivos OU cola links externos (Google Drive, Dropbox)
