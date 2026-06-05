@@ -51,7 +51,7 @@ class ApprovalResponse < ApplicationRecord
     content = [
       turbo_stream_tag("append",  "admin-toast-region",          toast_html),
       turbo_stream_tag("replace", "sidebar-badge",               badge_html),
-      turbo_stream_tag("replace", dom_id(arte_with_client),      dashboard_html),
+      turbo_stream_tag("replace", ActionView::RecordIdentifier.dom_id(arte_with_client), dashboard_html),
       turbo_stream_tag("prepend", "approvals-tbody",             approvals_html)
     ].join
 
