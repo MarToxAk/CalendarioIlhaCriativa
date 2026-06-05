@@ -73,7 +73,7 @@ Full details: [.planning/milestones/v1.4-ROADMAP.md](.planning/milestones/v1.4-R
 ### v1.5 Real-time & Notifications
 
 - [x] **Phase 17: Cable Foundation + Admin Channel + Badge + Toast** - Estabelece a infraestrutura WebSocket e monta o sistema de badge e toast no painel admin (completed 2026-06-05)
-- [ ] **Phase 18: ApprovalResponse Broadcast + Admin Live Rows** - Broadcasts em tempo real das novas respostas de aprovação para o dashboard e página Aprovações do admin
+- [x] **Phase 18: ApprovalResponse Broadcast + Admin Live Rows** - Broadcasts em tempo real das novas respostas de aprovação para o dashboard e página Aprovações do admin (completed 2026-06-05)
 - [ ] **Phase 19: Client Real-time + Arte Status Broadcast** - Canal do cliente e broadcasts quando admin marca arte como revisada
 - [ ] **Phase 20: Admin Calendar Chips Real-time** - Chips do calendário admin atualizam em tempo real quando status de arte muda
 
@@ -184,6 +184,6 @@ Plans:
 | 15. Configurações | v1.4 | 3/3 | Complete    | 2026-06-04 |
 | 16. Feriados Brasileiros | v1.4 | 2/2 | Complete    | 2026-06-04 |
 | 17. Cable Foundation + Admin Channel + Badge + Toast | v1.5 | 4/4 | Complete    | 2026-06-05 |
-| 18. ApprovalResponse Broadcast + Admin Live Rows | v1.5 | 3/3 | Executed | - |
+| 18. ApprovalResponse Broadcast + Admin Live Rows | v1.5 | 4/4 | Complete   | 2026-06-05 |
 | 19. Client Real-time + Arte Status Broadcast | v1.5 | 0/3 | Not started | - |
 | 20. Admin Calendar Chips Real-time | v1.5 | 0/2 | Not started | - |
