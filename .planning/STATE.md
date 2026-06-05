@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Real-time & Notifications
-status: Roadmap ready — run `/gsd-plan-phase 17`
-last_updated: "2026-06-05T10:37:44.041Z"
-last_activity: 2026-06-05 — Roadmap v1.5 criado (Phases 17–20)
+status: executing
+last_updated: "2026-06-05T11:05:00.214Z"
+last_activity: 2026-06-05 -- Phase 17 planning complete
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 11
+  total_plans: 4
   completed_plans: 0
   percent: 0
 ---
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-06-05)
 
 Phase: 17 (not started)
 Plan: —
-Status: Roadmap ready — run `/gsd-plan-phase 17`
-Last activity: 2026-06-05 — Roadmap v1.5 criado (Phases 17–20)
+Status: Ready to execute
+Last activity: 2026-06-05 -- Phase 17 planning complete
 
 ## Progress Bar
 

@@ -80,56 +80,73 @@ Full details: [.planning/milestones/v1.4-ROADMAP.md](.planning/milestones/v1.4-R
 ## Phase Details
 
 ### Phase 17: Cable Foundation + Admin Channel + Badge + Toast
+
 **Goal**: Estabelecer a infraestrutura WebSocket funcional, o canal do admin, o badge numérico no sidebar e a infraestrutura de toast para que o painel admin esteja pronto para receber broadcasts em tempo real
 **Depends on**: Phase 16 (painel admin completo)
 **Requirements**: CABLE-01, CABLE-02
 **Success Criteria** (what must be TRUE):
+
   1. Admin abre o painel e o WebSocket conecta sem erros no console do browser (nenhum reject de connection.rb)
   2. Sidebar do admin exibe badge numérico com a contagem atual de artes com "Pediu Alteração" não revisadas
   3. Badge exibe "0" (ou some) quando não há artes pendentes de revisão
   4. Região de toast `id="admin-toast-region"` existe no layout admin pronta para receber broadcasts
   5. Stimulus toast_controller está registrado e responde ao evento de append de toast no DOM
-**Plans**: 4 plans
-Plans:
+
+**Plans**: 4 plansPlans:
+**Wave 1**
+
 - [ ] 17-00-PLAN.md — Infraestrutura de testes: ApplicationCable::Channel base class, fixtures clients/sessions, stubs RED
 - [ ] 17-01-PLAN.md — connection.rb: autenticação dual admin (cookie) + cliente (token URL)
 - [ ] 17-02-PLAN.md — AdminNotificationsChannel: canal per-user com stream_for e defesa em profundidade
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 17-03-PLAN.md — Badge sidebar + toast region no layout + toast_controller.js
+
 **UI hint**: yes
 
 ### Phase 18: ApprovalResponse Broadcast + Admin Live Rows
+
 **Goal**: Quando um cliente registra aprovação ou pedido de alteração, o admin recebe toast imediato em qualquer página e as listas do dashboard e da página Aprovações ganham a nova linha sem recarregar
 **Depends on**: Phase 17
 **Requirements**: RTUP-01 (incremento do badge), RTUP-02, RTUP-03, RTUP-04
 **Success Criteria** (what must be TRUE):
+
   1. Admin logado em qualquer página do painel recebe um toast visível dentro de 2 segundos após cliente submeter resposta
   2. Dashboard admin exibe nova linha de arte no topo da tabela sem recarregar a página quando cliente aprova ou pede alteração
   3. Página Aprovações do admin exibe nova linha no topo da lista em tempo real quando nova resposta chega
   4. Badge do sidebar incrementa em 1 quando nova resposta "Pediu Alteração" chega (sem recarregar)
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 19: Client Real-time + Arte Status Broadcast
+
 **Goal**: Quando o admin marca uma arte como revisada, o calendário do cliente atualiza a célula e o resumo de status em tempo real e exibe um toast de notificação — tudo sem recarregar a página
 **Depends on**: Phase 18
 **Requirements**: RTUP-05, RTUP-06, RTUP-07, RTUP-01 (decremento do badge)
 **Success Criteria** (what must be TRUE):
+
   1. Cliente com calendário aberto vê o badge de status da arte mudar (de "Pediu Alteração" para "Revisado") dentro de 2 segundos após admin marcar como revisada
   2. Faixa de resumo no topo do calendário do cliente atualiza os contadores em tempo real quando status de arte muda
   3. Cliente recebe toast visível no calendário quando admin marca arte como revisada
   4. Badge do sidebar admin decrementa em 1 quando admin marca arte como revisada (RTUP-01 parcial)
   5. Autenticação do canal do cliente via token de URL funciona sem expor sessão do admin
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 20: Admin Calendar Chips Real-time
+
 **Goal**: Chips do calendário admin refletem mudanças de status de artes em tempo real, completando o ciclo de atualizações em tempo real para todas as views do admin
 **Depends on**: Phase 19
 **Requirements**: RTUP-08, RTUP-01 (finalizado)
 **Success Criteria** (what must be TRUE):
+
   1. Admin com calendário aberto vê o chip de uma arte atualizar visualmente (cor ou texto de status) dentro de 2 segundos após cliente registrar resposta
   2. Badge do sidebar reflete o estado correto após qualquer sequência de eventos (aprovação, pedido de alteração, revisão) — RTUP-01 completo
   3. Nenhum broadcast duplica chips ou cria elementos DOM extras no calendário admin
+
 **Plans**: TBD
 **UI hint**: yes
 
