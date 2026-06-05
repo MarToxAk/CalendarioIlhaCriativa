@@ -12,6 +12,8 @@ Sistema web em Ruby on Rails para agências e freelancers de social media gerenc
 
 **v1.3 shipped 2026-06-03** — painel admin totalmente estilizado com Tailwind puro: form de artes (fields, radio pills Stimulus, locals), pages new/edit (card + back link), index (tabela formatada, mobile cards, empty state), show (barra de ações semântica com turbo_confirm) e dashboard (link "Ver" com borda visível).
 
+**v1.4 shipped 2026-06-04** — todas as páginas admin completadas (Aprovações com filtros Turbo Frame e paginação Pagy, Calendário Admin com cor por cliente e navegação por mês, Configurações com troca de senha e nome da agência) e feriados/comemorativos brasileiros destacados em vermelho nos dois calendários.
+
 ## Core Value
 
 O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
@@ -102,9 +104,10 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - Status simplificado: Pendente → Aprovado / Pediu Alteração → Revisado → Pendente
 - Prazo de aprovação por arte (data limite definida pelo admin)
 - Notificações: admin verifica o painel quando quiser, sem alertas automáticos
-- **Tech stack:** Rails 8.1.3, PostgreSQL (192.168.3.203), Tailwind v4, Stimulus, Turbo, ActiveStorage
-- **Codebase:** ~290 arquivos, ~27.000+ linhas de código
+- **Tech stack:** Rails 8.1.3, PostgreSQL (192.168.3.203), Tailwind v4, Stimulus, Turbo, ActiveStorage, Pagy
+- **Codebase:** ~300+ arquivos, ~27.000+ linhas de código
 - **Storage:** ActiveStorage local (upload) + URLs externas (Drive/Dropbox) — S3 para produção
+- **Painel admin completo:** Dashboard, Artes (CRUD), Clientes (CRUD), Aprovações (histórico), Calendário (unificado), Configurações (senha + agência)
 
 ## Constraints
 
@@ -168,15 +171,16 @@ This document evolves at phase transitions and milestone boundaries.
 - 2026-06-02 — v1.1 SHIPPED — 3 requisitos (ARTE-08, ARTE-09, ARTE-10) validados
 - Phase 08 complete (2026-06-03) — Fix "Resposta inválida": scope: :approval_response adicionado nos dois form_with de aprovação (APRO-01, APRO-02 validados)
 
-## Current Milestone: v1.4 Admin Pages + Brazilian Calendar
+## Shipped: v1.4 Admin Pages + Brazilian Calendar
 
-**Goal:** Completar as páginas inacabadas do painel admin (Aprovações, Calendário, Configurações) e marcar feriados e dias comemorativos brasileiros nos calendários do admin e do cliente.
+**Shipped:** 2026-06-04
+**Archive:** [.planning/milestones/v1.4-ROADMAP.md](.planning/milestones/v1.4-ROADMAP.md)
 
-**Target features:**
-- Página "Aprovações" com histórico completo de todas as respostas, com filtros por cliente e status
-- Calendário admin unificado mostrando artes de todos os clientes com cor e nome por cliente
-- Página "Configurações" para alterar senha e dados da agência
-- Feriados nacionais e dias comemorativos brasileiros destacados visualmente nos calendários
+**What was delivered:**
+- Página "Aprovações" com paginação Pagy, filtros Turbo Frame por cliente e decisão, tabela desktop + cards mobile, badges verde/vermelho
+- Calendário Admin unificado com cor por cliente (8 cores determinísticas), iniciais, overflow "+N", navegação por mês via Turbo Frame
+- Página "Configurações" com troca de senha (valida senha atual) e edição de agency_name refletida dinamicamente no sidebar
+- BrazilianHolidays: módulo hardcoded 2025-2027 com 17+ feriados/comemorativos brasileiros, span text-red-400 nos dois calendários
 
 ---
-*Last updated: 2026-06-04 — Phase 16 complete: Feriados brasileiros (nacionais + comemorativos de marketing) visíveis nos calendários admin e cliente via módulo BrazilianHolidays hardcoded 2025–2027.*
+*Last updated: 2026-06-04 — v1.4 milestone archived.*

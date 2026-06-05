@@ -6,7 +6,7 @@
 - ✅ **v1.1 Fix Art Upload & Client Association** — Fases 7 + 7.1 (shipped 2026-06-02) → [Archive](.planning/milestones/v1.1-ROADMAP.md)
 - ✅ **v1.2 Calendar Summary & Approval Fix** — Fases 8 + 9 (shipped 2026-06-03) → [Archive](.planning/milestones/v1.2-ROADMAP.md)
 - ✅ **v1.3 Arte UI Polish** — Fases 10–12 (shipped 2026-06-03) → [Archive](.planning/milestones/v1.3-ROADMAP.md)
-- 🔄 **v1.4 Admin Pages + Brazilian Calendar** — Fases 13–16 (in progress)
+- ✅ **v1.4 Admin Pages + Brazilian Calendar** — Fases 13–16 (shipped 2026-06-04) → [Archive](.planning/milestones/v1.4-ROADMAP.md)
 
 ## Phases
 
@@ -57,108 +57,17 @@ Full details: [.planning/milestones/v1.3-ROADMAP.md](.planning/milestones/v1.3-R
 
 </details>
 
-### v1.4 Admin Pages + Brazilian Calendar
+<details>
+<summary>✅ v1.4 Admin Pages + Brazilian Calendar (Fases 13–16) — SHIPPED 2026-06-04</summary>
 
-- [x] **Phase 13: Página Aprovações** — Histórico completo de respostas com filtros por cliente e status (completed 2026-06-04)
-- [x] **Phase 14: Calendário Admin** — Calendário unificado com artes de todos os clientes, cor por cliente, navegação e links (completed 2026-06-04)
-- [x] **Phase 15: Configurações** — Página de configurações com alteração de senha e dados da agência (completed 2026-06-04)
-- [x] **Phase 16: Feriados Brasileiros** — Lista hardcoded de feriados e comemorativos visível nos calendários do admin e do cliente (completed 2026-06-04)
+- [x] Phase 13: Página Aprovações (3/3 plans) — completed 2026-06-04
+- [x] Phase 14: Calendário Admin (3/3 plans) — completed 2026-06-04
+- [x] Phase 15: Configurações (3/3 plans) — completed 2026-06-04
+- [x] Phase 16: Feriados Brasileiros (2/2 plans) — completed 2026-06-04
 
-## Phase Details
+Full details: [.planning/milestones/v1.4-ROADMAP.md](.planning/milestones/v1.4-ROADMAP.md)
 
-### Phase 13: Página Aprovações
-
-**Goal**: Admin consegue consultar o histórico completo de todas as respostas de aprovação num único lugar, com filtros e link direto para cada arte
-**Depends on**: Phase 12 (painel admin estilizado)
-**Requirements**: APRO-03, APRO-04, APRO-05, APRO-06, APRO-07
-**Success Criteria** (what must be TRUE):
-
-  1. Admin clica em "Aprovações" no sidebar e é levado à página (link não aponta mais para `#`)
-  2. Admin vê lista paginada de respostas ordenada da mais recente para a mais antiga
-  3. Cada item da lista exibe: nome do cliente, título/identificação da arte, status da resposta, data e comentário quando presente
-  4. Admin seleciona um cliente ou um status no filtro e a lista atualiza mostrando apenas os itens correspondentes
-  5. Admin clica num item da lista e acessa a página da arte correspondente diretamente
-
-**Plans**: 3 plans
-**Wave 1**
-
-- [x] 13-01-PLAN.md — Infraestrutura Pagy + rota + sidebar wired + arquivo de testes
-
-**Wave 2** *(blocked on Wave 1 completion)*
-
-- [x] 13-02-PLAN.md — Controller ApprovalsController + testes de integração
-
-**Wave 3** *(blocked on Wave 2 completion)*
-
-- [x] 13-03-PLAN.md — Views: index, _approval_row, _decision_badge
-
-**UI hint**: yes
-
-### Phase 14: Calendário Admin
-
-**Goal**: Admin visualiza num único calendário mensal as artes de todos os clientes, diferenciadas por cor e nome de cliente, e navega entre meses e acessa artes diretamente
-**Depends on**: Phase 13
-**Requirements**: CADM-01, CADM-02, CADM-03, CADM-04, CADM-05
-**Success Criteria** (what must be TRUE):
-
-  1. Admin clica em "Calendário" no sidebar e é levado à página do calendário admin (link não aponta mais para `#`)
-  2. Admin vê calendário mensal com todas as artes de todos os clientes distribuídas nos dias corretos
-  3. Cada arte exibe cor de fundo distinta por cliente e o nome ou iniciais do cliente visível na célula do dia
-  4. Admin clica nas setas de navegação (mês anterior / próximo) e o calendário atualiza sem recarregar a página completa
-  5. Admin clica numa arte do calendário e é levado à página de show da arte correspondente
-
-**Plans**: TBD
-**UI hint**: yes
-
-### Phase 15: Configurações
-
-**Goal**: Admin consegue alterar sua senha e o nome da agência através de uma página de configurações acessível pelo sidebar
-**Depends on**: Phase 14
-**Requirements**: CONF-01, CONF-02, CONF-03
-**Success Criteria** (what must be TRUE):
-
-  1. Admin clica em "Configurações" no sidebar e é levado à página de configurações (link não aponta mais para `#`)
-  2. Admin preenche formulário de troca de senha (senha atual + nova + confirmação) e a senha é atualizada com feedback de sucesso ou erro
-  3. Admin edita o nome da agência e salva, o novo nome aparece refletido no painel
-
-**Plans**: 3 plans
-
-**Wave 1**
-
-- [x] 15-01-PLAN.md — Migração agency_name + rota settings + sidebar wired + scaffold testes
-
-**Wave 2** *(blocked on Wave 1 completion)*
-
-- [x] 15-02-PLAN.md — Controller Admin::SettingsController + testes de integração
-
-**Wave 3** *(blocked on Wave 2 completion)*
-
-- [x] 15-03-PLAN.md — View: show com cards de senha e dados da agência
-
-**UI hint**: yes
-
-### Phase 16: Feriados Brasileiros
-
-**Goal**: Feriados nacionais e dias comemorativos de marketing brasileiros ficam visualmente destacados nos calendários do admin e do cliente, sem depender de API externa
-**Depends on**: Phase 15
-**Requirements**: FERI-01, FERI-02, FERI-03
-**Success Criteria** (what must be TRUE):
-
-  1. O sistema possui lista hardcoded com feriados nacionais e comemorativos de marketing (Dia das Mães, Namorados, Pais, etc.) para os anos em uso
-  2. No calendário do cliente, dias com feriado ou comemorativo exibem o nome do evento em texto vermelho legível na célula
-  3. No calendário do admin, dias com feriado ou comemorativo exibem o nome do evento em texto vermelho legível na célula
-
-**Plans**: 2 plans
-
-**Wave 1**
-
-- [x] 16-01-PLAN.md — Módulo BrazilianHolidays + helper brazilian_holiday_for + testes unitários
-
-**Wave 2** *(blocked on Wave 1 completion)*
-
-- [x] 16-02-PLAN.md — Views ERB dos dois calendários + testes de integração + checkpoint visual
-
-**UI hint**: yes
+</details>
 
 ## Progress
 

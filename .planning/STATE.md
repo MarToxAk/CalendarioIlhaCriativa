@@ -2,39 +2,38 @@
 gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: Admin Pages + Brazilian Calendar
-status: milestone_complete
-last_updated: 2026-06-04T21:21:15.975Z
-last_activity: 2026-06-04 -- Phase 16 planning complete
+status: archived
+last_updated: "2026-06-04T23:00:00.000Z"
+last_activity: 2026-06-04
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 11
-  completed_plans: 46
-  percent: 75
-stopped_at: Milestone complete (Phase 16 was final phase)
+  completed_plans: 11
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-03)
+See: .planning/PROJECT.md (updated 2026-06-04)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Milestone complete
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 16
-Plan: Not started
-Status: Milestone complete
+Phase: 16 (last phase of v1.4)
+Plan: Complete
+Status: v1.4 archived — planning next milestone
 Last activity: 2026-06-04
 
 ## Progress Bar
 
 ```
-v1.4: [ ] Phase 13  [ ] Phase 14  [ ] Phase 15  [ ] Phase 16
-       0/4 phases complete
+v1.4: [x] Phase 13  [x] Phase 14  [x] Phase 15  [x] Phase 16
+       4/4 phases complete — SHIPPED
 ```
 
 ## Milestone v1.0 — Shipped
@@ -69,18 +68,13 @@ v1.4: [ ] Phase 13  [ ] Phase 14  [ ] Phase 15  [ ] Phase 16
 - **Plans:** 5/5 complete
 - **Requirements:** 6/6 (FORM-01..03, PAGE-01..02, IDX-01..02, SHOW-01, DASH-01)
 
-## Milestone v1.4 — In Progress
+## Milestone v1.4 — Shipped
 
-- **Started:** 2026-06-04
+- **Shipped:** 2026-06-04
+- **Archived:** 2026-06-04
 - **Phases:** 4 (Phase 13–16)
-- **Requirements:** 16 total
-
-| Phase | Requirements | Status |
-|-------|--------------|--------|
-| 13. Página Aprovações | APRO-03..07 (5 req) | Not started |
-| 14. Calendário Admin | CADM-01..05 (5 req) | Not started |
-| 15. Configurações | CONF-01..03 (3 req) | In progress (Wave 2/3 done) |
-| 16. Feriados Brasileiros | FERI-01..03 (3 req) | Not started |
+- **Plans:** 11/11 complete
+- **Requirements:** 16/16 (APRO-03..07, CADM-01..05, CONF-01..03, FERI-01..03)
 
 ## Deferred Items
 
@@ -106,6 +100,10 @@ v1.4: [ ] Phase 13  [ ] Phase 14  [ ] Phase 15  [ ] Phase 16
 | verification | Phase 11: 11-01-VERIFICATION.md [human_needed] — arte index polish, validação visual | deferred | v1.3 close 2026-06-03 |
 | uat | Phase 12: 12-HUMAN-UAT.md [partial] — 3 cenários show+dashboard (validação visual, turbo_confirm) | deferred | v1.3 close 2026-06-03 |
 | verification | Phase 12: 12-01-VERIFICATION.md [human_needed] — arte show+dashboard, validação visual | deferred | v1.3 close 2026-06-03 |
+| uat | Phase 13: 13-HUMAN-UAT.md [human_needed] — validação visual da página Aprovações (score 15/15) | deferred | v1.4 close 2026-06-04 |
+| verification | Phase 13: 13-VERIFICATION.md [human_needed] — validação visual da página Aprovações (score 15/15) | deferred | v1.4 close 2026-06-04 |
+| uat | Phase 14: 14-HUMAN-UAT.md [human_needed] — validação visual do calendário admin (score 9/9) | deferred | v1.4 close 2026-06-04 |
+| verification | Phase 14: 14-VERIFICATION.md [human_needed] — validação visual do calendário admin (score 9/9) | deferred | v1.4 close 2026-06-04 |
 
 ## Accumulated Context
 
@@ -116,19 +114,14 @@ v1.4: [ ] Phase 13  [ ] Phase 14  [ ] Phase 15  [ ] Phase 16
 - v1.3 roadmap defined 2026-06-03: Phase 10 (form polish) + Phase 11 (index polish) + Phase 12 (show + dashboard)
 - v1.4 roadmap defined 2026-06-04: Phase 13 (aprovações) + Phase 14 (calendário admin) + Phase 15 (configurações) + Phase 16 (feriados brasileiros)
 
-### v1.4 Context
+### v1.4 Context (SHIPPED 2026-06-04)
 
-- Sidebar links "Aprovações" e "Calendário" apontam para `#` desde v1.0 — serão wired nas fases 13 e 14 respectivamente
-- Calendário do cliente usa simple_calendar gem — fase 16 precisa estender a view para destacar feriados sem quebrar o layout existente
-- Padrão de filtros com Turbo Frame já estabelecido na fase 6 (dashboard) — fase 13 deve replicar o mesmo padrão para filtros de aprovações
-- Cor por cliente (fase 14): não há campo de cor no model Client ainda — pode ser necessário adicionar coluna ou derivar cor determinística do id/nome
-- Configurações (fase 15): Rails 8 auth generator gera `passwords_controller` e `sessions_controller` — verificar o que já existe antes de criar novo controller
-
-### v1.3 Context
-
-Classes placeholder sem CSS definido a eliminar: `form-input`, `btn`, `btn-primary`, `btn-sm`.
-Padrão de referência para card + back link: páginas new/edit de clientes (`app/views/admin/clients/`).
+- Sidebar "Aprovações" e "Calendário" wired (fases 13 e 14)
+- Cor por cliente derivada deterministicamente via `client.id % 8` — não requer coluna de cor no model
+- agency_name adicionado à tabela users (migração 20260604121724) com default "Ilha Criativa"
+- Rack::Attack rate-limit interferia em testes de controller com múltiplos `post session_path` — fix: `Rack::Attack.cache.store.clear` no setup de testes
+- BrazilianHolidays module em app/lib/ (autoloaded) com 17+ feriados/comemorativos 2025-2027
 
 ## Operator Next Steps
 
-- Run `/gsd-plan-phase 13` to plan Phase 13: Página Aprovações
+- Run `/gsd-new-milestone` to start planning v1.5

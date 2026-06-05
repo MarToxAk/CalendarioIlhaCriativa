@@ -1,5 +1,33 @@
 # Milestones
 
+## v1.4 Admin Pages + Brazilian Calendar (Shipped: 2026-06-04)
+
+**Phases completed:** 4 phases, 11 plans
+**Timeline:** 2026-06-04 (1 day)
+**Files:** 199 files changed, 8.674 insertions
+**Requirements:** 16/16 (APRO-03..07, CADM-01..05, CONF-01..03, FERI-01..03)
+**Known deferred items at close:** 4 (see STATE.md Deferred Items) — validações visuais fases 13 e 14
+
+### What Was Shipped
+
+Completou as quatro páginas do painel admin inacabadas desde v1.0 e adicionou feriados brasileiros nos calendários.
+
+### Key Accomplishments
+
+1. **Página Aprovações** — Admin::ApprovalsController com query anti-N+1, paginação Pagy 25 itens, filtros Turbo Frame por cliente e decisão, tabela desktop + cards mobile, badges verde/vermelho; 8 testes de integração
+2. **Calendário Admin** — Admin::CalendarController com helper client_color (8 cores determinísticas via id % 8), grade mensal 7 colunas, chips coloridos com iniciais, overflow "+N", navegação de mês via Turbo Frame; 12 testes de integração
+3. **Configurações** — Admin::SettingsController com troca de senha (valida atual + mismatch) e edição de agency_name; coluna agency_name na tabela users; nome da agência dinâmico no sidebar; 8 testes de integração
+4. **Feriados Brasileiros** — BrazilianHolidays module em app/lib/ com 17+ datas/ano para 2025-2027 (feriados nacionais + comemorativos de marketing); span text-red-400 nos dois calendários; 12 testes automatizados; checkpoint visual aprovado
+5. **Infraestrutura Pagy** — Pagy::Backend/Frontend habilitados via include no base controller e application_helper
+6. **Fix Rack::Attack em testes** — Rack::Attack.cache.store.clear no setup previne flakiness do rate limiter entre múltiplos logins em testes
+
+### Archive
+
+- Roadmap: `.planning/milestones/v1.4-ROADMAP.md`
+- Requirements: `.planning/milestones/v1.4-REQUIREMENTS.md`
+
+---
+
 ## v1.3 Arte UI Polish (Shipped: 2026-06-03)
 
 **Phases completed:** 5 phases, 7 plans, 10 tasks
