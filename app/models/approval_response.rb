@@ -13,6 +13,7 @@ class ApprovalResponse < ApplicationRecord
   private
 
   def arte_must_be_pending
+    return unless arte
     errors.add(:arte, "não está em estado aprovável") unless arte.pending? || arte.revised?
   end
 
@@ -24,35 +25,44 @@ class ApprovalResponse < ApplicationRecord
   end
 
   def broadcasts_to_admin
-    admin = User.first
+    admin = User.order(:id).first
     return unless admin
 
     arte_with_client = Arte.includes(:client).find(arte_id)
     badge_count      = Arte.change_requested.count
 
-    streams = [
-      turbo_stream.append(
-        "admin-toast-region",
-        partial: "admin/shared/approval_toast",
-        locals:  { approval_response: self, arte: arte_with_client }
-      ),
-      (turbo_stream.replace(
-        "sidebar-badge",
-        partial: "admin/shared/sidebar_badge",
-        locals:  { badge_count: badge_count }
-      ) if decision == "change_requested"),
-      turbo_stream.replace(
-        dom_id(arte_with_client),
-        partial: "admin/dashboard/arte_dashboard_row",
-        locals:  { arte: arte_with_client }
-      ),
-      turbo_stream.prepend(
-        "approvals-tbody",
-        partial: "admin/approvals/approval_row",
-        locals:  { approval_response: self }
-      )
-    ].compact
+    toast_html    = render_partial_html(
+      partial: "admin/shared/approval_toast",
+      locals:  { approval_response: self, arte: arte_with_client }
+    )
+    badge_html    = render_partial_html(
+      partial: "admin/shared/sidebar_badge",
+      locals:  { badge_count: badge_count }
+    )
+    dashboard_html = render_partial_html(
+      partial: "admin/dashboard/arte_dashboard_row",
+      locals:  { arte: arte_with_client }
+    )
+    approvals_html = render_partial_html(
+      partial: "admin/approvals/approval_row",
+      locals:  { approval_response: self, arte: arte_with_client }
+    )
 
-    AdminNotificationsChannel.broadcast_to(admin, turbo_stream: streams)
+    content = [
+      turbo_stream_tag("append",  "admin-toast-region",          toast_html),
+      turbo_stream_tag("replace", "sidebar-badge",               badge_html),
+      turbo_stream_tag("replace", dom_id(arte_with_client),      dashboard_html),
+      turbo_stream_tag("prepend", "approvals-tbody",             approvals_html)
+    ].join
+
+    AdminNotificationsChannel.broadcast_to(admin, content)
+  end
+
+  def render_partial_html(partial:, locals:)
+    ApplicationController.render(partial: partial, locals: locals, formats: [ :html ])
+  end
+
+  def turbo_stream_tag(action, target, template_html = "")
+    %(<turbo-stream action="#{action}" target="#{target}"><template>#{template_html}</template></turbo-stream>)
   end
 end

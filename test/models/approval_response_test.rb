@@ -67,27 +67,28 @@ class ApprovalResponseTest < ActiveSupport::TestCase
   end
 
   # ===========================================================================
-  # Fase 18 — Testes RED para broadcasts_to_admin (Plan 00)
-  # Esses testes falham intencionalmente até Plan 02 adicionar o método.
+  # Fase 18 — Testes para broadcasts_to_admin
+  # Atualizados no Plan 03: stub posicional (user, content) + 4 streams em ambos
+  # os casos (CR-02 — badge sempre broadcast).
   # ===========================================================================
 
   # Test A: broadcasts_to_admin deve ser método privado no model ApprovalResponse
   test "broadcasts_to_admin eh metodo privado definido no model" do
     ar = ApprovalResponse.new(arte: @arte_pending, decision: :change_requested)
     assert ar.respond_to?(:broadcasts_to_admin, true),
-           "ApprovalResponse deve ter método privado broadcasts_to_admin (Plan 02 o implementa)"
+           "ApprovalResponse deve ter método privado broadcasts_to_admin"
   end
 
   # Test B: after_create_commit deve registrar :broadcasts_to_admin como callback
   test "after_create_commit registra broadcasts_to_admin" do
     assert_includes ApprovalResponse._commit_callbacks.map(&:filter), :broadcasts_to_admin,
-                    "after_create_commit deve registrar :broadcasts_to_admin (Plan 02 o adiciona)"
+                    "after_create_commit deve registrar :broadcasts_to_admin"
   end
 
   # Test C: AdminNotificationsChannel.broadcast_to é chamado exatamente 1x para change_requested
   test "change_requested cria approval e chama broadcast_to uma vez" do
     @broadcast_calls = []
-    stub_fn = ->(user, **kwargs) { @broadcast_calls << { user: user, kwargs: kwargs } }
+    stub_fn = ->(user, content) { @broadcast_calls << { user: user, content: content } }
     AdminNotificationsChannel.stub(:broadcast_to, stub_fn) do
       ApprovalResponse.create!(arte: @arte_pending, decision: :change_requested)
     end
@@ -106,7 +107,7 @@ class ApprovalResponseTest < ActiveSupport::TestCase
       external_url: "https://drive.google.com/file/revised_for_approved"
     )
     @broadcast_calls = []
-    stub_fn = ->(user, **kwargs) { @broadcast_calls << { user: user, kwargs: kwargs } }
+    stub_fn = ->(user, content) { @broadcast_calls << { user: user, content: content } }
     AdminNotificationsChannel.stub(:broadcast_to, stub_fn) do
       ApprovalResponse.create!(arte: arte_revised, decision: :approved)
     end
@@ -114,19 +115,20 @@ class ApprovalResponseTest < ActiveSupport::TestCase
                  "AdminNotificationsChannel.broadcast_to deve ser chamado exatamente 1 vez para approved"
   end
 
-  # Test E: change_requested deve gerar 4 Turbo Streams (toast + badge + dashboard + approvals)
+  # Test E (ATUALIZADO per CR-02): change_requested deve gerar 4 turbo-stream tags no content string
   test "change_requested broadcast gera 4 turbo streams" do
     @broadcast_calls = []
-    stub_fn = ->(user, **kwargs) { @broadcast_calls << { user: user, kwargs: kwargs } }
+    stub_fn = ->(user, content) { @broadcast_calls << { user: user, content: content } }
     AdminNotificationsChannel.stub(:broadcast_to, stub_fn) do
       ApprovalResponse.create!(arte: @arte_pending, decision: :change_requested)
     end
-    assert_equal 4, @broadcast_calls.first[:kwargs][:turbo_stream].length,
-                 "change_requested deve gerar 4 turbo streams: toast, badge, dashboard row e approvals prepend"
+    content = @broadcast_calls.first[:content]
+    assert_equal 4, content.scan(/<turbo-stream/).count,
+                 "change_requested deve gerar 4 turbo-stream tags: toast, badge, dashboard row e approvals prepend"
   end
 
-  # Test F: approved deve gerar 3 Turbo Streams (sem badge — D-12)
-  test "approved broadcast gera 3 turbo streams sem badge" do
+  # Test F (ATUALIZADO per CR-02): approved também deve gerar 4 turbo-stream tags (badge sempre — CR-02)
+  test "approved broadcast gera 4 turbo streams com badge" do
     arte_revised = Arte.create!(
       client: @client,
       scheduled_on: Date.current,
@@ -136,12 +138,13 @@ class ApprovalResponseTest < ActiveSupport::TestCase
       external_url: "https://drive.google.com/file/revised_for_streams"
     )
     @broadcast_calls = []
-    stub_fn = ->(user, **kwargs) { @broadcast_calls << { user: user, kwargs: kwargs } }
+    stub_fn = ->(user, content) { @broadcast_calls << { user: user, content: content } }
     AdminNotificationsChannel.stub(:broadcast_to, stub_fn) do
       ApprovalResponse.create!(arte: arte_revised, decision: :approved)
     end
-    assert_equal 3, @broadcast_calls.first[:kwargs][:turbo_stream].length,
-                 "approved deve gerar 3 turbo streams (sem badge stream — D-12)"
+    content = @broadcast_calls.first[:content]
+    assert_equal 4, content.scan(/<turbo-stream/).count,
+                 "approved deve gerar 4 turbo-stream tags: toast, badge (sempre — CR-02), dashboard row e approvals prepend"
   end
 
   # Test G: broadcasts_to_admin não deve disparar N+1 para arte.client
@@ -149,7 +152,7 @@ class ApprovalResponseTest < ActiveSupport::TestCase
     queries = []
     subscriber = ->(name, started, finished, unique_id, payload) { queries << payload[:sql].to_s }
     @broadcast_calls = []
-    stub_fn = ->(user, **kwargs) { @broadcast_calls << { user: user, kwargs: kwargs } }
+    stub_fn = ->(user, content) { @broadcast_calls << { user: user, content: content } }
     ActiveSupport::Notifications.subscribed(subscriber, "sql.active_record") do
       AdminNotificationsChannel.stub(:broadcast_to, stub_fn) do
         ApprovalResponse.create!(arte: @arte_pending, decision: :change_requested)
