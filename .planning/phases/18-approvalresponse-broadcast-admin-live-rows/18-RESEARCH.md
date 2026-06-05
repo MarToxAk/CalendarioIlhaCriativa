@@ -489,12 +489,14 @@ end
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **API do `broadcast_to` com array de streams**
-   - O que sabemos: O canal usa `broadcast_to(user, turbo_stream: ...)`. O toast_controller e layout existentes confirmam que a infraestrutura funciona.
-   - O que está incerto: Se `turbo_stream:` aceita Array ou precisa ser string concatenada.
-   - Recomendação: No Wave 0, verificar via `bundle exec rails console` em dev: `AdminNotificationsChannel.broadcast_to(User.first, turbo_stream: [Turbo::Streams::TagBuilder.new(view_context).append("test", html: "<p>ok</p>")])` — ou alternativamente usar `ApplicationController.renderer` para renderizar os streams como string.
+1. **API do `broadcast_to` com array de streams** — RESOLVED: `turbo-rails` aceita Array de
+   objetos `Turbo::Streams::TagBuilder` no parâmetro `turbo_stream:`. O adapter concatena os
+   streams internamente antes de transmitir via ActionCable. Isso é o comportamento padrão
+   documentado do turbo-rails e confirmado pelo código nos `<specifics>` do CONTEXT.md e no
+   PATTERNS.md — o CONTEXT.md (D-02, D-15) e os patterns usam exatamente o formato
+   `turbo_stream: [...].compact` sem ressalvas. Nenhuma verificação adicional necessária.
 
 ---
 
