@@ -1,39 +1,38 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.4
-milestone_name: Admin Pages + Brazilian Calendar
-status: archived
-last_updated: "2026-06-04T23:00:00.000Z"
-last_activity: 2026-06-04
+milestone: v1.5
+milestone_name: Real-time & Notifications
+status: planning
+last_updated: "2026-06-05T00:00:00.000Z"
+last_activity: 2026-06-05
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-04)
+See: .planning/PROJECT.md (updated 2026-06-05)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Planning next milestone
+**Current focus:** v1.5 Real-time & Notifications — defining requirements
 
 ## Current Position
 
-Phase: 16 (last phase of v1.4)
-Plan: Complete
-Status: v1.4 archived — planning next milestone
-Last activity: 2026-06-04
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-06-05 — Milestone v1.5 started
 
 ## Progress Bar
 
 ```
-v1.4: [x] Phase 13  [x] Phase 14  [x] Phase 15  [x] Phase 16
-       4/4 phases complete — SHIPPED
+v1.5: (phases TBD — roadmap em construção)
 ```
 
 ## Milestone v1.0 — Shipped
@@ -67,6 +66,11 @@ v1.4: [x] Phase 13  [x] Phase 14  [x] Phase 15  [x] Phase 16
 - **Phases:** 3 (Phase 10, 11, 12)
 - **Plans:** 5/5 complete
 - **Requirements:** 6/6 (FORM-01..03, PAGE-01..02, IDX-01..02, SHOW-01, DASH-01)
+
+## Milestone v1.5 — In Progress
+
+- **Started:** 2026-06-05
+- **Goal:** Real-time & Notifications via ActionCable/Turbo Streams
 
 ## Milestone v1.4 — Shipped
 
@@ -114,6 +118,15 @@ v1.4: [x] Phase 13  [x] Phase 14  [x] Phase 15  [x] Phase 16
 - v1.3 roadmap defined 2026-06-03: Phase 10 (form polish) + Phase 11 (index polish) + Phase 12 (show + dashboard)
 - v1.4 roadmap defined 2026-06-04: Phase 13 (aprovações) + Phase 14 (calendário admin) + Phase 15 (configurações) + Phase 16 (feriados brasileiros)
 
+### v1.5 Context
+
+- ActionCable disponível no Rails 8.1.3 — sem gem adicional necessária
+- Adapter PostgreSQL para ActionCable (sem Redis) — config: `config/cable.yml`
+- Autenticação ActionCable: admin usa Session (cookie), cliente usa token de URL
+- Turbo Streams via cable_ready: broadcast direto do model callback
+- Toast system: Stimulus controller global montado no layout admin e no layout do cliente
+- Badge sidebar: counter calculado via Arte.where(decision: :change_requested, status: not :revised)
+
 ### v1.4 Context (SHIPPED 2026-06-04)
 
 - Sidebar "Aprovações" e "Calendário" wired (fases 13 e 14)
@@ -124,4 +137,4 @@ v1.4: [x] Phase 13  [x] Phase 14  [x] Phase 15  [x] Phase 16
 
 ## Operator Next Steps
 
-- Run `/gsd-new-milestone` to start planning v1.5
+- Roadmap em construção — run `/gsd-plan-phase 17` quando roadmap estiver pronto

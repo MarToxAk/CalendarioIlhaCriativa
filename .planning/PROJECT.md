@@ -182,5 +182,17 @@ This document evolves at phase transitions and milestone boundaries.
 - Página "Configurações" com troca de senha (valida senha atual) e edição de agency_name refletida dinamicamente no sidebar
 - BrazilianHolidays: módulo hardcoded 2025-2027 com 17+ feriados/comemorativos brasileiros, span text-red-400 nos dois calendários
 
+## Current Milestone: v1.5 Real-time & Notifications
+
+**Goal:** Admin e cliente veem atualizações em tempo real via ActionCable/Turbo Streams — sem recarregar a página — e recebem toasts globais quando eventos relevantes ocorrem.
+
+**Target features:**
+- Badge numérico no sidebar do admin mostrando artes com "Pediu Alteração" não revisadas, atualiza em tempo real
+- Dashboard de aprovações e página Aprovações do admin atualizam via Turbo Stream quando cliente registra nova resposta
+- Calendário admin: chips atualizam quando status de arte muda
+- Toast global no painel admin em qualquer página quando nova resposta de cliente chega
+- Calendário do cliente: células e badges de status atualizam quando admin marca arte como revisada
+- Toast no calendário do cliente quando arte é revisada
+
 ---
-*Last updated: 2026-06-04 — v1.4 milestone archived.*
+*Last updated: 2026-06-05 — v1.5 milestone started.*
