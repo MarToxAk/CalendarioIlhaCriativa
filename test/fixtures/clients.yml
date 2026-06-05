@@ -1,0 +1,16 @@
+<% password_digest = BCrypt::Password.create("password") %>
+
+one:
+  name: Client One
+  password_digest: <%= password_digest %>
+  active: true
+
+two:
+  name: Client Two
+  password_digest: <%= password_digest %>
+  active: true
+
+inactive:
+  name: Inactive Client
+  password_digest: <%= password_digest %>
+  active: false
