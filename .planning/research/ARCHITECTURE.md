@@ -1,461 +1,403 @@
-# Architecture Research: Calendário de Aprovação de Artes
+# Architecture Research — ActionCable Integration
 
-**Domain:** Content approval workflow — social media agency admin + passwordless client portal
-**Researched:** 2026-05-24
-**Overall confidence:** HIGH (all key patterns grounded in official Rails guides and verified sources)
-
----
-
-## Components
-
-### Component Map
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Rails App                            │
-│                                                             │
-│  ┌──────────────────┐         ┌────────────────────────┐   │
-│  │   Admin Panel    │         │  Client-Facing Calendar │   │
-│  │  (authenticated) │         │  (token + password)     │   │
-│  │                  │         │                         │   │
-│  │ - Client CRUD    │         │ - Monthly calendar view │   │
-│  │ - Arte CRUD      │         │ - Arte detail / preview │   │
-│  │ - File upload    │         │ - Approve / request     │   │
-│  │ - Feedback panel │         │   change with comment   │   │
-│  └────────┬─────────┘         └───────────┬─────────────┘   │
-│           │                               │                 │
-│           └──────────┬────────────────────┘                 │
-│                      │                                      │
-│            ┌─────────▼──────────┐                          │
-│            │   Domain Core      │                          │
-│            │   (ActiveRecord)   │                          │
-│            │                    │                          │
-│            │ Client             │                          │
-│            │ Arte               │                          │
-│            │ ApprovalResponse   │                          │
-│            │ Comment            │                          │
-│            └─────────┬──────────┘                          │
-│                      │                                      │
-│            ┌─────────▼──────────┐                          │
-│            │   Storage Layer    │                          │
-│            │                    │                          │
-│            │ Active Storage     │                          │
-│            │ (local disk / S3)  │                          │
-│            │ External URL field │                          │
-│            └────────────────────┘                          │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Boundaries and Responsibilities
-
-| Component | Responsibility | Key Rails Mechanism |
-|-----------|---------------|---------------------|
-| Admin Panel | Full CRUD on clients and artes, file upload, read all feedback | Devise or Rails 8 auth generator for admin session |
-| Client Calendar | Read-only view of own monthly artes, submit approval/change | Token + password session, scoped to one Client |
-| Domain Core | Business rules, state transitions, associations | ActiveRecord models, enum, validations |
-| Storage Layer | Hold uploaded files OR record external URL | Active Storage (`has_one_attached`) + plain `external_url` string column |
-| Feedback Panel | Aggregate view of all pending/changed artes | Scoped query in Admin, no new component needed |
-| Notification Hooks | Reserved extension points (v2) | ActiveRecord callbacks (`after_create_commit`) ready for Action Mailer or a job |
-
-The admin panel and client calendar share the same Rails process. They are separated by routing namespaces (`/admin/*` vs `/c/:token/*`) and authentication concerns, not by separate applications. At 10-30 clients this is the correct level of separation — no microservices needed.
+**Project:** Calendário Livia v1.5 Real-time & Notifications
+**Researched:** 2026-06-05
+**Based on:** Full codebase audit (Rails 8.1.3, existing channels, models, views, controllers)
 
 ---
 
-## Data Model
+## Integration Points (new vs modified)
 
-### Key Entities
+### New Files
 
-```
-Client
-  id
-  name                    string, not null
-  slug                    string, unique (human-readable, optional)
-  access_token            string, not null, unique  ← URL token (has_secure_token)
-  password_digest         string, not null           ← has_secure_password
-  created_at / updated_at
+| File | Type | Purpose |
+|------|------|---------|
+| `app/channels/admin_notifications_channel.rb` | New | Broadcasts badge count + toast to admin |
+| `app/channels/client_calendar_channel.rb` | New | Broadcasts calendar updates to specific client |
+| `app/views/admin/shared/_pending_badge.html.erb` | New | Badge span rendered inside sidebar link |
+| `app/views/admin/shared/_toast.html.erb` | New | Auto-dismissing toast container in admin layout |
+| `app/views/client/shared/_toast.html.erb` | New | Auto-dismissing toast container in client layout |
+| `app/javascript/controllers/toast_controller.js` | New | Stimulus: auto-dismiss + animate-out after N seconds |
+| `app/views/admin/calendar/_arte_chip.html.erb` | New | Extracted partial for single chip (currently inline) |
+| `app/views/admin/dashboard/_arte_row.html.erb` | New | Turbo-streamable row partial for dashboard table |
+| `app/views/client/home/_calendar_day_cell.html.erb` | New | Extracted partial for single day cell (currently inline) |
+| `app/views/client/home/_status_summary.html.erb` | New | Extracted partial for status bar (currently inline) |
 
-Arte
-  id
-  client_id               integer, FK → clients.id
-  title                   string
-  caption                 text
-  scheduled_on            date, not null             ← calendar day
-  approval_deadline       date
-  platform                integer (enum)             ← instagram | facebook | linkedin
-  media_type              integer (enum)             ← image | video | caption_only
-  status                  integer (enum)             ← pending | approved | change_requested | revised
-  external_url            string, nullable           ← Google Drive / Dropbox link
-  created_at / updated_at
-  [Active Storage attachment: media_file (optional)]
+### Modified Files
 
-ApprovalResponse
-  id
-  arte_id                 integer, FK → artes.id
-  decision                integer (enum)             ← approved | change_requested
-  comment                 text, nullable
-  responded_at            datetime
-  created_at / updated_at
-
-  NOTE: One-to-one with Arte for v1 (one active response per arte).
-  If revision history is needed later, convert to has_many.
-```
-
-### Associations
-
-```ruby
-# Client
-has_many :artes, dependent: :destroy
-
-# Arte
-belongs_to :client
-has_one   :approval_response, dependent: :destroy
-has_one_attached :media_file  # nil if external_url is used instead
-
-# ApprovalResponse
-belongs_to :arte
-```
-
-### Enums
-
-```ruby
-# Arte
-enum :platform,   { instagram: 0, facebook: 1, linkedin: 2 }, prefix: :platform
-enum :media_type, { image: 0, video: 1, caption_only: 2 }
-enum :status,     { pending: 0, approved: 1, change_requested: 2, revised: 3 }
-
-# ApprovalResponse
-enum :decision,   { approved: 0, change_requested: 1 }
-```
-
-Use integer-backed enums (not string). Add `null: false, default: 0` at the DB level for every enum column. Never reorder enum keys — always append.
-
-### The External URL + Active Storage Duality
-
-Active Storage handles file uploads only. It has no concept of an external link. The cleanest approach for this project is a dual-column strategy on `artes`:
-
-- `media_file` (Active Storage attachment) — used when admin uploads a file
-- `external_url` (string column) — used when admin pastes a Drive/Dropbox link
-
-Add a model validation ensuring at least one is present, and never both:
-
-```ruby
-validate :media_source_present
-validate :only_one_media_source
-
-def media_source_present
-  errors.add(:base, "Precisa de arquivo ou link externo") unless media_file.attached? || external_url.present?
-end
-
-def only_one_media_source
-  errors.add(:base, "Use arquivo OU link externo, não ambos") if media_file.attached? && external_url.present?
-end
-```
-
-### Calendar as a Query, Not a Model
-
-There is no `Calendar` model. A monthly calendar view is a scoped query:
-
-```ruby
-Arte.where(client: @client, scheduled_on: Date.current.beginning_of_month..Date.current.end_of_month)
-    .order(:scheduled_on)
-    .includes(:approval_response)
-```
-
-Group results by `scheduled_on.day` in the presenter/view layer. Adding a Calendar model adds indirection with no benefit at this scale.
+| File | Change |
+|------|--------|
+| `app/channels/application_cable/connection.rb` | Support dual identity: current_user (admin) + current_client (client, via channel params) |
+| `app/models/approval_response.rb` | Add `after_create_commit` broadcast to admin |
+| `app/models/arte.rb` | Add `after_update_commit` broadcast on status change |
+| `app/views/admin/shared/_sidebar.html.erb` | Add `id="sidebar-badge"` wrapper around Aprovações label |
+| `app/views/layouts/admin.html.erb` | Add `turbo_stream_from "admin_notifications"` + `id="admin-toast-region"` div |
+| `app/views/layouts/client.html.erb` | Add channel subscription tag + `id="client-toast-region"` div |
+| `app/views/client/home/_month_calendar.html.erb` | Add `id="day-#{date.iso8601}"` to each cell div |
+| `app/views/admin/calendar/_calendar_grid.html.erb` | Add `id="arte-chip-#{arte.id}"` to each chip span |
+| `app/views/admin/dashboard/index.html.erb` | Add `id="dashboard-arte-#{arte.id}"` to each row (after extracting partial) |
 
 ---
 
-## Access Control Architecture
+## Channel Structure
 
-### Two Authentication Contexts, One App
+### AdminNotificationsChannel
 
-| Context | Who | Mechanism | Session Key |
-|---------|-----|-----------|-------------|
-| Admin | Agency staff | Rails 8 auth generator (`has_secure_password` on `User` model) | `session[:user_id]` |
-| Client | End client | `access_token` in URL + `has_secure_password` on `Client` model | `session[:client_id]` |
-
-These are completely separate session namespaces. There is no shared authentication logic.
-
-### Admin Authentication
-
-Use the Rails 8 built-in authentication generator:
-
-```bash
-bin/rails generate authentication
-```
-
-This produces a `User` model with `has_secure_password`, a `Session` model with `has_secure_token`, and an `Authentication` concern for `ApplicationController`. Scope all admin routes under `/admin` with a `before_action :require_authentication` (the generated concern).
-
-For v1, a single admin user (created via `rails console` or a seed) is sufficient. No sign-up flow needed.
-
-### Client Token + Password Flow
-
-Clients access via a URL like `/c/abc123xyz` where `abc123xyz` is the `Client#access_token`. The token identifies which client, the password authenticates them.
+Subscribes to a single global stream. All admin sessions share it — there is only one admin user in this system (single agency, 10–30 clients).
 
 ```ruby
-# Client model
-class Client < ApplicationRecord
-  has_secure_token :access_token   # generates 24-char unique token on create
-  has_secure_password              # password_digest column, authenticate(password) method
-  has_many :artes, dependent: :destroy
+# app/channels/admin_notifications_channel.rb
+class AdminNotificationsChannel < ApplicationCable::Channel
+  def subscribed
+    reject unless current_user.present?
+    stream_from "admin_notifications"
+  end
 end
 ```
 
-The flow in four steps:
+`current_user` is already set by the existing `Connection#connect` via `cookies.signed[:session_id]`. No changes needed to authentication for admin.
 
-1. Admin creates a client. Rails auto-generates `access_token`. Admin sets a password. Admin shares the URL `/c/{access_token}` with the client.
-2. Client hits `/c/:token` → app finds `Client.find_by!(access_token: params[:token])`. Renders a password form (the token is in the URL, so the form can be a simple POST).
-3. Client submits password → `client.authenticate(params[:password])`. On success, write `session[:client_id] = client.id`. Redirect to `/c/:token/calendar`.
-4. All subsequent client requests go through a `before_action :require_client_auth` in a base `ClientController`:
+Receives:
+- `replace` → `"sidebar-badge"` (badge counter)
+- `prepend` → `"approvals-content"` tbody (new approval row)
+- `prepend` → `"dashboard-content"` (new arte row)
+- `append` → `"admin-toast-region"` (toast notification)
+
+### ClientCalendarChannel
+
+Subscribes to a per-client stream keyed by `access_token`. Client identity comes from a token passed in subscription params (not from Connection).
 
 ```ruby
-class ClientController < ApplicationController
-  skip_before_action :require_authentication  # skip admin auth
-  before_action :load_client_from_token
-  before_action :require_client_auth
+# app/channels/client_calendar_channel.rb
+class ClientCalendarChannel < ApplicationCable::Channel
+  def subscribed
+    client = Client.find_by(access_token: params[:token])
+    reject and return unless client&.active?
+    stream_from "client_calendar_#{client.access_token}"
+  end
+end
+```
 
-  private
+Receives:
+- `replace` → `"day-#{date.iso8601}"` (calendar cell)
+- `replace` → `"status-summary"` (summary bar chips)
+- `append` → `"client-toast-region"` (toast when art revised)
 
-  def load_client_from_token
-    @client = Client.find_by!(access_token: params[:token])
-  rescue ActiveRecord::RecordNotFound
-    render plain: "Link inválido", status: :not_found
+---
+
+## Model Callbacks
+
+### ApprovalResponse — after_create_commit
+
+`approval_response.rb` already has `after_create :sync_arte_status` which transitions arte status synchronously. The broadcast must be `after_create_commit` (not `after_create`) so it fires after the transaction commits and the badge count query sees the updated arte status.
+
+```ruby
+# Additions to app/models/approval_response.rb
+after_create_commit :broadcast_to_admin
+
+private
+
+def broadcast_to_admin
+  pending_count = Arte.change_requested.count
+
+  Turbo::StreamsChannel.broadcast_replace_to(
+    "admin_notifications",
+    target: "sidebar-badge",
+    partial: "admin/shared/pending_badge",
+    locals: { count: pending_count }
+  )
+
+  Turbo::StreamsChannel.broadcast_prepend_to(
+    "admin_notifications",
+    target: "approvals-content",
+    partial: "admin/approvals/approval_row",
+    locals: { approval_response: self }
+  )
+
+  Turbo::StreamsChannel.broadcast_prepend_to(
+    "admin_notifications",
+    target: "dashboard-content",
+    partial: "admin/dashboard/arte_row",
+    locals: { arte: arte }
+  )
+
+  Turbo::StreamsChannel.broadcast_append_to(
+    "admin_notifications",
+    target: "admin-toast-region",
+    partial: "admin/shared/toast",
+    locals: { message: "#{arte.client.name} respondeu à arte #{arte.title.presence || arte.scheduled_on.strftime('%d/%m')}" }
+  )
+end
+```
+
+**Ordering guarantee:** `after_create` runs inside the transaction; `after_create_commit` runs after it. Both callbacks co-exist without conflict. The Arte status is committed to DB before the broadcast fires, so `Arte.change_requested.count` returns the correct value.
+
+### Arte — after_update_commit
+
+Scoped to status changes only using `saved_change_to_status?` (available after commit, unlike `status_changed?` which is only valid before commit).
+
+```ruby
+# Additions to app/models/arte.rb
+after_update_commit :broadcast_status_change, if: :saved_change_to_status?
+
+private
+
+def broadcast_status_change
+  # Notify the specific client
+  Turbo::StreamsChannel.broadcast_replace_to(
+    "client_calendar_#{client.access_token}",
+    target: "day-#{scheduled_on.iso8601}",
+    partial: "client/home/calendar_day_cell",
+    locals: {
+      date: scheduled_on,
+      artes_do_dia: client.artes.where(scheduled_on: scheduled_on).to_a,
+      client: client,
+      current_month: scheduled_on.beginning_of_month
+    }
+  )
+
+  Turbo::StreamsChannel.broadcast_replace_to(
+    "client_calendar_#{client.access_token}",
+    target: "status-summary",
+    partial: "client/home/status_summary",
+    locals: { client: client, current_month: scheduled_on.beginning_of_month }
+  )
+
+  if revised?
+    Turbo::StreamsChannel.broadcast_append_to(
+      "client_calendar_#{client.access_token}",
+      target: "client-toast-region",
+      partial: "client/shared/toast",
+      locals: { message: "Arte revisada: #{title.presence || scheduled_on.strftime('%d/%m')}" }
+    )
   end
 
-  def require_client_auth
-    unless session[:client_id] == @client.id
-      redirect_to client_login_path(@client.access_token)
+  # Update admin calendar chip
+  Turbo::StreamsChannel.broadcast_replace_to(
+    "admin_notifications",
+    target: "arte-chip-#{id}",
+    partial: "admin/calendar/arte_chip",
+    locals: { arte: self }
+  )
+
+  # Badge may decrease (change_requested → revised means one fewer pending)
+  Turbo::StreamsChannel.broadcast_replace_to(
+    "admin_notifications",
+    target: "sidebar-badge",
+    partial: "admin/shared/pending_badge",
+    locals: { count: Arte.change_requested.count }
+  )
+end
+```
+
+---
+
+## Broadcast Targets (DOM IDs)
+
+All targets must exist in the DOM when the broadcast arrives. Turbo silently discards streams targeting non-existent IDs — this is safe and expected (admin on Dashboard won't have Approvals table in DOM).
+
+| Target ID | In File | Wrapped Element | Stream Action |
+|-----------|---------|-----------------|---------------|
+| `sidebar-badge` | `_sidebar.html.erb` | `<span id="sidebar-badge">` around badge pill | `replace` |
+| `admin-toast-region` | `layouts/admin.html.erb` | `<div id="admin-toast-region">` (empty, toasts appended) | `append` |
+| `approvals-content` | `approvals/index.html.erb` | Already exists as `<turbo-frame id="approvals-content">` | `prepend` into tbody |
+| `dashboard-content` | `dashboard/index.html.erb` | Already exists as `<turbo-frame id="dashboard-content">` | `prepend` |
+| `arte-chip-#{arte.id}` | `calendar/_calendar_grid.html.erb` | `<span id="arte-chip-42">` wrapping the link chip | `replace` |
+| `day-#{date.iso8601}` | `client/home/_month_calendar.html.erb` | `<div id="day-2026-06-15">` each cell div | `replace` |
+| `status-summary` | `client/home/index.html.erb` | `<div id="status-summary">` around summary bar | `replace` |
+| `client-toast-region` | `layouts/client.html.erb` | `<div id="client-toast-region">` (empty, toasts appended) | `append` |
+
+**Naming rule for dates:** Use `date.iso8601` (e.g., `2026-06-15`), not `strftime` with slashes. Slashes break CSS selectors used internally by Turbo when it resolves the target ID.
+
+**Turbo Frame coexistence:** `approvals-content` and `dashboard-content` are existing turbo-frames used for filter navigation. ActionCable `broadcast_prepend_to` targeting these IDs works correctly — Turbo Stream actions operate on the full document DOM, not scoped inside frames. The existing filter mechanism (which replaces the whole frame content) and the live-prepend (which inserts a row) do not conflict.
+
+---
+
+## Authentication in Channels
+
+### Admin channels (no change needed)
+
+`Connection` already sets `current_user` via `cookies.signed[:session_id]` → `Session.find_by`. `AdminNotificationsChannel#subscribed` simply checks `current_user.present?`. This works today without modification.
+
+### Client channels (token-in-params pattern)
+
+The client auth model in `ClientController` uses `session[:client_id]` + `session[:client_token_version]`. ActionCable connections receive cookies, but decrypting the Rails session cookie from inside `Connection` is fragile (depends on session serializer, may change across Rails versions).
+
+**Use token-in-params instead.** The `access_token` is already public (it is the URL slug every client uses to access their calendar). Pass it when creating the subscription:
+
+In `layouts/client.html.erb` (or a client-specific JS file):
+```javascript
+// Rendered by Rails — @client is always set in client layout
+import consumer from "channels/consumer"
+consumer.subscriptions.create(
+  { channel: "ClientCalendarChannel", token: "<%= @client.access_token %>" },
+  { received(data) { /* Turbo handles stream elements automatically */ } }
+)
+```
+
+`ClientCalendarChannel#subscribed` receives `params[:token]`, validates it, and streams. This is consistent with how the entire client portal works (token in URL = identity).
+
+**Connection adjustment:** The existing `Connection#connect` calls `set_current_user || reject_unauthorized_connection`. Clients connecting to `ClientCalendarChannel` will have `current_user = nil` — the connection would be rejected before the channel can validate the token. Fix: allow the connection through when no admin session is present, and push the auth decision down to the channel level.
+
+```ruby
+# app/channels/application_cable/connection.rb
+module ApplicationCable
+  class Connection < ActionCable::Connection::Base
+    identified_by :current_user
+
+    def connect
+      # Allow connection for both admin (session cookie) and unauthenticated clients
+      # Channels handle their own authorization via params
+      set_current_user
+      # Do NOT reject here — ClientCalendarChannel authenticates via params[:token]
+    end
+
+    private
+
+    def set_current_user
+      if (session_record = Session.find_by(id: cookies.signed[:session_id]))
+        self.current_user = session_record.user
+      end
     end
   end
 end
 ```
 
-### Isolation Guarantee
+This means the WebSocket connection itself is always accepted; channel-level `reject` handles unauthorized subscriptions. This is the standard Rails pattern when mixing authenticated and token-based channels on the same cable server.
 
-Client sessions are always verified against the token in the URL. A client cannot access another client's calendar by guessing a session. The check `session[:client_id] == @client.id` prevents session-fixation-style lateral movement. Artes queries are always scoped to `@client`:
+**Security posture:** An attacker who knows a client's `access_token` can subscribe to that client's stream. This is the same threat model as the existing HTTP portal — knowing the token is equivalent to having access. No regression.
 
-```ruby
-@artes = @client.artes.where(scheduled_on: month_range)
+---
+
+## Suggested Build Order
+
+Dependencies: each step produces DOM IDs and partials that later steps broadcast into.
+
+### Step 1 — Foundation: Cable connectivity
+
+- Verify `ActionCable` is mounted (it is — Rails 8 default in `routes.rb`)
+- Verify `turbo.min.js` importmap pin includes the cable consumer (it does)
+- Modify `Connection#connect` to remove the hard reject for non-admin connections
+- Smoke test: open browser console, confirm WebSocket connects to `/cable` without error
+
+Nothing visible to the user. De-risks the entire feature.
+
+### Step 2 — AdminNotificationsChannel + sidebar badge
+
+- Create `AdminNotificationsChannel`
+- Create `_pending_badge.html.erb` partial (a colored pill with count)
+- Add `id="sidebar-badge"` wrapper to "Aprovações" nav item in `_sidebar.html.erb`
+- Add `<%= turbo_stream_from "admin_notifications" %>` to `layouts/admin.html.erb`
+- Add `<div id="admin-toast-region"></div>` to admin layout
+- Create `_toast.html.erb` + `toast_controller.js`
+- Verify via console: `ActionCable.server.broadcast("admin_notifications", ...)` updates badge live
+
+### Step 3 — ApprovalResponse broadcast (badge + toast)
+
+- Add `after_create_commit :broadcast_to_admin` to `ApprovalResponse`
+- Test end-to-end: client submits approval in one tab → admin sidebar badge updates in another tab without reload
+
+### Step 4 — Live rows in Dashboard and Approvals
+
+- Extract `_arte_row.html.erb` partial from `dashboard/index.html.erb` (rows currently inline)
+- Add `id="dashboard-arte-#{arte.id}"` to each row TR
+- Extend `broadcast_to_admin` to prepend approval row and dashboard arte row
+- Test: client submits response → row appears at top of both admin pages in real time
+
+### Step 5 — ClientCalendarChannel + Arte status broadcast
+
+- Create `ClientCalendarChannel`
+- Extract `_calendar_day_cell.html.erb` from `_month_calendar.html.erb`
+- Extract `_status_summary.html.erb` from `client/home/index.html.erb`
+- Add `id="day-#{date.iso8601}"` to each cell div in `_month_calendar.html.erb`
+- Add `id="status-summary"` to summary bar wrapper in `index.html.erb`
+- Add channel subscription tag + `id="client-toast-region"` to `layouts/client.html.erb`
+- Create `_toast.html.erb` for client (can reuse same partial with different path)
+- Add `after_update_commit :broadcast_status_change, if: :saved_change_to_status?` to `Arte`
+- Test: admin marks arte revised → client calendar cell updates without reload
+
+### Step 6 — Admin calendar chip live updates
+
+- Extract `_arte_chip.html.erb` from `_calendar_grid.html.erb` (currently inline link)
+- Add `id="arte-chip-#{arte.id}"` wrapper to each chip in grid
+- Extend `Arte#broadcast_status_change` to replace the admin chip
+- Test: approval arrives → admin calendar chip reflects new status color/label
+
+---
+
+## Data Flow Diagram (text)
+
+### Flow A — Client submits approval or change request
+
+```
+Client browser (POST /client/:token/artes/:id/responses)
+  └─ Client::ResponsesController#create
+        └─ ApprovalResponse.save (inside transaction)
+              ├─ after_create: sync_arte_status
+              │     └─ arte.approved! OR arte.change_requested!
+              └─ [commit]
+                    └─ after_create_commit: broadcast_to_admin
+                          ├─ broadcast_replace_to "admin_notifications"
+                          │     → target: "sidebar-badge"  (Arte.change_requested.count)
+                          ├─ broadcast_prepend_to "admin_notifications"
+                          │     → target: "approvals-content"  (_approval_row)
+                          ├─ broadcast_prepend_to "admin_notifications"
+                          │     → target: "dashboard-content"  (_arte_row)
+                          └─ broadcast_append_to "admin_notifications"
+                                → target: "admin-toast-region"  (_toast)
+
+ActionCable server → admin WebSocket connection
+  Admin browser (any admin page):
+    - sidebar badge count updates
+    - toast appears and auto-dismisses
+    - if on /admin: arte row prepends at top of dashboard table
+    - if on /admin/approvals: approval row prepends at top of table
 ```
 
-Never query `Arte.find(params[:id])` without the client scope. Use `@client.artes.find(params[:id])` so Rails raises `RecordNotFound` on cross-client access.
+### Flow B — Admin marks arte as revised
 
-### Routing Structure
+```
+Admin browser (PATCH /admin/artes/:id/mark_revised)
+  └─ Admin::ArtesController#mark_revised
+        └─ arte.revised!
+              └─ [commit]
+                    └─ after_update_commit: broadcast_status_change
+                          ├─ broadcast_replace_to "client_calendar_#{token}"
+                          │     → target: "day-2026-06-15"  (_calendar_day_cell)
+                          ├─ broadcast_replace_to "client_calendar_#{token}"
+                          │     → target: "status-summary"  (_status_summary)
+                          ├─ broadcast_append_to "client_calendar_#{token}"
+                          │     → target: "client-toast-region"  (_toast)
+                          ├─ broadcast_replace_to "admin_notifications"
+                          │     → target: "arte-chip-42"  (_arte_chip)
+                          └─ broadcast_replace_to "admin_notifications"
+                                → target: "sidebar-badge"  (count decrements)
 
-```ruby
-Rails.application.routes.draw do
-  # Admin — protected by require_authentication concern
-  namespace :admin do
-    root to: "dashboard#index"
-    resources :clients do
-      resources :artes
-    end
-    resources :feedback, only: [:index]   # read-all feedback panel
-  end
-
-  # Client portal — protected by token + password
-  scope "/c/:token", module: :client, as: :client do
-    get   "login",    to: "sessions#new",    as: :login
-    post  "login",    to: "sessions#create"
-    delete "logout",  to: "sessions#destroy", as: :logout
-    get   "calendar", to: "calendars#show",  as: :calendar
-    resources :artes, only: [:show] do
-      resource :approval_response, only: [:create, :update]
-    end
-  end
-end
+ActionCable server → two streams
+  Client browser (if on /client/:token/home):
+    - calendar day cell re-renders (badge color changes)
+    - status summary bar recalculates
+    - toast: "Arte revisada: [title]"
+  Admin browser (if on /admin/calendar):
+    - arte chip re-renders with new status
+    - sidebar badge decrements
 ```
 
 ---
 
-## Data Flow
+## Critical Constraints
 
-### Creation Flow (Admin → Arte)
+**Partial extraction is prerequisite to broadcasting.** Turbo Stream broadcasts render partials server-side. Any view that currently renders a repeating unit inline cannot be targeted by a broadcast until that unit is extracted to a named partial. Three extractions are mandatory before any broadcast targeting those elements will work:
 
-```
-Admin fills arte form
-  → POST /admin/clients/:id/artes
-  → Admin::ArtesController#create
-  → Arte.new(arte_params) scoped to client
-  → Active Storage attaches file  OR  external_url stored
-  → Arte saved with status: :pending
-  → Arte appears on client's monthly calendar
-```
+1. Dashboard arte rows → `admin/dashboard/_arte_row.html.erb`
+2. Client calendar day cell → `client/home/_calendar_day_cell.html.erb`
+3. Admin calendar arte chip → `admin/calendar/_arte_chip.html.erb`
+4. Client status summary → `client/home/_status_summary.html.erb`
 
-### Review Flow (Client → ApprovalResponse)
+**`after_create_commit` vs `after_create`.** The existing `after_create :sync_arte_status` callback runs inside the open transaction. If the broadcast also ran inside the transaction (via `after_create`), the badge count query would see the pre-commit state. Use `after_create_commit` for all broadcasts.
 
-```
-Client opens /c/:token/calendar
-  → CalendarsController#show
-  → @client.artes.for_month(params[:month]).includes(:approval_response)
-  → Render calendar grouped by day
-  → Client clicks an arte
-  → ArtesController#show renders preview + decision form
+**`saved_change_to_status?` not `status_changed?`.** `status_changed?` is dirty tracking, only valid before/during the transaction. `saved_change_to_status?` reads `saved_changes` and is correct in `after_update_commit`.
 
-Client submits decision
-  → POST /c/:token/artes/:id/approval_response
-  → ApprovalResponsesController#create (or update if revisiting)
-  → ApprovalResponse.create!(arte: @arte, decision:, comment:)
-  → Arte status updated via callback or controller call:
-       @arte.approved!           if decision == :approved
-       @arte.change_requested!   if decision == :change_requested
-  → Redirect back to calendar with confirmation message
+**Broadcast fires in request thread by default.** `Turbo::StreamsChannel.broadcast_*` is synchronous. At 10–30 clients this is fine. If latency is observed, wrap in `after_create_commit { BroadcastApprovalJob.perform_later(id) }`.
 
-[Extension point v2: after_create_commit :notify_admin callback fires here]
-```
-
-### Revision Flow (Admin → Revised)
-
-```
-Admin opens /admin/feedback
-  → Feedback::IndexController queries Arte.change_requested.includes(:client, :approval_response)
-  → Admin sees all artes with requested changes + client comments
-
-Admin makes changes (re-uploads file or updates caption)
-  → PATCH /admin/clients/:id/artes/:id
-  → Admin marks arte as revised: @arte.revised!
-  → ApprovalResponse is NOT deleted — kept as history
-  → Arte status resets... OR admin can reset to :pending if re-approval is needed
-
-[Decision: after admin marks as :revised, the arte status stays :revised until admin
-manually resets to :pending if they want another client approval round.
-For v1, :revised is a terminal state that means "admin addressed it." Simple.]
-```
-
-### State Machine on Arte#status
-
-```
-pending → approved          (client approves)
-pending → change_requested  (client requests change)
-change_requested → revised  (admin marks addressed)
-revised → pending           (admin resets for re-approval, optional v2)
-```
-
-Do not use a state machine gem (AASM, workflow) for this. The transitions are simple enough that `Arte#approved!`, `Arte#change_requested!`, and `Arte#revised!` (generated by enum) are sufficient. Add validations on `ApprovalResponse` to guard the transition:
-
-```ruby
-class ApprovalResponse < ApplicationRecord
-  belongs_to :arte
-  enum :decision, { approved: 0, change_requested: 1 }
-
-  validates :decision, presence: true
-  validate :arte_must_be_pending, on: :create
-
-  after_create :sync_arte_status
-
-  private
-
-  def arte_must_be_pending
-    errors.add(:arte, "já foi respondida") unless arte.pending?
-  end
-
-  def sync_arte_status
-    case decision
-    when "approved"         then arte.approved!
-    when "change_requested" then arte.change_requested!
-    end
-  end
-end
-```
-
----
-
-## Build Order
-
-Dependencies cascade: you cannot build later phases without earlier ones being solid.
-
-### Phase 1 — Data Foundation
-
-Build first because everything depends on it.
-
-- `Client` model: `access_token` (has_secure_token), `password_digest` (has_secure_password), name
-- `Arte` model: all columns including enums, `external_url`, Active Storage attachment
-- `ApprovalResponse` model: decision enum, comment, `arte_id`
-- Migrations with correct null constraints and defaults
-- Model validations and associations
-- `media_source_present` / `only_one_media_source` validations on Arte
-- Basic seeds (one admin user, one client, a few artes)
-
-### Phase 2 — Admin Authentication + Client CRUD
-
-Build second because admin must exist before any client data is real.
-
-- Rails 8 auth generator for admin `User` + `Session`
-- Admin routes namespace + `ApplicationController` concern
-- `Admin::ClientsController` — CRUD, display access_token and shareable link
-- `Admin::ArtesController` — CRUD, file upload via Active Storage or external_url paste
-- Simple admin layout (no styling needed yet, functionality first)
-
-### Phase 3 — Client Calendar + Auth
-
-Build third because it depends on clients and artes existing.
-
-- `Client::SessionsController` — password form, create/destroy
-- `ClientController` base class with `load_client_from_token` + `require_client_auth`
-- `Client::CalendarsController#show` — monthly query, group by day
-- `Client::ArtesController#show` — arte detail with media preview
-- Handle both `media_file` (Active Storage URL) and `external_url` in the view
-
-### Phase 4 — Approval Flow
-
-Build fourth because client must be able to see artes before responding.
-
-- `Client::ApprovalResponsesController#create` + `#update`
-- `ApprovalResponse` state sync callback
-- Arte status enum transitions
-- Guard against double-submission (`arte_must_be_pending` validation)
-- Confirmation message after decision
-
-### Phase 5 — Admin Feedback Panel
-
-Build fifth because it reads data produced by Phase 4.
-
-- `Admin::FeedbackController#index`
-- Query: `Arte.change_requested.includes(:client, :approval_response).order(:approval_deadline)`
-- Display client name, arte title, comment, deadline
-- "Mark as revised" button → `PATCH /admin/artes/:id` with `{ status: :revised }`
-- Filter/sort by client, deadline
-
-### Phase 6 — Polish + Deadline Awareness
-
-- Highlight artes past `approval_deadline` in both admin and client views
-- Active Storage direct upload (skip for local disk, add for S3 if needed)
-- Turbo Frames for approve/change inline (no full-page reload)
-- Mobile-friendly calendar layout
-
----
-
-## Rails Conventions to Follow
-
-| Concern | Convention | Why |
-|---------|-----------|-----|
-| Client auth isolation | Two separate concerns (`Authentication` for admin, custom `ClientAuthentication` for client) | Clean separation, no leakage |
-| Enum columns | Integer-backed, `null: false, default: 0` | Prevents nil surprises; safe addition later |
-| Media storage | `has_one_attached :media_file` + `external_url` string, validated mutually exclusive | Active Storage doesn't handle external URLs natively |
-| Calendar rendering | Plain query + view helper, no Calendar model | YAGNI — a model adds indirection with no payoff |
-| State transitions | Enum-generated bang methods (`arte.approved!`) | Sufficient for a binary workflow; no gem needed |
-| Scoping | Always `@client.artes.find(...)` never `Arte.find(...)` in client controllers | Enforces isolation at the query level |
-| Namespacing | `Admin::` and `Client::` controller namespaces | Clear ownership, easy to grep, standard Rails |
-
----
-
-## Architectural Risks to Watch
-
-| Risk | Probability | Mitigation |
-|------|------------|------------|
-| Client views another client's arte via URL manipulation | Medium | Always scope queries to `@client`; see isolation note above |
-| `external_url` pointing to a Drive link that becomes private | High (operational) | Display URL as-is; admin's responsibility to maintain link validity |
-| Arte with no media source (neither upload nor URL) | Medium | Model validation catches it at save time |
-| Admin user password lost with no recovery flow | Low | Seed reset via `rails console` is acceptable for single-admin v1 |
-| ApprovalResponse submitted twice (double-click) | Medium | `arte_must_be_pending` validation on `ApprovalResponse`; Turbo disables button after submit |
-
----
-
-## Sources
-
-- [Active Storage Overview — Rails Guides](https://guides.rubyonrails.org/active_storage_overview.html) — polymorphic attachments, `has_one_attached`, direct upload (HIGH confidence)
-- [Rails 8 Authentication Generator — BigBinary](https://www.bigbinary.com/blog/rails-8-introduces-a-basic-authentication-generator) — admin auth generator (HIGH confidence)
-- [generates_token_for in Rails 7.1 — Mintbit](https://www.mintbit.com/blog/rails-7-dot-1-generate-tokens-for-specific-purposes-with-generates-token-for/) — token expiry and embedded data (HIGH confidence)
-- [ActiveRecord::SecureToken — Rails API](https://api.rubyonrails.org/classes/ActiveRecord/SecureToken/ClassMethods.html) — `has_secure_token` mechanics (HIGH confidence)
-- [Enum Best Practices — Honeybadger](https://www.honeybadger.io/blog/how-to-use-enum-attributes-in-ruby-on-rails/) — integer-backed enums, default values (MEDIUM confidence)
-- [Hotwire Decisions — Lab Zero](https://labzero.com/blog/hotwire-decisions-when-to-use-turbo-frames-turbo-streams-and-stimulus) — Turbo Frames for inline interactions (MEDIUM confidence)
+**Client session page has no authenticated `@client`.** The subscription JS tag in `layouts/client.html.erb` must only emit when the client is authenticated (`session[:client_id].present?`). Wrap in a conditional or render it only from the home/artes templates via `content_for(:head)`.

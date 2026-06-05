@@ -1,290 +1,574 @@
-# Pitfalls Research: Calendário de Aprovação de Artes
+# Pitfalls Research — ActionCable Integration
 
-**Domain:** Content approval calendar with token-based client access
-**Researched:** 2026-05-24
-**Overall confidence:** HIGH (all critical items verified against official sources)
+**Project:** Calendário de Aprovação de Artes  
+**Researched:** 2026-06-05  
+**Scope:** Adding ActionCable + Turbo Streams real-time to Rails 8.1.3 existing app  
+**Confidence:** HIGH (official Rails guides + source code verified)
 
 ---
 
-## Critical Pitfalls
+## PostgreSQL Adapter Pitfalls
 
-### 1. Token Enumeration via Short or Predictable Tokens
+### Pitfall 1: cable.yml already uses solid_cable in production — adapter choice has real consequences
 
-**Risk:** If client tokens are short (under 16 chars), sequential, or derived from IDs, an attacker can enumerate all valid links in a small number of requests, accessing every client's calendar without a password.
+The existing `config/cable.yml` uses `solid_cable` in production (polling-based, separate `cable`
+DB). The milestone constraint says "PostgreSQL adapter (no Redis)." These are distinct choices:
 
-**Warning signs:**
-- Tokens contain the client's database ID or name
-- Tokens are 8 characters or fewer
-- No unique index on the token column in the database
-- No rate limiting on the public calendar route
+- `solid_cable` — polling at 0.1s intervals, uses a dedicated `cable` DB already declared in
+  `database.yml`, zero extra connection model complexity, but introduces polling latency.
+- `postgresql` — uses LISTEN/NOTIFY on the primary DB, true push-based, no separate DB needed,
+  but requires understanding the connection model (see Pitfall 2).
+
+**Current cable.yml state:**
+- `development: adapter: async` — correct, do not change (same-process only; cable comment in
+  file explains this correctly)
+- `test: adapter: test` — correct, must not change
+- `production: adapter: solid_cable` — already wired to a `cable` DB entry in database.yml
+
+If switching to `postgresql` adapter for production, remove the entire solid_cable block and
+write:
+```yaml
+production:
+  adapter: postgresql
+```
+It picks up the primary DB config from `database.yml` automatically. Extra YAML keys cause
+silent fallback to async.
+
+---
+
+### Pitfall 2: PostgreSQL adapter creates LISTEN connections outside the AR pool
+
+The PostgreSQL adapter uses two strategies internally:
+- **Broadcasts:** `connection_pool.with_connection` — normal AR pool checkout, returns cleanly.
+- **Subscriptions (LISTEN/NOTIFY):** `connection_pool.new_connection` — deliberately bypasses
+  pool to avoid pinned connections. Each ActionCable worker thread that handles a subscription
+  opens a **dedicated, persistent PostgreSQL connection** that does NOT count against `pool:` in
+  `database.yml` but DOES consume a PostgreSQL server slot.
+
+With Puma at 3 threads and 30 concurrent WebSocket clients, expect 3–5 persistent extra
+connections beyond the normal pool. For a server with `max_connections = 100` (PostgreSQL
+default), this is not a crisis at this scale, but must be known.
+
+**Prevention:** Leave pool size at `RAILS_MAX_THREADS` (already in database.yml). Monitor
+`SELECT count(*) FROM pg_stat_activity` in production.
+
+---
+
+### Pitfall 3: Pool exhaustion from broadcast + HTTP request contention
+
+Broadcasts inside model callbacks use `with_connection` (pool checkout). If all 5 pool
+connections are busy (concurrent HTTP requests mid-query) and a broadcast fires, it blocks until
+a connection is free. Under load this manifests as ActionCable worker timeouts in logs.
+
+**Prevention:** The existing `pool: 5` with Puma at 3 threads has 2 headroom connections — just
+adequate for light use. If moving to production with higher concurrency, set
+`RAILS_MAX_THREADS=5` and ensure pool matches.
+
+---
+
+### Pitfall 4: PostgreSQL NOTIFY has an 8 KB hard payload limit
+
+Rails hashes channel names over 63 bytes (SHA1) automatically — that is handled. But the
+**broadcast payload itself** (rendered HTML Turbo Stream) must fit in 8,000 bytes. A broadcast
+containing a full calendar row with multiple art chips, Tailwind classes, and inline SVG will
+exceed this limit. The failure mode: the broadcast is silently dropped or raises
+`PG::InvalidParameterValue` inside the background job.
+
+**Prevention:** Broadcast small, focused partials. A status badge update should broadcast only
+the badge HTML, not the entire calendar cell. If a partial regularly exceeds ~4 KB rendered,
+split it or broadcast a page refresh signal instead.
+
+---
+
+### Pitfall 5: Development `async` adapter — console broadcasts do not reach the browser
+
+The `async` adapter (current dev config) works only within the same OS process. Running
+`ActionCable.server.broadcast(...)` from `bin/rails console` in a terminal does nothing in the
+browser — it is a different process. The cable.yml comment in this project already warns about
+this correctly.
+
+**Prevention:** Use the web console (`console` in a view), or temporarily switch development to
+`postgresql` adapter while testing broadcasts. Never use `solid_cable` or `postgresql` in the
+test environment.
+
+---
+
+## Authentication Pitfalls (client without session)
+
+### Pitfall 1: CRITICAL — existing connection.rb rejects all client users
+
+The current `app/channels/application_cable/connection.rb` authenticates only via:
+```ruby
+Session.find_by(id: cookies.signed[:session_id])
+```
+
+Client users have no `Session` record. They authenticate via `session[:client_id]` +
+`session[:client_token_version]` set by `ClientController#require_client_auth`. Every client
+who opens their calendar page will have their WebSocket upgrade rejected with "An unauthorized
+connection attempt was rejected." Turbo Streams real-time will silently not work for clients.
+
+**Required fix — extend connection.rb to dual-path authentication:**
+
+```ruby
+module ApplicationCable
+  class Connection < ActionCable::Connection::Base
+    identified_by :current_user, :current_client
+
+    def connect
+      set_current_user || set_current_client || reject_unauthorized_connection
+    end
+
+    private
+
+    def set_current_user
+      if session = Session.find_by(id: cookies.signed[:session_id])
+        self.current_user = session.user
+      end
+    end
+
+    def set_current_client
+      client_id      = request.session[:client_id]
+      token_version  = request.session[:client_token_version]
+      return unless client_id && token_version
+      client = Client.find_by(id: client_id)
+      return unless client&.active? && client.token_version == token_version
+      self.current_client = client
+    end
+  end
+end
+```
+
+`identified_by` accepts multiple identifiers. The connection is accepted when any one is non-nil.
+
+---
+
+### Pitfall 2: ActionCable connection.rb does NOT expose bare `session` — use `request.session`
+
+In controllers, `session` is a DSL method. In `ApplicationCable::Connection`, the object is an
+`ActionCable::Connection::Base` — there is no `session` method by default. The HTTP session IS
+accessible but only via `request.session[:key]`. Using bare `session` raises `NoMethodError` or
+returns nil silently.
+
+**Prevention:** Always use `request.session[:client_id]` in connection.rb, never `session[:client_id]`.
+
+---
+
+### Pitfall 3: Passing access_token in the WebSocket URL is a security vulnerability
+
+A tempting shortcut:
+```javascript
+createConsumer(`/cable?token=${clientToken}`)
+```
+
+The `access_token` is the client's only credential — it never expires and gives full calendar
+access. WebSocket upgrade URLs appear in: server access logs (plaintext), Nginx/Apache logs,
+browser network history, and proxy logs. This permanently compromises the client's calendar if
+any log is leaked.
+
+**Prevention:** Do not pass tokens in URLs. Use `request.session` in connection.rb. The client's
+session is already established by `ClientController` login — it contains all needed state.
+
+---
+
+### Pitfall 4: Channel subscription must scope the stream to the specific client
+
+Without scoping, all clients share one stream and receive each other's real-time updates:
+
+```ruby
+# Wrong — every subscriber receives every broadcast
+def subscribed
+  stream_from "arts_updates"
+end
+```
+
+```ruby
+# Right — each client only receives their own updates
+def subscribed
+  stream_from "client_#{current_client.id}_updates"
+end
+
+# Or using Turbo helper (generates same scoped name automatically)
+def subscribed
+  stream_for current_client
+end
+```
+
+A client from account A receiving account B's approval updates is a data privacy breach.
+
+---
+
+### Pitfall 5: `reject_unauthorized_connection` generates logged errors — expected but noisy
+
+Every WebSocket attempt from an unauthenticated context (pre-login page, bot, wrong origin) logs
+an error. In production this creates log noise but is correct behavior. With 30 clients, each
+calendar page load before login fires one rejected connection.
+
+**Prevention:** This is expected. Filter at the log aggregator if noisy. Do not suppress the
+rejection itself — it is the security mechanism.
+
+---
+
+## Turbo Frames vs Turbo Streams Coexistence
+
+### Pitfall 1: `turbo_stream.replace` targeting a `<turbo-frame>` destroys the frame element
+
+This project has three active Turbo Frames:
+- `dashboard-content` (admin/dashboard/index.html.erb)
+- `calendar-content` (admin/calendar/index.html.erb)
+- `approvals-content` (admin/approvals/index.html.erb)
+
+If a broadcast uses `turbo_stream.replace("approvals-content", ...)`, the `<turbo-frame>` element
+itself is replaced with non-frame HTML. Subsequent filter link clicks (which target the frame by
+its ID) then trigger full page navigations instead of frame-scoped requests. The page looks fine
+visually but Turbo Frame behavior is permanently broken for that page session.
+
+**Prevention:** When targeting an element that IS a `<turbo-frame>`, use `turbo_stream.update`
+(replaces inner content, preserves the frame element and its event bindings). Use `replace` only
+for elements that are NOT turbo-frame wrappers.
+
+```ruby
+# Safe — updates content inside the frame, frame element survives
+turbo_stream.update("approvals-content", partial: "admin/approvals/list")
+
+# Dangerous — kills the frame wrapper itself
+turbo_stream.replace("approvals-content", partial: "admin/approvals/list")
+```
+
+---
+
+### Pitfall 2: Broadcasts and Turbo Frame navigations are independent — do not confuse them
+
+A Turbo Frame link click sends an HTTP request with `Turbo-Frame:` header and expects an HTML
+response with a matching frame. ActionCable is a persistent WebSocket — completely separate
+infrastructure that does not see or respond to frame navigation.
+
+Wrong mental model: "I'll push a broadcast to update the frame when a filter is applied."
+Right mental model: Filter clicks go through HTTP as they do now (unchanged). Broadcasts push
+real-time updates that happen independently of user navigation.
+
+**Prevention:** Keep the two systems orthogonal. Filters and pagination stay pure Turbo Frames
+over HTTP. Real-time status updates go through cable broadcasts targeting specific record IDs
+inside the frame — not the frame itself.
+
+---
+
+### Pitfall 3: DOM target IDs inside a Turbo Frame become stale when the frame navigates
+
+When the `approvals-content` frame loads new content (filter click), all old DOM IDs inside it
+are destroyed. If a broadcast fires targeting an ID that was inside the old frame content,
+it is silently discarded. If a broadcast fires targeting an ID inside the new frame content
+before the frame finishes loading, it is also discarded.
+
+**Prevention:** This is acceptable for this use case. The next frame render shows the current
+database state. Design broadcasts to be idempotent: a missed broadcast means the next page
+interaction shows the correct state. Do not architect around catching every broadcast.
+
+---
+
+## DOM ID / Broadcast Target Pitfalls
+
+### Pitfall 1: Missing broadcast targets fail completely silently
+
+When a Turbo Stream arrives and the target ID is not in the DOM, Turbo receives the message,
+finds no element, and does nothing. No JavaScript error. No server error. The server logs show
+the broadcast as successful. This is the leading cause of "real-time isn't working" bugs.
+
+**Debugging procedure:**
+1. Open browser DevTools → Network tab → filter by WS
+2. Click on the `/cable` connection
+3. Watch Messages tab — incoming turbo-stream frames appear here
+4. If messages arrive but DOM does not update: target ID mismatch
+5. If no messages arrive: channel subscription or broadcast scoping is wrong
+
+---
+
+### Pitfall 2: Calendar cell IDs — day-number-only IDs collide across months
+
+The calendar grid renders 28–31 day cells per month. A naive `id="day-5"` collides across months
+if the DOM ever has two calendar months visible, and more critically, when months are compared in
+admin calendar (which shows all clients). Month navigation replaces the frame content, so
+collisions only matter within one rendered page — but if two calendar grids are ever on the same
+page (e.g., a mini-preview), collisions cause the wrong cell to update.
 
 **Prevention:**
-- Use Rails' built-in `has_secure_token` (generates 24-char base58 token via `SecureRandom::base58`). Collision probability is 1/58^24 — effectively zero.
-- Add a unique index on `clients.public_token` in the migration. `has_secure_token` handles regeneration on collision, but the DB constraint is the actual safety net.
-- Apply Rack::Attack throttling on the token-based calendar route: max 20 requests per IP per minute. Even with a valid token, a client hitting 300 requests/minute is anomalous.
-- Never expose the client's integer ID in any URL visible to clients.
-
-**Phase:** Foundation phase (auth and token generation). Getting this wrong at the start means rotating all client links later, which requires informing every client.
+- Day cells: `id="cal_<%= date.iso8601 %>"` e.g., `id="cal_2026-06-05"`
+- Art chips inside a cell: `id="<%= dom_id(arte) %>"` (e.g., `id="arte_42"`) — Rails `dom_id`
+  guarantees globally unique IDs for persisted records
+- Status badge inside a chip: `id="status_<%= dom_id(arte) %>"` e.g., `id="status_arte_42"`
 
 ---
 
-### 2. Password Brute Force on Token + Password Auth
+### Pitfall 3: `dom_id` on unsaved (new) records is not unique
 
-**Risk:** The client access model is `token (URL) + simple password`. The token is effectively public (sent by email, shared in messages). This means the password is the only secret. Without rate limiting, an attacker who discovers a client's URL can brute-force the short password in seconds.
+`dom_id(Arte.new)` returns `"new_arte"`. Broadcasting to `"new_arte"` when there are two pending
+creation broadcasts means both target the same non-existent element. Only persisted records have
+meaningful IDs.
 
-**Warning signs:**
-- No failed attempt counter per token
-- Password login form has no throttle on failed attempts
-- Passwords are short numeric strings (e.g., "1234")
-- No distinction between "token correct, password wrong" and "token not found" in error responses — but also no timing-constant comparison
-
-**Prevention:**
-- Use `BCrypt` (via `has_secure_password` or manual digest) to store client passwords — never plaintext.
-- Throttle the password-check route per token with Rack::Attack: max 5 failures per token per 15 minutes, returning 429.
-- Return identical error messages for "token not found" and "wrong password" — never reveal which part failed.
-- Use `ActiveSupport::SecurityUtils.secure_compare` when comparing any token or password digest to prevent timing attacks.
-- Enforce a minimum password length of 8 characters in the admin UI when creating client credentials, even if "simple."
-
-**Phase:** Foundation phase (alongside token generation). These controls are trivial to add at creation and costly to retrofit.
+**Prevention:** Only broadcast in `after_create_commit` and `after_update_commit` — by that
+point the record has an integer `id` and `dom_id` is globally unique.
 
 ---
 
-### 3. Cross-Client Data Leak via Missing Scope
+### Pitfall 4: Partial path convention mismatch raises `MissingTemplate` in broadcast jobs
 
-**Risk:** In a single-database multi-client system, every query that doesn't scope by client can return another client's posts. This is the most common multi-tenant failure mode. It happens once, usually silently — a client sees another agency's content.
+`Turbo::Broadcastable` uses `to_partial_path` to locate the partial. For an `Arte` model it
+expects `app/views/artes/_arte.html.erb`. This project's arte partials live under
+`app/views/admin/artes/`. The broadcast job will raise `ActionView::MissingTemplate` silently
+(in job logs, invisible to the user).
 
-**Warning signs:**
-- Controller actions use `Post.find(params[:id])` instead of `current_client.posts.find(params[:id])`
-- Any query that starts with a model name directly (e.g., `Post.where(...)`) rather than through an association
-- `current_client` helper is defined but not consistently used
-- Background jobs use unscoped queries ("enqueue job with post_id, find post in job")
-
-**Prevention:**
-- Every data-access method in client-facing controllers must go through the client association: `current_client.posts.find(params[:id])`. This raises `ActiveRecord::RecordNotFound` (→ 404) if the post belongs to a different client, never leaking data.
-- Consider using the `acts_as_tenant` gem to enforce scoping at the model level as a safety net. It adds a `default_scope` that makes unscoped queries impossible without explicitly disabling the tenant.
-- Write an explicit integration test for the leak scenario: log in as client A, try to access a post ID belonging to client B — assert 404, not 200.
-- Background jobs must receive `client_id` and reload through the association, not fetch the resource directly.
-
-**Phase:** Foundation phase (data model) and every feature phase thereafter. The test for cross-client access must be part of the test suite from day one.
-
----
-
-### 4. File Upload Without Size and Type Enforcement
-
-**Risk:** An admin uploads a 2 GB video file directly. Rails buffers it in memory or to disk before any validation fires, potentially crashing the server or filling disk. Separately, a malicious upload with a `.jpg` extension but executable content can bypass naive extension checks.
-
-**Warning signs:**
-- No `content_length_limit` set in Active Storage or Nginx config
-- File type validated only by extension check in JS/client-side
-- No `active_storage_validations` or equivalent gem in Gemfile
-- Video previews processed synchronously in the web request
-- Upload controller action runs for more than 5 seconds on large files
-
-**Prevention:**
-- Add `active_storage_validations` gem and declare explicit size and type limits on the model:
-  ```ruby
-  validates :file, content_type: ['image/jpeg', 'image/png', 'image/gif', 'video/mp4'],
-                   size: { less_than: 100.megabytes }
-  ```
-- Set Nginx `client_max_body_size` to your limit (e.g., `100m`) to reject oversized uploads at the proxy before they hit Rails.
-- Rely on Active Storage's `identify()` which reads magic bytes to determine real MIME type — do not trust the `Content-Type` header supplied by the client.
-- For videos, do NOT process (transcode, generate thumbnails) synchronously in the request. Defer to Active Job.
-- For local storage in v1: set a per-client storage quota check before accepting uploads; log accumulated disk usage.
-- External links (Google Drive, Dropbox) are much safer for large files — no storage cost, no upload attack surface. Make this the recommended path for videos in admin onboarding.
-
-**Phase:** Feature phase covering file upload. Must be done before any file upload goes to production, not retrofitted after.
+**Prevention:** Always pass `partial:` explicitly in any broadcast call in this codebase:
+```ruby
+broadcast_replace_later_to(
+  client,
+  target:  dom_id(self),
+  partial: "admin/artes/arte",
+  locals:  { arte: self }
+)
+```
+Do not rely on the convention-based path discovery when partials are namespaced.
 
 ---
 
-### 5. Timezone Mismatch Causing Posts to Appear on Wrong Day
+## Testing Pitfalls (Minitest)
 
-**Risk:** Dates are stored as `datetime` in UTC. The agency operates in one timezone (e.g., Brasília, UTC-3). When the admin schedules a post for "Monday at 11pm," it stores as Tuesday 02:00 UTC. The calendar displays it on Tuesday. The client sees it on the wrong day. This erodes trust immediately on first use.
+### Pitfall 1: `cable.yml` test env is already correct — do not touch it
 
-**Warning signs:**
-- `config.time_zone` is not set in `application.rb` (defaults to UTC)
-- Post scheduled dates are stored as `datetime` instead of `date` when time-of-day is irrelevant
-- Calendar grouping uses `.to_date` on a UTC datetime without timezone conversion
-- `Date.today` used instead of `Date.current` or `Time.zone.today`
-- Tests all pass but production users in Brazil see wrong days
-
-**Prevention:**
-- Set `config.time_zone = 'Brasilia'` in `application.rb` immediately. For v1 serving a single agency, a single timezone is correct.
-- Store post scheduled dates as `date` column type (not `datetime`) if time-of-day is not needed. A `date` column has no timezone ambiguity.
-- If `datetime` is needed (for deadlines), always use `Time.zone.now`, `Time.current`, `Time.zone.parse` — never `Time.now` or `Date.today`.
-- The calendar grouping query must compare dates in the app timezone: `Post.where(scheduled_date: month_range)` where `month_range` is computed using `Time.zone`.
-- Write a test that creates a post at 11pm Brasília time and asserts it appears on the correct calendar day, not the next day.
-
-**Phase:** Foundation phase (data model). Changing datetime columns to dates, or adding timezone conversion, after client data exists is painful. Decide date vs. datetime types correctly upfront.
+`test: adapter: test` is the right configuration. The test adapter is built into Rails since
+Rails 6 — no extra gem is needed. It intercepts broadcasts in memory with no async behavior,
+making tests deterministic. Do not change to `async` (non-deterministic) or `postgresql`
+(requires real DB connection in tests).
 
 ---
 
-### 6. Approval State Corruption via Direct Attribute Writes
+### Pitfall 2: `assert_broadcast_on` takes the stream name string, not the model
 
-**Risk:** Approval status starts as a simple string column. Without a state machine, controllers freely write `post.update(status: params[:status])`, allowing invalid transitions: a "revisada" (reviewed) post can be set back to "pendente" by replaying a request, or a client can POST any status string including ones not in the spec.
+```ruby
+# Wrong — this is not the stream name ActionCable uses internally
+assert_broadcast_on(Arte, { ... })
 
-**Warning signs:**
-- `status` column is a plain `string` without a database check constraint or enum
-- Controller accepts `status` directly from `params` without validation
-- No model-level allowed-values check
-- Admin can set status to arbitrary strings via the API
-- No audit log of who changed status and when
+# Right for a Turbo stream scoped to a model (matches stream_for(arte))
+assert_broadcast_on(
+  Turbo::StreamsChannel.broadcasting_for(arte),
+  { ... }
+)
 
-**Prevention:**
-- Use Rails `enum` to define states:
-  ```ruby
-  enum status: { pending: 0, approved: 1, changes_requested: 2, revised: 3 }
-  ```
-  Rails enums reject invalid values with an `ArgumentError` before hitting the database.
-- Define allowed transitions explicitly. For this project's simple binary model (approved / changes_requested), the client can only transition from `pending` to `approved` or `changes_requested`. The admin can only transition from `changes_requested` to `revised`. Enforce this in the model with a custom validation or a lightweight state machine.
-- Never pass `status` from `params` directly. Use named action methods: `post.approve!`, `post.request_changes!`.
-- Add a database check constraint matching the enum values as a last line of defense.
-- For AASM if adopted: use `guard` blocks on transitions and handle `AASM::InvalidTransition` exceptions at the controller level.
+# Right for a named stream
+assert_broadcast_on("admin_updates", { ... })
+```
 
-**Phase:** Feature phase (approval workflow). Define enums and transition rules before implementing client-facing approval actions.
+Getting the stream name wrong causes the assertion to always fail or — if checking
+`assert_no_broadcasts` — to give a false pass.
+
+**Debug tip:** Call `Turbo::StreamsChannel.broadcasting_for(record)` in a test console to see
+the exact string ActionCable uses for that model, then copy it into the assertion.
 
 ---
 
-## Moderate Pitfalls
+### Pitfall 3: Block form required for `assert_broadcast_on` with model callbacks
 
-### 7. Client Shares Their Own Link with the Wrong Person
+```ruby
+# Wrong — asserts on broadcasts that happened BEFORE the block, not after
+arte.update!(status: :approved)
+assert_broadcast_on("admin_updates", { ... })   # always fails
 
-**Risk:** The client forwards their calendar URL (or the admin sends the wrong link to the wrong client). Because it's a token URL with a shared password, there's no audit trail and no way to distinguish sessions. One client can see another's content.
-
-**Warning signs:**
-- Links have no expiry or rotation mechanism
-- All client sessions share the same password indefinitely
-- No per-session logging in the audit trail
-- Admin has no way to revoke a link without generating a new token
-
-**Prevention:**
-- Build token rotation into the admin panel from the start: "Generate new link" invalidates the old token and issues a new one. This is one button that takes 5 minutes to implement but critical when a client leaks their link.
-- Store session origin (IP, user agent, approximate timestamp) in the server session when a client authenticates. Show the admin "last accessed from X" in the client panel.
-- Link invalidation is more important than encryption. A token the admin can rotate is safer than one they can't.
-
-**Phase:** Admin panel phase. Token rotation must exist before onboarding real clients.
+# Right — intercepts broadcasts triggered during block execution
+assert_broadcast_on("admin_updates", { ... }) do
+  arte.update!(status: :approved)
+end
+```
 
 ---
 
-### 8. External Link Rot (Google Drive / Dropbox Links)
+### Pitfall 4: `broadcast_later` enqueues a job — must flush Active Job queue in tests
 
-**Risk:** Admin pastes a Google Drive link for a post. Three weeks later the file is moved, the folder permissions change, or the Drive link expires. The client opens the calendar to approve a post and sees a broken link or "Access denied." The client assumes the post doesn't exist. They don't approve it. Deadline is missed.
+Any `_later` broadcast variant (the recommended pattern for model callbacks) enqueues an
+`Turbo::Streams::BroadcastJob`. With the default `test` Active Job adapter, jobs are queued but
+not executed. `assert_broadcast_on` will not see the broadcast because the job never ran.
 
-**Warning signs:**
-- No validation that the external URL is reachable at time of entry
-- No visual distinction between "file uploaded here" vs "external link" in the calendar UI
-- No admin alert when a client views a post and the file is inaccessible
-- Broken links go undetected until a client complains
+**Fix options:**
 
-**Prevention:**
-- At save time, perform a lightweight `HEAD` request to the external URL and warn the admin if it returns non-2xx. This won't catch future breakage but catches immediate mistakes.
-- In the UI, show a clear "External link — ensure permissions are set to 'Anyone with link'" notice when an external URL is saved.
-- Log when a client views a post but the external resource returns an error (requires client-side fetch with error reporting).
-- Consider embedding a preview thumbnail (via Open Graph or Google Drive preview) so the admin can visually confirm the right file before saving.
+Option A — flush queue in the test block:
+```ruby
+assert_broadcast_on("admin_updates", { ... }) do
+  perform_enqueued_jobs do
+    arte.update!(status: :approved)
+  end
+end
+```
 
-**Phase:** Feature phase (post creation). The HEAD-request validation at save time is simple and catches 80% of cases.
+Option B — use inline adapter for the whole test file:
+```ruby
+setup { ActiveJob::Base.queue_adapter = :inline }
+teardown { ActiveJob::Base.queue_adapter = :test }
+```
 
----
-
-### 9. Approval Ambiguity After Admin Makes Revisions
-
-**Risk:** Client requests changes. Admin revises the file and marks it "revisada." The client never re-approves it. The post goes live with unverified revised content. Alternatively, the admin re-opens the post for approval but the client doesn't realize it's a new version — they think their earlier "changes requested" comment was enough.
-
-**Warning signs:**
-- "Revisada" is a terminal state with no path back to client approval
-- No visual indicator in the client calendar that a post has been revised since their last interaction
-- Clients don't see a revision history or "updated" badge
-
-**Prevention:**
-- After the admin marks a post as "revisada," automatically reset it to a "pending_re_approval" state that appears to the client as a new pending item.
-- Show a "Revised — please re-approve" badge prominently on the calendar item.
-- Keep a simple revision counter on the post (`revision_count: integer`) so both admin and client know it's been revised N times.
-- The binary status model (approved / changes_requested) requires a `revised` state that feeds back into the client's pending queue — model this in the state machine from the start, not as an afterthought.
-
-**Phase:** Feature phase (approval workflow state machine). Design the full state cycle (pending → approved/changes_requested → revised → pending) before writing the first controller action.
+Option C — test the job directly without testing the callback trigger.
 
 ---
 
-## Minor Pitfalls
+### Pitfall 5: Channel tests require `ActionCable::Channel::TestCase`
 
-### 10. Session Not Invalidated After Token Rotation
+```ruby
+# Wrong — no subscription lifecycle, no transmit helpers
+class NotificationsChannelTest < ActiveSupport::TestCase; end
 
-**Risk:** Admin rotates a client's token (because the link was leaked). The client who had the old link is already authenticated in a browser session. Their session cookie still grants access, even though their token no longer works for new logins.
+# Right
+class NotificationsChannelTest < ActionCable::Channel::TestCase; end
+```
 
-**Warning signs:**
-- `session[:client_id]` is set on login and never explicitly cleared on token rotation
-- Admin rotates token but client's open browser tab still works
-
-**Prevention:**
-- Store the token value (or a token version counter) in the session at login time. On every authenticated request, verify `session[:client_token] == current_client.public_token`. If they don't match, destroy the session.
-- This is a one-line check in `before_action :authenticate_client!`.
-
-**Phase:** Foundation phase (auth). Add the check when implementing the session authentication filter.
+`ActionCable::Channel::TestCase` provides `subscribe`, `unsubscribe`, and `assert_broadcasts`.
+Using the wrong superclass gives no helpful errors — methods simply do not exist or the channel
+is never instantiated.
 
 ---
 
-### 11. Calendar Month Navigation Loading All Posts
+## Performance & N+1 Pitfalls
 
-**Risk:** Admin accumulates 12 months of posts. The calendar loads all posts for all time to render the current month view, making the page slow for no reason.
+### Pitfall 1: Synchronous broadcast inside a DB transaction holds the connection open
 
-**Warning signs:**
-- `current_client.posts` without date scoping in the calendar query
-- Calendar page load time increases month after month
-- N+1 queries on post associations (platform tags, file attachments)
+`after_save` and `after_create` run inside the transaction. Broadcasting synchronously there
+holds the DB connection occupied during template rendering, increasing lock contention under
+concurrent writes. `after_commit` callbacks run outside the transaction but synchronous rendering
+still blocks the worker thread.
 
-**Prevention:**
-- Always scope calendar queries to the displayed month: `current_client.posts.where(scheduled_date: start_of_month..end_of_month)`.
-- Eager load associations: `.includes(:active_storage_attachments)`.
-- Add a database index on `(client_id, scheduled_date)` — the two columns always queried together.
-
-**Phase:** Feature phase (calendar view). Add the index and scope in the same migration/PR as the calendar feature.
-
----
-
-### 12. Admin Panel Has No Confirmation on Destructive Actions
-
-**Risk:** Admin accidentally deletes a client or a post. No confirmation dialog. Data is gone. For a 10-30 client operation, each client represents real relationship risk.
-
-**Warning signs:**
-- Delete buttons use standard `method: :delete` links with no `data-confirm`
-- No soft delete / audit trail on client or post records
-
-**Prevention:**
-- Add `data-confirm: "Delete this post? This cannot be undone."` to all destructive actions.
-- Consider `paranoia` gem or a manual `deleted_at` column for soft deletes on clients and posts. Given the scale (10-30 clients), hard deletes are a real risk.
-
-**Phase:** Admin panel phase.
+**Prevention:** Use `_later` variants in all model callbacks:
+```ruby
+after_create_commit :broadcast_append_later_to_admin
+```
+Not:
+```ruby
+after_create_commit :broadcast_append_to_admin   # synchronous render, blocks thread
+```
+Exception: `broadcast_remove_to` needs no `_later` because it sends only the dom_id — no template render.
 
 ---
 
-## Phase-Specific Warnings
+### Pitfall 2: Broadcast partials cannot access `current_user`, `current_client`, or helpers
 
-| Phase Topic | Likely Pitfall | Mitigation |
-|-------------|---------------|------------|
-| Auth & token setup | Brute force on password + timing attack on token | Rack::Attack + secure_compare + BCrypt from day one |
-| Data model | Timezone bug puts posts on wrong day | Use `date` columns, set `config.time_zone`, write timezone test |
-| Data model | Cross-client data leak | All queries through `current_client` association, add integration test |
-| File upload | Oversized files crash server | Size limit in model + Nginx config before first upload |
-| File upload | MIME spoofing bypasses type check | Trust Active Storage `identify()`, not user-supplied Content-Type |
-| Approval workflow | Invalid state transitions | Rails enum + named bang methods, never raw `status=` from params |
-| Approval workflow | Revised posts never re-approved | Design full state cycle before implementing actions |
-| Admin panel | Leaked client links can't be revoked | Token rotation button required before onboarding clients |
-| Calendar view | Month view loads all history | Scope query to displayed month + index on `(client_id, scheduled_date)` |
-| Client UX | Clients don't understand what "approved" means | Prominent status badges, clear CTA copy, explicit deadline countdown |
+Background jobs that render broadcast partials have no request context. These are all
+unavailable:
+- `current_user` → `NameError`
+- `current_client` → `NameError`  
+- `session` → `NameError`
+- `flash` → `NameError`
+- Route helpers requiring a host (e.g., `url_for`) → may raise without `default_url_options`
+
+**When this bites in this project:** Any partial that conditionally renders admin vs client
+content by checking `current_user.present?` will raise inside a broadcast job.
+
+**Prevention:** Design broadcast partials to be context-free. Pass everything needed as `locals:`:
+```ruby
+broadcast_replace_later_to(
+  "admin_updates",
+  target:  dom_id(self),
+  partial: "admin/artes/status_badge",
+  locals:  { arte: self, status: self.status }
+)
+```
+Broadcast separate partials to admin and client streams when viewer-specific rendering is needed.
+
+---
+
+### Pitfall 3: N+1 in broadcast partials when accessing associations
+
+A broadcast partial for `ApprovalResponse` that renders `response.arte.client.name` triggers
+2 queries per broadcast job if the arte and client were not loaded. With 30 concurrent approvals,
+that is 60 extra queries.
+
+**Prevention:** Use `includes` when the job reloads the record, or pass pre-resolved values as locals:
+```ruby
+after_create_commit do
+  arte = Arte.includes(:client).find(self.arte_id)
+  broadcast_append_later_to(
+    "admin_approvals",
+    partial: "admin/approvals/row",
+    locals: { approval: self, arte: arte, client: arte.client }
+  )
+end
+```
+
+---
+
+### Pitfall 4: `after_update_commit` fires on EVERY update, not just status changes
+
+```ruby
+# Fires on EVERY column write — deadline, notes, media_url, etc.
+after_update_commit :broadcast_status_update
+```
+
+This floods the cable on unrelated admin edits and may leak data if scoping is wrong.
+
+**Prevention:** Gate broadcasts on the specific change:
+```ruby
+after_update_commit do
+  broadcast_replace_later_to(...) if saved_change_to_status?
+end
+```
+`saved_change_to_attribute?(:column)` is the correct Active Record method. `changed?` does not
+work in `after_commit` callbacks — the change tracking has already reset.
+
+---
+
+### Pitfall 5: Memory growth from open WebSocket connections
+
+Each connected client holds an `ApplicationCable::Connection` object and subscription state in
+the Ruby heap. With 30 clients all subscribed, this is 30 persistent objects plus subscription
+lists. If channels do not clean up on disconnect, memory grows.
+
+**Prevention:** Always implement `unsubscribed`:
+```ruby
+def unsubscribed
+  stop_all_streams
+end
+```
+`stop_all_streams` is called automatically for `stream_from`/`stream_for` channels, but explicit
+cleanup is required for any timers or instance variables set in `subscribed`.
+
+---
+
+## Prevention Strategies (Per Pitfall)
+
+| Pitfall | Category | Severity | Prevention |
+|---------|----------|----------|------------|
+| solid_cable vs postgresql adapter choice | Config | HIGH | Decide adapter before writing channel code; test env must stay `test` |
+| LISTEN connections bypass AR pool | Config | LOW | Monitor PG `pg_stat_activity`; adequate for 30 users |
+| PG NOTIFY 8 KB payload limit | Config | MEDIUM | Keep broadcast payloads small; partial, not full page sections |
+| Pool exhaustion under broadcast+HTTP concurrency | Config | LOW | Existing pool=5, Puma=3 threads has headroom for this scale |
+| Dev `async` adapter — console broadcasts invisible | Config | INFO | Use web console or temporarily switch dev to `postgresql` |
+| connection.rb rejects client users | Auth | CRITICAL | Dual-path auth: Session-based admin + request.session-based client |
+| `session` vs `request.session` in connection.rb | Auth | HIGH | Always use `request.session` in connection.rb |
+| access_token in WebSocket URL | Auth | HIGH | Never — use session state established by ClientController |
+| Stream not scoped to client | Auth/Privacy | HIGH | Use `stream_for(current_client)` or `"client_#{id}_updates"` |
+| `replace` destroys turbo-frame element | Frames/Streams | HIGH | Use `update` when targeting a `<turbo-frame>` wrapper |
+| Broadcasts and frame navigations are independent | Frames | MEDIUM | Keep HTTP frame navigation and cable broadcasts orthogonal |
+| Stale IDs after frame navigation | Frames | LOW | Idempotent broadcasts — next frame load shows current state |
+| Missing broadcast target is completely silent | Streams | HIGH | Verify IDs with DevTools WS → Messages tab |
+| Day-number-only calendar IDs collide | DOM IDs | MEDIUM | Use `id="cal_2026-06-05"` format; use `dom_id(arte)` for chips |
+| `dom_id` on unsaved records not unique | DOM IDs | MEDIUM | Broadcast only in `after_commit` (persisted records only) |
+| Partial path mismatch (namespaced views) | Broadcast | HIGH | Always specify `partial:` explicitly — do not rely on convention |
+| Wrong test cable adapter | Testing | HIGH | Already correct; never change `test: adapter: test` |
+| Wrong stream name in assertions | Testing | MEDIUM | Use `Turbo::StreamsChannel.broadcasting_for(model)` for exact name |
+| `assert_broadcast_on` without block | Testing | HIGH | Always use block form to capture broadcasts triggered by action |
+| `broadcast_later` jobs not executed in tests | Testing | HIGH | Wrap with `perform_enqueued_jobs { }` or use inline adapter |
+| Wrong test case superclass for channels | Testing | MEDIUM | Use `ActionCable::Channel::TestCase`, not `ActiveSupport::TestCase` |
+| Synchronous broadcast inside transaction | Performance | HIGH | Always use `_later` variants in model callbacks |
+| `current_user` in broadcast partial | Performance | HIGH | Pass everything as `locals:`; design context-free partials |
+| N+1 in broadcast partials | Performance | MEDIUM | Use `includes` in job; pass pre-resolved associations as locals |
+| Broadcasts on every `after_update_commit` | Performance | MEDIUM | Gate with `saved_change_to_status?` — use `saved_change_to_attribute?` |
+| Memory from open connections | Performance | LOW | Always implement `unsubscribed { stop_all_streams }` |
 
 ---
 
 ## Sources
 
-- [Rails Security Guide — Securing Rails Applications](https://guides.rubyonrails.org/security.html)
-- [SECURITY IN RAILS: Preventing enumeration attacks, timing attacks — DEV Community](https://dev.to/rwxpat/security-in-rails-preventing-enumeration-attacks-data-leaks-and-timing-based-attacks-4k6e)
-- [has_secure_token — Rails API](https://api.rubyonrails.org/classes/ActiveRecord/SecureToken/ClassMethods.html)
-- [Rack::Attack rate limiting production guide — TTB Software](https://ttb.software/2026/03/21/rails-rate-limiting-rack-attack-production-guide/)
-- [active_storage_validations gem — GitHub](https://github.com/igorkasyanchuk/active_storage_validations)
-- [Securing Rails Active Storage Direct Uploads — DEV Community](https://dev.to/slimgee/securing-rails-active-storage-direct-uploads-55fm)
-- [Unrestricted File Upload via MIME Type Spoofing — GitHub Advisory](https://github.com/gitroomhq/postiz-app/security/advisories/GHSA-44wg-r34q-hvfx)
-- [Row-Level Multitenancy in Rails — DEV Community](https://dev.to/temitopeajao/row-level-multitenancy-in-rails-building-a-bulletproof-tenant-isolation-layer-from-scratch-25de)
-- [Multi-Tenancy in Rails 8 — Omaship Guides](https://omaship.com/guides/multi-tenancy-rails-saas-2026)
-- [AASM State Machines for Rails — GitHub](https://github.com/aasm/aasm)
-- [Date/Time comparisons incorrect depending on TimeZone — Rails issue #36462](https://github.com/rails/rails/issues/36462)
-- [Content Calendar Approval Process — Sugar Punch Marketing](https://sugarpunchmarketing.com/podcast-episodes/content-calendar-approval-process-create-systems-clients-actually-use-no-more-chasing-feedback/)
-- [Active Storage & Form Errors: Preventing Lost File Uploads — Daniela Baron](https://danielabaron.me/blog/active_storage_form_errors/)
+- [Action Cable Overview — Ruby on Rails Guides](https://guides.rubyonrails.org/action_cable_overview.html) — HIGH confidence
+- [PostgreSQL Adapter source — Rails 8 stable](https://msp-greg.github.io/rails_stable/ActionCable/SubscriptionAdapter/PostgreSQL.html) — HIGH confidence (source code)
+- [ActionCable::TestHelper — Edge Rails API](https://edgeapi.rubyonrails.org/classes/ActionCable/TestHelper.html) — HIGH confidence
+- [ActionCable can deplete AR connection pool — rails/rails#23778](https://github.com/rails/rails/issues/23778) — HIGH confidence (upstream issue)
+- [Turbo::Broadcastable docs — rubydoc.info main](https://rubydoc.info/github/hotwired/turbo-rails/Turbo/Broadcastable) — HIGH confidence (gem docs)
+- [Turbo Streams on Rails — David Colby](https://www.colby.so/posts/turbo-streams-on-rails) — MEDIUM confidence (practitioner)
+- [Solving Turbo Frame Replacement Issues — DEV Community](https://dev.to/flstudio4/solving-turbo-frame-replacement-issues-in-rails-g9a) — MEDIUM confidence
+- [Difference between replace and update — Hotwire Discussion](https://discuss.hotwired.dev/t/difference-between-replace-and-update-turbo-streams/3148) — MEDIUM confidence
+- [Connection Management — Stanza](https://www.stanza.dev/courses/rails-action-cable/scaling-action-cable/rails-action-cable-connection-management) — MEDIUM confidence
+- [ActionCable memory leak — rails/rails#26119](https://github.com/rails/rails/issues/26119) — HIGH confidence (upstream issue)
+- [Decoding Turbo-Stream Errors](https://junkangworld.com/blog/decoding-turbo-stream-errors-my-ultimate-2025-fix-guide) — MEDIUM confidence
