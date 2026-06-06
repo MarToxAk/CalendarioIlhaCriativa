@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Real-time & Notifications
-status: executing
-last_updated: "2026-06-06T16:20:51.104Z"
+status: ready_to_plan
+last_updated: 2026-06-06T20:30:00.366Z
 last_activity: 2026-06-06 -- Phase 19 execution started
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 11
-  completed_plans: 10
+  completed_plans: 57
   percent: 50
+stopped_at: Phase 19 complete (3/3) — ready to discuss Phase 20
 ---
 
 # Project State
@@ -20,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-05)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 19 — client-real-time-arte-status-broadcast
+**Current focus:** Phase 20 — admin calendar chips real time
 
 ## Current Position
 
-Phase: 19 (client-real-time-arte-status-broadcast) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 19
-Last activity: 2026-06-06 -- Phase 19 execution started
+Phase: 20
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-06-06
 
 ## Progress Bar
 
