@@ -67,6 +67,6 @@ class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
     @arte.update!(status: :pending)
     get admin_root_url
     assert_response :success
-    assert_select "span#sidebar-badge", count: 0
+    assert_select "span#sidebar-badge.hidden"
   end
 end
