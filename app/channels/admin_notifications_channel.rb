@@ -1,6 +1,6 @@
 class AdminNotificationsChannel < ApplicationCable::Channel
   def subscribed
-    reject unless current_user
+    return reject unless current_user
     stream_for current_user
   end
 end
