@@ -125,12 +125,12 @@ GEM
     erubi (1.13.1)
     et-orbi (1.4.0)
       tzinfo
-    fugit (1.12.2)
+    fugit (1.12.1)
       et-orbi (~> 1.4)
       raabro (~> 1.4)
     globalid (1.3.0)
       activesupport (>= 6.1)
-    good_job (4.19.0)
+    good_job (4.18.2)
       activejob (>= 6.1.0)
       activerecord (>= 6.1.0)
       concurrent-ruby (>= 1.3.1)
@@ -239,7 +239,7 @@ GEM
       actionpack (>= 7.0.0)
       activesupport (>= 7.0.0)
       rack
-    psych (5.4.0)
+    psych (5.3.1)
       date
       stringio
     public_suffix (7.0.5)
@@ -419,7 +419,7 @@ DEPENDENCIES
   capybara
   debug
   dotenv-rails
-  good_job (~> 4.19)
+  good_job (~> 4.0)
   image_processing (~> 2.0)
   importmap-rails
   jbuilder
