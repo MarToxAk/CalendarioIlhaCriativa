@@ -16,7 +16,7 @@ dependency_graph:
     - broadcast-admin: "1 turbo-stream — replace sidebar-badge decrementado"
     - requirements: [RTUP-05, RTUP-06, RTUP-07, RTUP-01-decremento]
   affects:
-    - 19-02 (checkpoint humano — verificação visual em browser)
+    - 20 (Admin Calendar Chips Real-time — próxima fase)
 
 tech-stack:
   added: []
@@ -54,10 +54,10 @@ completed: "2026-06-06"
 
 ## Performance
 
-- **Duration:** 8 min
+- **Duration:** ~20 min (incluindo checkpoint visual)
 - **Started:** 2026-06-06T15:35:00Z
-- **Completed:** 2026-06-06T15:43:00Z
-- **Tasks:** 1 (Task 2 é checkpoint — aguardando verificação humana)
+- **Completed:** 2026-06-06T18:30:00Z
+- **Tasks:** 2 (Task 1: implementação auto; Task 2: checkpoint visual aprovado)
 - **Files modified:** 1
 
 ## Accomplishments
@@ -65,11 +65,16 @@ completed: "2026-06-06"
 - `after_update_commit :broadcasts_revised_to_all, if: -> { saved_change_to_status? && revised? }` adicionado ao model Arte
 - Método `broadcasts_revised_to_all` implementado com guard `return unless admin` (T-19-05), cálculo SQL do summary do mês, 4 renders de partial e broadcast duplo via ClientCalendarChannel + AdminNotificationsChannel
 - Helpers `render_partial_html` e `turbo_stream_tag` privados adicionados ao model (mesmo padrão de `approval_response.rb`)
-- Testes RED de 19-00 prontos para ficar GREEN quando executados com banco disponível
+- Verificação visual aprovada pelo usuário (Task 2 checkpoint): todos os 4 cenários confirmados em browser
+  - Cenário 1: Badge admin decrementa em tempo real quando arte é marcada como revisada (RTUP-01 decremento)
+  - Cenário 2: Chip da arte no calendário do cliente atualiza para "Revisado" em <2s (RTUP-05)
+  - Cenário 3: Faixa de resumo do cliente atualiza contadores em tempo real (RTUP-06)
+  - Cenário 4: Toast "Arte revisada" aparece com auto-dismiss 5s e botão x (RTUP-07)
 
 ## Task Commits
 
 1. **Task 1: Arte#broadcasts_revised_to_all — callback condicional + broadcast duplo** - `ca98b3c` (feat)
+2. **Task 2: Verificação visual aprovada** - checkpoint:human-verify APROVADO pelo usuário (sem commit separado — aprovação registrada neste SUMMARY)
 
 ## Files Created/Modified
 
@@ -105,8 +110,9 @@ Nenhum. O método `broadcasts_revised_to_all` usa dados reais do banco (artes do
 
 ## Next Phase Readiness
 
-- Task 2 (checkpoint:human-verify) aguarda verificação visual em browser: badge admin decrementa, chip cliente atualiza, summary atualiza, toast aparece com auto-dismiss
-- Após aprovação, fase 19 completa — fase 20 (Admin Calendar Chips Real-time) pode iniciar
+- Plano 19-01 CONCLUIDO — Task 2 (checkpoint:human-verify) APROVADO pelo usuário em 2026-06-06
+- Fase 19 completa — fase 20 (Admin Calendar Chips Real-time) pode iniciar
+- RTUP-01 (decremento), RTUP-05, RTUP-06, RTUP-07 implementados e verificados em browser
 
 ---
 

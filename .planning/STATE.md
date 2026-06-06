@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Real-time & Notifications
 status: executing
-last_updated: "2026-06-06T15:37:12.781Z"
+last_updated: "2026-06-06T18:30:00.000Z"
 last_activity: 2026-06-06
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 10
-  completed_plans: 10
-  percent: 75
+  total_plans: 11
+  completed_plans: 11
+  percent: 78
 ---
 
 # Project State
@@ -24,18 +24,18 @@ See: .planning/PROJECT.md (updated 2026-06-05)
 
 ## Current Position
 
-Phase: 19 (client-real-time-arte-status-broadcast) — EXECUTING
-Plan: 2 of 2
-Status: Ready to execute
+Phase: 19 (client-real-time-arte-status-broadcast) — COMPLETE
+Plan: 2 of 2 — DONE
+Status: Phase complete — ready for Phase 20
 Last activity: 2026-06-06
 
 ## Progress Bar
 
 ```
-v1.5: [░░░░░░░░░░░░░░░░░░░░] 0% (0/4 phases)
-Phase 17: Cable Foundation + Admin Channel + Badge + Toast — Not started
-Phase 18: ApprovalResponse Broadcast + Admin Live Rows — Not started
-Phase 19: Client Real-time + Arte Status Broadcast — Not started
+v1.5: [███████████████░░░░░] 75% (3/4 phases)
+Phase 17: Cable Foundation + Admin Channel + Badge + Toast — Complete (2026-06-05)
+Phase 18: ApprovalResponse Broadcast + Admin Live Rows — Complete (2026-06-05)
+Phase 19: Client Real-time + Arte Status Broadcast — Complete (2026-06-06)
 Phase 20: Admin Calendar Chips Real-time — Not started
 ```
 
@@ -84,8 +84,8 @@ Phase 20: Admin Calendar Chips Real-time — Not started
 - **Started:** 2026-06-05
 - **Goal:** Real-time & Notifications via ActionCable/Turbo Streams
 - **Phases:** 4 (Phase 17–20)
-- **Plans:** 0/11 complete
-- **Requirements:** 0/10 (CABLE-01, CABLE-02, RTUP-01..08)
+- **Plans:** 11/11 complete (Phases 17+18+19 done; Phase 20 TBD)
+- **Requirements:** 8/10 complete (CABLE-01, CABLE-02, RTUP-01..07 done; RTUP-08 pending Phase 20)
 
 ## Deferred Items
 
@@ -151,14 +151,17 @@ Phase 20: Admin Calendar Chips Real-time — Not started
 
 ## Operator Next Steps
 
-- Roadmap v1.5 pronto — run `/gsd-plan-phase 17`
+- Phase 19 completa — próximo passo: `/gsd-plan-phase 20` (Admin Calendar Chips Real-time)
 
 ## Performance Metrics
 
 | Phase | Plan | Duration | Notes |
 |-------|------|----------|-------|
-| Phase 19 P01 | 8min | 1 tasks | 1 files |
+| Phase 19 P00 | 30min | 3 tasks | 7 files |
+| Phase 19 P01 | 20min | 2 tasks | 1 file |
 
 ## Decisions
 
-- [Phase ?]: Arte#broadcasts_revised_to_all callback
+- [Phase 19]: Arte#broadcasts_revised_to_all callback — after_update_commit condicional, guard saved_change_to_status? && revised?
+- [Phase 19]: Broadcast duplo por transação: ClientCalendarChannel (3 streams) + AdminNotificationsChannel (1 stream)
+- [Phase 19]: ActionView::RecordIdentifier.dom_id() para geração segura de IDs no model
