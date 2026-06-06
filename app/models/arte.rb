@@ -38,38 +38,28 @@ class Arte < ApplicationRecord
     admin = User.order(:id).first
     return unless admin
 
-    badge_count         = Arte.change_requested.count
-    current_month_start = scheduled_on.beginning_of_month
-    current_month_end   = scheduled_on.end_of_month
-    artes_do_mes        = client.artes.where(scheduled_on: current_month_start..current_month_end)
-    summary = {
-      total:            artes_do_mes.count,
-      approved:         artes_do_mes.where(status: :approved).count,
-      pending:          artes_do_mes.where(status: [ :pending, :revised ]).count,
-      change_requested: artes_do_mes.where(status: :change_requested).count
-    }
+    # Contagem global (todos os clientes) — badge admin mostra pendências totais, não por cliente
+    badge_count = Arte.change_requested.count
 
-    chip_html    = render_partial_html(
+    chip_html  = render_partial_html(
       partial: "client/home/arte_calendar_chip",
       locals:  { arte: self, client: client }
     )
-    summary_html = render_partial_html(
-      partial: "client/home/calendar_summary",
-      locals:  { summary: summary }
-    )
-    toast_html   = render_partial_html(
+    toast_html = render_partial_html(
       partial: "client/shared/arte_revised_toast",
       locals:  { arte: self, client: client }
     )
-    badge_html   = render_partial_html(
+    badge_html = render_partial_html(
       partial: "admin/shared/sidebar_badge",
       locals:  { badge_count: badge_count }
     )
 
+    # Envia apenas chip e toast ao cliente; o #calendar-summary não é atualizado
+    # em tempo real porque a arte revisada pode pertencer a um mês diferente do
+    # mês que o cliente está visualizando — sobrescrever causaria dados incorretos.
     chip_target    = ActionView::RecordIdentifier.dom_id(self, "calendar_chip")
     client_streams = [
-      turbo_stream_tag("replace", chip_target,         chip_html),
-      turbo_stream_tag("replace", "calendar-summary",  summary_html),
+      turbo_stream_tag("replace", chip_target,           chip_html),
       turbo_stream_tag("append",  "client-toast-region", toast_html)
     ].join
     admin_stream = turbo_stream_tag("replace", "sidebar-badge", badge_html)

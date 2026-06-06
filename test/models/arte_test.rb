@@ -59,8 +59,8 @@ class ArteTest < ActiveSupport::TestCase
 
     assert_equal 1, client_calls.length
     assert_equal 1, admin_calls.length
-    assert_equal 3, client_calls.first.scan(/<turbo-stream/).count,
-                 "Cliente deve receber 3 turbo streams: chip, summary, toast"
+    assert_equal 2, client_calls.first.scan(/<turbo-stream/).count,
+                 "Cliente deve receber 2 turbo streams: chip e toast (summary removido do broadcast — CR-01)"
     assert_equal 1, admin_calls.first.scan(/<turbo-stream/).count,
                  "Admin deve receber 1 turbo stream: badge decremento"
   end
