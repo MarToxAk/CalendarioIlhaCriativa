@@ -39,6 +39,11 @@ class ArteTest < ActiveSupport::TestCase
   end
 
   test "revised! dispara broadcast para ClientCalendarChannel e AdminNotificationsChannel" do
+    # broadcasts_revised_to_all faz User.order(:id).first e retorna cedo se nil.
+    # Explicitamos a dependência para que a mensagem de falha seja clara caso
+    # os fixtures de User sejam removidos (WR-02).
+    assert User.exists?, "Este teste requer ao menos um User (fixture users.yml)"
+
     arte = Arte.create!(
       client: @client,
       scheduled_on: Date.current,
