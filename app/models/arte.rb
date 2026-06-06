@@ -22,6 +22,8 @@ class Arte < ApplicationRecord
   enum :media_type, { image: 0, video: 1, caption_only: 2 }
   enum :status,     { pending: 0, approved: 1, change_requested: 2, revised: 3 }
 
+  after_update_commit :broadcasts_revised_to_all, if: -> { saved_change_to_status? && revised? }
+
   validates :scheduled_on, presence: true
   validates :platform,     presence: true
   validates :media_type,   presence: true
@@ -31,6 +33,58 @@ class Arte < ApplicationRecord
   validate :only_one_media_source
 
   private
+
+  def broadcasts_revised_to_all
+    admin = User.order(:id).first
+    return unless admin
+
+    badge_count         = Arte.change_requested.count
+    current_month_start = scheduled_on.beginning_of_month
+    current_month_end   = scheduled_on.end_of_month
+    artes_do_mes        = client.artes.where(scheduled_on: current_month_start..current_month_end)
+    summary = {
+      total:            artes_do_mes.count,
+      approved:         artes_do_mes.where(status: :approved).count,
+      pending:          artes_do_mes.where(status: [ :pending, :revised ]).count,
+      change_requested: artes_do_mes.where(status: :change_requested).count
+    }
+
+    chip_html    = render_partial_html(
+      partial: "client/home/arte_calendar_chip",
+      locals:  { arte: self, client: client }
+    )
+    summary_html = render_partial_html(
+      partial: "client/home/calendar_summary",
+      locals:  { summary: summary }
+    )
+    toast_html   = render_partial_html(
+      partial: "client/shared/arte_revised_toast",
+      locals:  { arte: self, client: client }
+    )
+    badge_html   = render_partial_html(
+      partial: "admin/shared/sidebar_badge",
+      locals:  { badge_count: badge_count }
+    )
+
+    chip_target    = ActionView::RecordIdentifier.dom_id(self, "calendar_chip")
+    client_streams = [
+      turbo_stream_tag("replace", chip_target,         chip_html),
+      turbo_stream_tag("replace", "calendar-summary",  summary_html),
+      turbo_stream_tag("append",  "client-toast-region", toast_html)
+    ].join
+    admin_stream = turbo_stream_tag("replace", "sidebar-badge", badge_html)
+
+    ClientCalendarChannel.broadcast_to(client, client_streams)
+    AdminNotificationsChannel.broadcast_to(admin, admin_stream)
+  end
+
+  def render_partial_html(partial:, locals:)
+    ApplicationController.render(partial: partial, locals: locals, formats: [ :html ])
+  end
+
+  def turbo_stream_tag(action, target, template_html = "")
+    %(<turbo-stream action="#{action}" target="#{target}"><template>#{template_html}</template></turbo-stream>)
+  end
 
   def media_source_present
     return if media_file.attached? || external_url.present?
