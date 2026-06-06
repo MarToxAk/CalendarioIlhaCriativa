@@ -143,7 +143,16 @@ Plans:
   4. Badge do sidebar admin decrementa em 1 quando admin marca arte como revisada (RTUP-01 parcial)
   5. Autenticação do canal do cliente via token de URL funciona sem expor sessão do admin
 
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+**Wave 1**
+
+- [ ] 19-00-PLAN.md — Canal ClientCalendarChannel + layout cliente + partials com DOM IDs estáveis + testes RED
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 19-01-PLAN.md — Arte#broadcasts_revised_to_all → Turbo Streams para cliente (chip, summary, toast) + decremento badge admin → GREEN + checkpoint visual
+
 **UI hint**: yes
 
 ### Phase 20: Admin Calendar Chips Real-time
