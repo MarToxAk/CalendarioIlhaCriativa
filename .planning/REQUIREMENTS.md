@@ -15,16 +15,16 @@
 
 ### Notificações do Admin (acionadas por: cliente envia resposta de aprovação)
 
-- [ ] **RTUP-01**: Badge no sidebar do admin atualiza em tempo real — incrementa quando nova resposta "Pediu Alteração" chega, decrementa quando admin marca arte como revisada
+- [x] **RTUP-01**: Badge no sidebar do admin atualiza em tempo real — incrementa quando nova resposta "Pediu Alteração" chega, decrementa quando admin marca arte como revisada
 - [ ] **RTUP-02**: Admin recebe toast em qualquer página do painel quando nova resposta de cliente chega (sem recarregar)
 - [ ] **RTUP-03**: Dashboard admin recebe nova linha de arte em tempo real quando cliente registra aprovação ou pedido de alteração
 - [ ] **RTUP-04**: Página Aprovações do admin recebe nova linha em tempo real quando nova resposta chega
 
 ### Real-time do Cliente (acionadas por: admin marca arte como revisada)
 
-- [ ] **RTUP-05**: Célula do calendário do cliente atualiza em tempo real quando admin marca arte como revisada (badge de status muda)
-- [ ] **RTUP-06**: Faixa de resumo de status no topo do calendário do cliente atualiza em tempo real quando arte muda de status
-- [ ] **RTUP-07**: Cliente recebe toast no calendário quando arte é revisada pelo admin
+- [x] **RTUP-05**: Célula do calendário do cliente atualiza em tempo real quando admin marca arte como revisada (badge de status muda)
+- [x] **RTUP-06**: Faixa de resumo de status no topo do calendário do cliente atualiza em tempo real quando arte muda de status
+- [x] **RTUP-07**: Cliente recebe toast no calendário quando arte é revisada pelo admin
 - [ ] **RTUP-08**: Chips do calendário admin atualizam em tempo real quando status de arte muda
 
 ---

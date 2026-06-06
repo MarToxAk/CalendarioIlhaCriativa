@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Real-time & Notifications
 status: executing
-last_updated: "2026-06-06T13:06:30.711Z"
-last_activity: 2026-06-06 -- Phase 19 execution started
+last_updated: "2026-06-06T15:37:12.781Z"
+last_activity: 2026-06-06
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 10
-  completed_plans: 8
-  percent: 50
+  completed_plans: 10
+  percent: 75
 ---
 
 # Project State
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-06-05)
 ## Current Position
 
 Phase: 19 (client-real-time-arte-status-broadcast) — EXECUTING
-Plan: 1 of 2
-Status: Executing Phase 19
-Last activity: 2026-06-06 -- Phase 19 execution started
+Plan: 2 of 2
+Status: Ready to execute
+Last activity: 2026-06-06
 
 ## Progress Bar
 
@@ -152,3 +152,13 @@ Phase 20: Admin Calendar Chips Real-time — Not started
 ## Operator Next Steps
 
 - Roadmap v1.5 pronto — run `/gsd-plan-phase 17`
+
+## Performance Metrics
+
+| Phase | Plan | Duration | Notes |
+|-------|------|----------|-------|
+| Phase 19 P01 | 8min | 1 tasks | 1 files |
+
+## Decisions
+
+- [Phase ?]: Arte#broadcasts_revised_to_all callback
