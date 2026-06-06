@@ -147,7 +147,7 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 19-00-PLAN.md — Canal ClientCalendarChannel + layout cliente + partials com DOM IDs estáveis + testes RED
+- [x] 19-00-PLAN.md — Canal ClientCalendarChannel + layout cliente + partials com DOM IDs estáveis + testes RED
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -194,5 +194,5 @@ Plans:
 | 16. Feriados Brasileiros | v1.4 | 2/2 | Complete    | 2026-06-04 |
 | 17. Cable Foundation + Admin Channel + Badge + Toast | v1.5 | 4/4 | Complete    | 2026-06-05 |
 | 18. ApprovalResponse Broadcast + Admin Live Rows | v1.5 | 4/4 | Complete   | 2026-06-05 |
-| 19. Client Real-time + Arte Status Broadcast | v1.5 | 0/3 | Not started | - |
+| 19. Client Real-time + Arte Status Broadcast | v1.5 | 1/2 | In Progress|  |
 | 20. Admin Calendar Chips Real-time | v1.5 | 0/2 | Not started | - |
