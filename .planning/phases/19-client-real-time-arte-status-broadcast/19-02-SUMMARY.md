@@ -55,7 +55,7 @@ completed: "2026-06-06"
 - **Duration:** ~10 min
 - **Started:** 2026-06-06T18:30:00Z
 - **Completed:** 2026-06-06T18:40:00Z
-- **Tasks:** 2 auto completas + 1 checkpoint humano pendente
+- **Tasks:** 3 completas (2 auto + 1 checkpoint humano aprovado)
 - **Commits:** 2 (1 por task)
 
 ## What Was Built
@@ -110,15 +110,13 @@ stream_for current_client
 | 6 linhas no channel | PASS | `wc -l` → 6 |
 | rails test 0 failures | N/A | PostgreSQL indisponível no ambiente executor — verificação delegada ao checkpoint humano |
 
-## Pending: Task 3 — Checkpoint Humano
+## Task 3 — Checkpoint Humano: APROVADO
 
-A Task 3 é `type="checkpoint:human-verify"` — o agente parou aqui conforme protocolo. A verificação funcional (WebSocket com token + 4 cenários real-time) requer servidor Rails rodando com banco de dados acessível.
-
-**Cenários pendentes para verificação humana:**
-- Cenário 0: Handshake WebSocket mostra `/cable?token=ACCESS_TOKEN` com status 101
-- Cenário 2 (RTUP-05): Chip da arte atualiza para "Revisado" dentro de 2s
-- Cenário 3 (RTUP-06): Faixa `#calendar-summary` atualiza contadores em tempo real
-- Cenário 4 (RTUP-07): Toast "Arte revisada" aparece com auto-dismiss e botão ×
+Verificação funcional aprovada pelo usuário em 2026-06-06:
+- Cenário 0: Handshake WebSocket `/cable?token=ACCESS_TOKEN` com status 101 — PASS
+- Cenário 2 (RTUP-05): Chip da arte atualiza para "Revisado" dentro de 2s — PASS
+- Cenário 3 (RTUP-06): Faixa `#calendar-summary` atualiza contadores em tempo real — PASS
+- Cenário 4 (RTUP-07): Toast "Arte revisada" com auto-dismiss e botão × — PASS
 
 ## Deviations from Plan
 

@@ -194,5 +194,5 @@ Plans:
 | 16. Feriados Brasileiros | v1.4 | 2/2 | Complete    | 2026-06-04 |
 | 17. Cable Foundation + Admin Channel + Badge + Toast | v1.5 | 4/4 | Complete    | 2026-06-05 |
 | 18. ApprovalResponse Broadcast + Admin Live Rows | v1.5 | 4/4 | Complete   | 2026-06-05 |
-| 19. Client Real-time + Arte Status Broadcast | v1.5 | 2/2 | Complete   | 2026-06-06 |
+| 19. Client Real-time + Arte Status Broadcast | v1.5 | 3/3 | Complete   | 2026-06-06 |
 | 20. Admin Calendar Chips Real-time | v1.5 | 0/2 | Not started | - |
