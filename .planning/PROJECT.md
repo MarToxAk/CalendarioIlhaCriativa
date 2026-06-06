@@ -203,4 +203,6 @@ This document evolves at phase transitions and milestone boundaries.
 - Toast no calendário do cliente quando arte é revisada
 
 ---
-*Last updated: 2026-06-05 — v1.5 milestone started.*
+**Phases complete:** 17 (Cable foundation + badge admin), 18 (ApprovalResponse broadcast), 19 (Cliente real-time — chips, summary, toast via WebSocket autenticado com token).
+
+*Last updated: 2026-06-06 — Phase 19 complete. Next: Phase 20 (admin calendar chips real-time).*
