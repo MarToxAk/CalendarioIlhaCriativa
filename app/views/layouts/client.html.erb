@@ -7,6 +7,9 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= yield :head %>
+    <% if @client %>
+      <meta name="action-cable-url" content="<%= "#{Rails.application.config.action_cable.url || '/cable'}?token=#{@client.access_token}" %>">
+    <% end %>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
