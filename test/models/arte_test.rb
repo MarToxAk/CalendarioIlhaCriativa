@@ -37,4 +37,69 @@ class ArteTest < ActiveSupport::TestCase
   test "arte com external_url válido é válida" do
     assert @arte_valida.valid?, @arte_valida.errors.full_messages.inspect
   end
+
+  test "revised! dispara broadcast para ClientCalendarChannel e AdminNotificationsChannel" do
+    arte = Arte.create!(
+      client: @client,
+      scheduled_on: Date.current,
+      platform: :instagram,
+      media_type: :image,
+      status: :change_requested,
+      external_url: "https://drive.google.com/file/test"
+    )
+
+    client_calls = []
+    admin_calls  = []
+
+    ClientCalendarChannel.stub(:broadcast_to, ->(c, content) { client_calls << content }) do
+      AdminNotificationsChannel.stub(:broadcast_to, ->(u, content) { admin_calls << content }) do
+        arte.revised!
+      end
+    end
+
+    assert_equal 1, client_calls.length
+    assert_equal 1, admin_calls.length
+    assert_equal 3, client_calls.first.scan(/<turbo-stream/).count,
+                 "Cliente deve receber 3 turbo streams: chip, summary, toast"
+    assert_equal 1, admin_calls.first.scan(/<turbo-stream/).count,
+                 "Admin deve receber 1 turbo stream: badge decremento"
+  end
+
+  test "revised! nao dispara broadcast quando update nao muda status para revised" do
+    arte = Arte.create!(
+      client: @client,
+      scheduled_on: Date.current,
+      platform: :instagram,
+      media_type: :image,
+      status: :pending,
+      external_url: "https://drive.google.com/file/test2"
+    )
+
+    client_calls = []
+
+    ClientCalendarChannel.stub(:broadcast_to, ->(c, content) { client_calls << content }) do
+      arte.update!(title: "Novo titulo")
+    end
+
+    assert_empty client_calls
+  end
+
+  test "revised! nao dispara broadcast quando status muda mas nao para revised" do
+    arte = Arte.create!(
+      client: @client,
+      scheduled_on: Date.current,
+      platform: :instagram,
+      media_type: :image,
+      status: :change_requested,
+      external_url: "https://drive.google.com/file/test3"
+    )
+
+    client_calls = []
+
+    ClientCalendarChannel.stub(:broadcast_to, ->(c, content) { client_calls << content }) do
+      arte.approved!
+    end
+
+    assert_empty client_calls
+  end
 end
