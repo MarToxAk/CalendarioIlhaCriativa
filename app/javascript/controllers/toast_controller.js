@@ -23,8 +23,10 @@ export default class extends Controller {
   // Removes the oldest toast if the region exceeds MAX_TOASTS.
   // Called on connect so that when Phase 18+ appends a new toast via Turbo Stream,
   // the region stays bounded. Users can also dismiss manually via data-action="toast#dismiss".
+  // Uses parentElement instead of getElementById so it works for both admin-toast-region
+  // and client-toast-region without depending on a hardcoded ID.
   _enforceLimit() {
-    const region = document.getElementById("admin-toast-region")
+    const region = this.element.parentElement
     if (!region) return
     const toasts = Array.from(region.children)
     if (toasts.length > MAX_TOASTS) {
