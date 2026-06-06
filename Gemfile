@@ -27,7 +27,7 @@ gem "rack-attack", "~> 6.8"
 
 # Domain gems
 gem "simple_calendar", "~> 3.1"
-gem "pagy", "~> 9.3"
+gem "pagy", "~> 43.5"
 gem "good_job", "~> 4.0"
 gem "active_storage_validations"
 
