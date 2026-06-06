@@ -30,11 +30,7 @@
       <% end %>
 
       <% artes_do_dia.each do |arte| %>
-        <%= link_to client_arte_path(token: client.access_token, id: arte),
-              class: "mt-1 flex items-center gap-1 p-1 rounded bg-gray-50 hover:bg-orange-50 transition-colors" do %>
-          <%= render "client/shared/platform_icon", arte: arte, size: 14 %>
-          <%= render "client/shared/arte_status_badge", arte: arte, compact: true %>
-        <% end %>
+        <%= render "client/home/arte_calendar_chip", arte: arte, client: client %>
       <% end %>
     </div>
   <% end %>
