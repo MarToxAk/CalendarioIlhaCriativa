@@ -5,19 +5,19 @@ depth: standard
 files_reviewed: 10
 files_reviewed_list:
   - app/channels/client_calendar_channel.rb
-  - app/models/arte.rb
   - app/views/client/home/_arte_calendar_chip.html.erb
   - app/views/client/home/_calendar_summary.html.erb
   - app/views/client/shared/_arte_revised_toast.html.erb
+  - test/channels/client_calendar_channel_test.rb
   - app/views/layouts/client.html.erb
   - app/views/client/home/index.html.erb
   - app/views/client/home/_month_calendar.html.erb
-  - test/channels/client_calendar_channel_test.rb
   - test/models/arte_test.rb
+  - app/models/arte.rb
 findings:
-  critical: 3
+  critical: 2
   warning: 2
-  info: 1
+  info: 2
   total: 6
 status: issues_found
 ---
@@ -31,93 +31,134 @@ status: issues_found
 
 ## Summary
 
-A revisão cobre a infraestrutura de tempo real do cliente: `ClientCalendarChannel`,
-o callback `after_update_commit` em `Arte`, partials Turbo Stream e o layout cliente.
-
-O código tem um defeito de bloqueio funcional que torna o canal em tempo real inoperante
-em produção, além de dois bugs de segurança/comportamento no canal e no modelo.
-Os demais problemas são de qualidade/robustez.
+A fase implementa o broadcast em tempo real de mudanças de status de artes para o cliente via
+ActionCable (`ClientCalendarChannel`) e Turbo Streams. O canal em si está correto; o callback
+`after_update_commit` em `Arte` constrói e envia corretamente os streams; os testes cobrem os
+caminhos principais. Foram encontrados dois bugs críticos: um de lógica no broadcast (dados do
+mês errado sobrepõem a visão do cliente quando a arte revisada pertence a um mês diferente do
+mês que o cliente está visualizando) e outro no `toast_controller.js` (limite de toasts nunca
+enforçado na página do cliente por ID hardcoded errado). Há também duas advertências de
+qualidade nos testes.
 
 ---
+
+## Narrative Findings (AI reviewer)
 
 ## Critical Issues
 
-### CR-01: WebSocket do cliente nunca autentica — broadcasts não chegam
+### CR-01: Broadcast substitui `#calendar-summary` com dados do mês errado quando cliente visualiza mês diferente
 
-**File:** `app/views/layouts/client.html.erb:15`
+**File:** `app/models/arte.rb:42-74`
 
-**Issue:**
-`Connection#set_current_client` (em `app/channels/application_cable/connection.rb`)
-exige que o token do cliente esteja presente em `request.params[:token]`. Para isso,
-a URL do WebSocket precisa ser `/cable?token=TOKEN`.
+**Issue:** Em `broadcasts_revised_to_all`, o resumo mensal é calculado usando
+`scheduled_on.beginning_of_month` da arte revisada, e enviado com
+`turbo_stream action="replace" target="calendar-summary"`. O elemento `#calendar-summary` está
+presente em qualquer mês que o cliente visualize (definido em `_calendar_summary.html.erb:2`).
 
-Sem uma tag `<meta name="action-cable-url">` apontando para a URL com o token,
-o turbo-rails usa a URL padrão `/cable` (sem parâmetros). Com isso:
-
-1. `set_current_user` retorna `nil` (o cliente não tem `Session` model — apenas
-   `session[:client_id]` no cookie HTTP, que a `Connection` não verifica).
-2. `set_current_client` retorna `nil` (token ausente na URL do WebSocket).
-3. `reject_unauthorized_connection` é invocado pelo framework.
-4. `ClientCalendarChannel#subscribed` nunca executa.
-5. Todo `ClientCalendarChannel.broadcast_to(client, …)` em `Arte#broadcasts_revised_to_all`
-   é transmitido para uma stream que nenhum cliente jamais ouve.
-
-A funcionalidade de tempo real do cliente está completamente inoperante em produção.
-
-**Fix:** Injetar a URL do cabo com o token via `content_for(:head)` no layout:
-
-```erb
-<%# app/views/layouts/client.html.erb — dentro de <head>, após csrf_meta_tags %>
-<% if @client %>
-  <meta name="action-cable-url" content="<%= "#{Rails.application.config.action_cable.url || '/cable'}?token=#{@client.access_token}" %>">
-<% end %>
-```
-
-Ou, alternativamente, gerar a meta tag com um helper dedicado no controller:
+Cenário concreto de falha: arte A está agendada em Janeiro. O cliente está visualizando o
+calendário de Março. O admin marca a arte A como revisada. O broadcast executa:
 
 ```ruby
-# app/controllers/client_controller.rb — before_action
-def set_cable_meta
-  @cable_url = "#{ActionController::Base.helpers.root_url}cable?token=#{@client.access_token}"
-end
+current_month_start = scheduled_on.beginning_of_month  # 1 de Janeiro
+artes_do_mes = client.artes.where(scheduled_on: current_month_start..current_month_end)
+# summary calculado para Janeiro...
+turbo_stream_tag("replace", "calendar-summary", summary_html)  # substitui o div na tela
 ```
 
-e no layout:
+O cliente passa a ver o resumo de Janeiro enquanto navega em Março. O chip replace para a arte
+de Janeiro (`#calendar_chip_arte_X`) seria ignorado silenciosamente pelo Turbo (elemento não
+existe no DOM de Março), mas o `#calendar-summary` **sempre existe** e é sobrescrito. O bug é
+silencioso — a UI parece funcionar mas exibe dados incorretos até o cliente navegar.
+
+**Fix:** Remover o replace do summary do broadcast global (ou tornar o target mês-específico).
+A abordagem mais segura:
+
+```ruby
+# app/models/arte.rb — broadcasts_revised_to_all
+# Enviar apenas chip e toast; summary fica sob responsabilidade da navegação normal
+client_streams = [
+  turbo_stream_tag("replace", chip_target,           chip_html),
+  turbo_stream_tag("append",  "client-toast-region", toast_html)
+].join
+```
+
+Se o summary em tempo real for necessário, incluir o mês no ID do elemento:
+
 ```erb
-<meta name="action-cable-url" content="<%= @cable_url %>">
+<%# _calendar_summary.html.erb %>
+<div id="calendar-summary-<%= summary[:month_key] %>" ...>
+```
+
+```ruby
+# arte.rb
+month_key      = scheduled_on.strftime("%Y-%m")
+summary_target = "calendar-summary-#{month_key}"
+turbo_stream_tag("replace", summary_target, summary_html)
 ```
 
 ---
 
-### CR-02: `reject` sem `return` — `stream_for` executa mesmo em conexões rejeitadas
+### CR-02: `toast_controller.js` — `_enforceLimit` usa ID `"admin-toast-region"` hardcoded; limite nunca é enforçado na página do cliente
 
-**File:** `app/channels/client_calendar_channel.rb:3-4`
+**File:** `app/javascript/controllers/toast_controller.js:27`
 
-**Issue:**
-`ActionCable::Channel::Base#reject` apenas seta um flag (`@reject_subscription = true`).
-Ele **não** interrompe a execução do método `subscribed`. Como resultado, quando
-`current_client` é `nil`, tanto `reject` quanto `stream_for(nil)` são chamados.
+**Issue:** O mesmo `toast_controller` é registrado para toasts de admin
+(`_approval_toast.html.erb`) e de cliente (`_arte_revised_toast.html.erb`). Na página do
+cliente, a região tem ID `"client-toast-region"` (definido em `layouts/client.html.erb:19`).
+O método `_enforceLimit()` faz:
 
-Com `stream_for(nil)`:
-- `Array(nil)` retorna `[]`.
-- `broadcasting_for(["client_calendar_channel"])` registra um stream cujo nome é
-  apenas o nome do canal — uma stream global não-cliente-específica.
-- Toda conexão rejeitada fica inscrita nessa stream parasita, consumindo recursos
-  do servidor e do Redis/SolidCable desnecessariamente.
+```javascript
+const region = document.getElementById("admin-toast-region")
+if (!region) return   // executa sempre em páginas de cliente
+```
 
-O mesmo padrão existe em `AdminNotificationsChannel`.
+Em qualquer página do cliente, `getElementById("admin-toast-region")` retorna `null`, a guarda
+dispara `return` imediatamente, e `MAX_TOASTS = 3` **nunca é aplicado**. Se o admin marcar
+várias artes como revisadas em sequência, o cliente acumula toasts indefinidamente, sem remoção
+dos mais antigos, podendo obstruir toda a interface.
 
-**Fix:**
+**Fix:** Usar o elemento pai do toast em vez do ID hardcoded:
+
+```javascript
+_enforceLimit() {
+  const region = this.element.parentElement
+  if (!region) return
+  const toasts = Array.from(region.children)
+  if (toasts.length > MAX_TOASTS) {
+    toasts[0].remove()
+  }
+}
+```
+
+Isso funciona para ambas as regiões sem depender de nomes de ID específicos.
+
+---
+
+## Warnings
+
+### WR-01: `AdminNotificationsChannel#subscribed` não usa `return reject` — `stream_for` executa mesmo após rejeição
+
+**File:** `app/channels/admin_notifications_channel.rb:3-5`
+
+**Issue:** `ClientCalendarChannel` (arquivo em escopo desta fase) usa corretamente
+`return reject unless current_client`. Mas `AdminNotificationsChannel`, que recebe broadcasts de
+`Arte#broadcasts_revised_to_all`, usa o padrão inconsistente:
+
 ```ruby
-# app/channels/client_calendar_channel.rb
 def subscribed
-  return reject unless current_client
-  stream_for current_client
+  reject unless current_user    # não interrompe o método
+  stream_for current_user       # executa mesmo quando current_user é nil
 end
 ```
 
+Em ActionCable, `reject` apenas seta um flag interno e não levanta exceção. Quando
+`current_user` é `nil`, `stream_for(nil)` é chamado, gerando um stream parasita com nome
+mal-formado. Conexões rejeitadas ficam subscritas nesse stream, consumindo recursos
+desnecessariamente. O AdminNotificationsChannel está fora do escopo formal de arquivos desta
+fase, mas o bug introduz risco de comportamento inesperado nos broadcasts de `Arte`.
+
+**Fix:**
 ```ruby
-# app/channels/admin_notifications_channel.rb
 def subscribed
   return reject unless current_user
   stream_for current_user
@@ -126,136 +167,81 @@ end
 
 ---
 
-### CR-03: Substituição do `calendar-summary` ignora o mês visualizado pelo cliente
+### WR-02: Teste de broadcast depende implicitamente da fixture de `User` para `User.order(:id).first`
 
-**File:** `app/models/arte.rb:42-58`
+**File:** `test/models/arte_test.rb:41-66`
 
-**Issue:**
-Em `broadcasts_revised_to_all`, o resumo do calendário é calculado com base no mês
-de `scheduled_on` da **arte revisada** e enviado com `turbo_stream action="replace"
-target="calendar-summary"`. O elemento `#calendar-summary` está presente em **todas**
-as views mensais.
+**Issue:** O teste `"revised! dispara broadcast..."` stuba `ClientCalendarChannel.broadcast_to`
+e `AdminNotificationsChannel.broadcast_to`, mas não stuba `User.order(:id).first`. O callback
+`broadcasts_revised_to_all` faz `admin = User.order(:id).first` e retorna cedo se `admin` for
+`nil`. O teste depende silenciosamente que `fixtures :all` carregue `users.yml` para que haja
+ao menos um `User` no banco de teste, sem expressar isso explicitamente no setup.
 
-Se o cliente estiver visualizando o mês X e a arte revisada pertencer ao mês Y:
-- O broadcast substitui `#calendar-summary` com dados do mês Y.
-- O cliente passa a ver o resumo errado para o mês que está olhando.
-- Nenhuma recarga ou navegação corrige isso até que o cliente mude de mês.
+Se os fixtures de `User` forem removidos, o teste falha em `assert_equal 1, admin_calls.length`
+com uma mensagem enganosa, e a causa (ausência de admin) não é óbvia.
 
-Esse bug é silencioso: o UI parece funcionar, mas exibe dados incorretos.
-
-**Fix:**
-A abordagem mais simples é não enviar o `summary` via broadcast indiscriminado.
-O chip do calendário (replace) e o toast (append) são suficientes. O summary
-poderia ser atualizado com um `morph` ou omitido do broadcast, deixando o cliente
-recarregá-lo ao navegar. Se o summary for necessário em tempo real, o canal precisa
-conhecer o mês atual do cliente (ex.: passando o mês como parâmetro de subscription):
-
+**Fix:** Explicitar a dependência:
 ```ruby
-# Arte#broadcasts_revised_to_all — remover ou tornar condicional
-# Opção conservadora: não substituir o summary via broadcast
-client_streams = [
-  turbo_stream_tag("replace", chip_target,          chip_html),
-  turbo_stream_tag("append",  "client-toast-region", toast_html)
-].join
-```
-
----
-
-## Warnings
-
-### WR-01: XSS potencial — `turbo_stream_tag` interpola `template_html` sem escape
-
-**File:** `app/models/arte.rb:85-87`
-
-**Issue:**
-O método `turbo_stream_tag` constrói HTML por interpolação direta de string:
-
-```ruby
-%(<turbo-stream action="#{action}" target="#{target}"><template>#{template_html}</template></turbo-stream>)
-```
-
-`template_html` provém de `ApplicationController.render`, que retorna uma `String`
-não marcada como `html_safe`. Se `render` falhar silenciosamente e retornar conteúdo
-parcial não-escapado, ou se o método for reutilizado com entrada controlada pelo
-usuário no futuro, qualquer valor de `template_html` seria injetado diretamente no
-stream HTML sem sanitização.
-
-Atualmente os valores são gerados por partials ERB seguros, mas o método não protege
-contra uso incorreto futuro.
-
-**Fix:** Marcar o retorno como html_safe explicitamente ou usar `SafeBuffer`:
-
-```ruby
-def turbo_stream_tag(action, target, template_html = "")
-  # action e target são constantes hardcoded; template_html vem de partials controlados
-  # Garantir que template_html seja tratado como HTML já escapado
-  content = template_html.respond_to?(:html_safe?) ? template_html : ERB::Util.html_escape(template_html.to_s)
-  %(<turbo-stream action="#{action}" target="#{target}"><template>#{content}</template></turbo-stream>).html_safe
+test "revised! dispara broadcast para ClientCalendarChannel e AdminNotificationsChannel" do
+  assert User.exists?, "Este teste requer ao menos um User (fixture users.yml)"
+  # ...
 end
 ```
 
-Melhor ainda: extrair para um helper ou usar `turbo_stream_action_tag` do turbo-rails.
-
----
-
-### WR-02: N+1 de queries no cálculo do `summary` no callback
-
-**File:** `app/models/arte.rb:44-50`
-
-**Issue:**
-`broadcasts_revised_to_all` executa 4 queries SQL separadas para construir o `summary`:
-
+Ou isolar completamente via stub:
 ```ruby
-artes_do_mes.count                                      # query 1
-artes_do_mes.where(status: :approved).count             # query 2
-artes_do_mes.where(status: [:pending, :revised]).count  # query 3
-artes_do_mes.where(status: :change_requested).count     # query 4
-```
-
-Isso é 4 round-trips ao banco de dados em um callback `after_update_commit` que já
-executa de forma síncrona dentro da stack de processamento da requisição/job.
-
-**Fix:** Usar uma única query com `group`:
-
-```ruby
-counts = artes_do_mes.group(:status).count
-# counts => {"approved" => 3, "pending" => 2, ...}
-summary = {
-  total:            counts.values.sum,
-  approved:         counts.fetch("approved", 0),
-  pending:          counts.fetch("pending", 0) + counts.fetch("revised", 0),
-  change_requested: counts.fetch("change_requested", 0)
-}
+fake_admin = users(:one)
+User.stub(:order, ->(*) { User.where(id: fake_admin.id) }) do
+  # ...
+end
 ```
 
 ---
 
 ## Info
 
-### IN-01: `test_block_destroy` usa variável de classe — não é thread-safe em parallelismo de testes
+### IN-01: Sem teste para o cenário "sem admin" em `broadcasts_revised_to_all`
 
-**File:** `app/models/arte.rb:9-19`
+**File:** `test/models/arte_test.rb`
 
-**Issue:**
-O hook `test_block_destroy` usa `Arte.test_block_destroy` (variável de classe).
-Se os testes rodarem em paralelo (processes ou threads), um teste que seta
-`Arte.test_block_destroy = true` pode afetar outros testes concorrentes, causando
-falhas intermitentes difíceis de diagnosticar.
+**Issue:** A linha `return unless admin` em `arte.rb:39` é um guard silencioso: quando não há
+nenhum `User` no banco, o broadcast do cliente (`ClientCalendarChannel`) também não ocorre,
+pois o método retorna antes de construir qualquer stream. Não há teste verificando esse
+comportamento. Se no futuro a lógica for reorganizada (ex.: separar o broadcast do cliente do
+broadcast do admin), esse guard pode suprimir erroneamente o broadcast do cliente.
 
-**Fix:** Usar `Thread.current` para isolar o estado por thread:
-
+**Fix:** Adicionar um teste explícito:
 ```ruby
-if Rails.env.test?
-  class << self
-    def test_block_destroy
-      Thread.current[:arte_test_block_destroy] || false
+test "revised! nao dispara broadcast ao cliente quando nao ha admin" do
+  # Stuba User.order para retornar relacao vazia
+  User.stub(:order, ->(*) { User.none }) do
+    client_calls = []
+    ClientCalendarChannel.stub(:broadcast_to, ->(c, _) { client_calls << c }) do
+      arte.revised!
     end
-    def test_block_destroy=(val)
-      Thread.current[:arte_test_block_destroy] = val
-    end
+    assert_empty client_calls, "Sem admin, cliente tambem nao recebe broadcast (comportamento atual)"
   end
-  # ...
 end
+```
+
+Isso documenta o comportamento atual e garante que futuras refatorações o mantenham ou o
+alterem conscientemente.
+
+---
+
+### IN-02: `badge_count` conta artes de todos os clientes sem documentação da intenção
+
+**File:** `app/models/arte.rb:41`
+
+**Issue:** `badge_count = Arte.change_requested.count` conta artes de **todos** os clientes,
+não apenas do cliente da arte revisada. Isso é provavelmente intencional (o badge admin mostra
+o total global de artes aguardando revisão), mas não está documentado. Futuros mantenedores
+podem assumir que o scope é por cliente e introduzir um filtro incorreto.
+
+**Fix:** Adicionar comentário inline:
+```ruby
+# Contagem global (todos os clientes) — badge admin mostra pendências totais, não por cliente
+badge_count = Arte.change_requested.count
 ```
 
 ---
