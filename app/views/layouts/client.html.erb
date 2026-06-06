@@ -12,6 +12,8 @@
     <%= javascript_importmap_tags %>
   </head>
   <body class="min-h-screen bg-white flex flex-col">
+    <%= turbo_stream_from @client, channel: ClientCalendarChannel if @client %>
+    <div id="client-toast-region" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 items-end"></div>
     <header class="sticky top-0 bg-white border-b border-gray-100 z-10">
       <div class="px-4 sm:px-6 py-4 flex items-center justify-between">
         <%= image_tag "/logo-livia.svg", alt: "Ilha Criativa", class: "h-8 w-auto object-contain" %>
