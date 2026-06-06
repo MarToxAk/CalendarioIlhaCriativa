@@ -1,39 +1,43 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.4
-milestone_name: Admin Pages + Brazilian Calendar
-status: executing
-last_updated: "2026-06-04T13:14:32.573Z"
-last_activity: 2026-06-04
+milestone: v1.5
+milestone_name: Real-time & Notifications
+status: ready_to_plan
+last_updated: 2026-06-06T20:30:00.366Z
+last_activity: 2026-06-06 -- Phase 19 execution started
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 9
-  completed_plans: 7
+  total_plans: 11
+  completed_plans: 57
   percent: 50
+stopped_at: Phase 19 complete (3/3) — ready to discuss Phase 20
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-03)
+See: .planning/PROJECT.md (updated 2026-06-05)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 15 — configurações
+**Current focus:** Phase 20 — admin calendar chips real time
 
 ## Current Position
 
-Phase: 15
-Plan: 02 complete (Wave 2 done)
-Status: In progress — Wave 3 pending
-Last activity: 2026-06-04
+Phase: 20
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-06-06
 
 ## Progress Bar
 
 ```
-v1.4: [ ] Phase 13  [ ] Phase 14  [ ] Phase 15  [ ] Phase 16
-       0/4 phases complete
+v1.5: [███████████████░░░░░] 75% (3/4 phases)
+Phase 17: Cable Foundation + Admin Channel + Badge + Toast — Complete (2026-06-05)
+Phase 18: ApprovalResponse Broadcast + Admin Live Rows — Complete (2026-06-05)
+Phase 19: Client Real-time + Arte Status Broadcast — Complete (2026-06-06)
+Phase 20: Admin Calendar Chips Real-time — Not started
 ```
 
 ## Milestone v1.0 — Shipped
@@ -68,18 +72,21 @@ v1.4: [ ] Phase 13  [ ] Phase 14  [ ] Phase 15  [ ] Phase 16
 - **Plans:** 5/5 complete
 - **Requirements:** 6/6 (FORM-01..03, PAGE-01..02, IDX-01..02, SHOW-01, DASH-01)
 
-## Milestone v1.4 — In Progress
+## Milestone v1.4 — Shipped
 
-- **Started:** 2026-06-04
+- **Shipped:** 2026-06-04
+- **Archived:** 2026-06-04
 - **Phases:** 4 (Phase 13–16)
-- **Requirements:** 16 total
+- **Plans:** 11/11 complete
+- **Requirements:** 16/16 (APRO-03..07, CADM-01..05, CONF-01..03, FERI-01..03)
 
-| Phase | Requirements | Status |
-|-------|--------------|--------|
-| 13. Página Aprovações | APRO-03..07 (5 req) | Not started |
-| 14. Calendário Admin | CADM-01..05 (5 req) | Not started |
-| 15. Configurações | CONF-01..03 (3 req) | In progress (Wave 2/3 done) |
-| 16. Feriados Brasileiros | FERI-01..03 (3 req) | Not started |
+## Milestone v1.5 — In Progress
+
+- **Started:** 2026-06-05
+- **Goal:** Real-time & Notifications via ActionCable/Turbo Streams
+- **Phases:** 4 (Phase 17–20)
+- **Plans:** 11/11 complete (Phases 17+18+19 done; Phase 20 TBD)
+- **Requirements:** 8/10 complete (CABLE-01, CABLE-02, RTUP-01..07 done; RTUP-08 pending Phase 20)
 
 ## Deferred Items
 
@@ -105,6 +112,10 @@ v1.4: [ ] Phase 13  [ ] Phase 14  [ ] Phase 15  [ ] Phase 16
 | verification | Phase 11: 11-01-VERIFICATION.md [human_needed] — arte index polish, validação visual | deferred | v1.3 close 2026-06-03 |
 | uat | Phase 12: 12-HUMAN-UAT.md [partial] — 3 cenários show+dashboard (validação visual, turbo_confirm) | deferred | v1.3 close 2026-06-03 |
 | verification | Phase 12: 12-01-VERIFICATION.md [human_needed] — arte show+dashboard, validação visual | deferred | v1.3 close 2026-06-03 |
+| uat | Phase 13: 13-HUMAN-UAT.md [human_needed] — validação visual da página Aprovações (score 15/15) | deferred | v1.4 close 2026-06-04 |
+| verification | Phase 13: 13-VERIFICATION.md [human_needed] — validação visual da página Aprovações (score 15/15) | deferred | v1.4 close 2026-06-04 |
+| uat | Phase 14: 14-HUMAN-UAT.md [human_needed] — validação visual do calendário admin (score 9/9) | deferred | v1.4 close 2026-06-04 |
+| verification | Phase 14: 14-VERIFICATION.md [human_needed] — validação visual do calendário admin (score 9/9) | deferred | v1.4 close 2026-06-04 |
 
 ## Accumulated Context
 
@@ -114,20 +125,44 @@ v1.4: [ ] Phase 13  [ ] Phase 14  [ ] Phase 15  [ ] Phase 16
 - v1.2 roadmap defined 2026-06-02: Phase 8 (bug aprovação) + Phase 9 (faixa de resumo)
 - v1.3 roadmap defined 2026-06-03: Phase 10 (form polish) + Phase 11 (index polish) + Phase 12 (show + dashboard)
 - v1.4 roadmap defined 2026-06-04: Phase 13 (aprovações) + Phase 14 (calendário admin) + Phase 15 (configurações) + Phase 16 (feriados brasileiros)
+- v1.5 roadmap defined 2026-06-05: Phase 17 (cable foundation + badge + toast) + Phase 18 (approval broadcasts) + Phase 19 (client real-time) + Phase 20 (admin calendar chips)
 
-### v1.4 Context
+### v1.5 Context
 
-- Sidebar links "Aprovações" e "Calendário" apontam para `#` desde v1.0 — serão wired nas fases 13 e 14 respectivamente
-- Calendário do cliente usa simple_calendar gem — fase 16 precisa estender a view para destacar feriados sem quebrar o layout existente
-- Padrão de filtros com Turbo Frame já estabelecido na fase 6 (dashboard) — fase 13 deve replicar o mesmo padrão para filtros de aprovações
-- Cor por cliente (fase 14): não há campo de cor no model Client ainda — pode ser necessário adicionar coluna ou derivar cor determinística do id/nome
-- Configurações (fase 15): Rails 8 auth generator gera `passwords_controller` e `sessions_controller` — verificar o que já existe antes de criar novo controller
+- ActionCable disponível no Rails 8.1.3 — sem gem adicional necessária
+- Adapter PostgreSQL para ActionCable (sem Redis) — config: `config/cable.yml`
+- Autenticação ActionCable: admin usa Session (cookie), cliente usa token de URL via params[:token]
+- connection.rb deve permitir admin e cliente; canais individuais fazem reject se não autorizado
+- Turbo Streams via cable_ready: broadcast direto do model callback
+- Toast system: Stimulus controller global (toast_controller.js) montado no layout admin e no layout do cliente
+- Badge sidebar: counter calculado via ApprovalResponse com decision :change_requested onde arte.status != :revised
+- solid_cable já instalado — usa PostgreSQL sem Redis
+- _approval_row.html.erb já existe (Phase 13) — reutilizar
+- id="sidebar-badge", id="admin-toast-region", id="client-toast-region" — IDs de target para broadcasts
+- turbo_stream_from "admin_notifications" vai no layout admin (Phase 17)
+- ClientCalendarChannel subscribing a "client_calendar_#{client.access_token}"
 
-### v1.3 Context
+### v1.4 Context (SHIPPED 2026-06-04)
 
-Classes placeholder sem CSS definido a eliminar: `form-input`, `btn`, `btn-primary`, `btn-sm`.
-Padrão de referência para card + back link: páginas new/edit de clientes (`app/views/admin/clients/`).
+- Sidebar "Aprovações" e "Calendário" wired (fases 13 e 14)
+- Cor por cliente derivada deterministicamente via `client.id % 8` — não requer coluna de cor no model
+- agency_name adicionado à tabela users (migração 20260604121724) com default "Ilha Criativa"
+- Rack::Attack rate-limit interferia em testes de controller com múltiplos `post session_path` — fix: `Rack::Attack.cache.store.clear` no setup de testes
+- BrazilianHolidays module em app/lib/ (autoloaded) com 17+ feriados/comemorativos 2025-2027
 
 ## Operator Next Steps
 
-- Run `/gsd-plan-phase 13` to plan Phase 13: Página Aprovações
+- Phase 19 completa — próximo passo: `/gsd-plan-phase 20` (Admin Calendar Chips Real-time)
+
+## Performance Metrics
+
+| Phase | Plan | Duration | Notes |
+|-------|------|----------|-------|
+| Phase 19 P00 | 30min | 3 tasks | 7 files |
+| Phase 19 P01 | 20min | 2 tasks | 1 file |
+
+## Decisions
+
+- [Phase 19]: Arte#broadcasts_revised_to_all callback — after_update_commit condicional, guard saved_change_to_status? && revised?
+- [Phase 19]: Broadcast duplo por transação: ClientCalendarChannel (3 streams) + AdminNotificationsChannel (1 stream)
+- [Phase 19]: ActionView::RecordIdentifier.dom_id() para geração segura de IDs no model

@@ -1,0 +1,16 @@
+<%# Locals: summary (Hash com :total, :approved, :pending, :change_requested) %>
+<div id="calendar-summary" role="status" aria-label="Resumo do mês"
+     class="flex flex-wrap gap-2 mb-4 justify-center <%= 'hidden' if summary[:total] == 0 %>">
+  <span class="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+    <span class="font-semibold"><%= summary[:total] %></span> total
+  </span>
+  <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+    <span class="font-semibold"><%= summary[:approved] %></span> aprovadas
+  </span>
+  <span class="px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+    <span class="font-semibold"><%= summary[:pending] %></span> pendentes
+  </span>
+  <span class="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+    <span class="font-semibold"><%= summary[:change_requested] %></span> pediu alteração
+  </span>
+</div>

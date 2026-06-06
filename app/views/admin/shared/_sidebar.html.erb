@@ -1,9 +1,10 @@
 <nav class="w-60 bg-[#0F7949] flex flex-col min-h-screen">
   <%# Branding %>
-  <div class="px-4 py-4 border-b border-white/20 flex items-center justify-center">
+  <div class="px-4 py-4 border-b border-white/20 flex flex-col items-center gap-2">
     <%= image_tag "/logo-livia.svg",
           alt: Current.user&.agency_name || "Logo",
           class: "h-10 w-auto object-contain" %>
+    <span class="text-white font-semibold text-sm"><%= Current.user&.agency_name || "Ilha Criativa" %></span>
   </div>
 
   <%# Nav items %>
@@ -17,6 +18,7 @@
         { label: "Calendário",    path: admin_calendar_index_path },
         { label: "Configurações", path: admin_settings_path },
       ]
+      badge_count = Arte.where(status: :change_requested).count
     %>
     <% nav_items.each do |item| %>
       <%= link_to item[:path],
@@ -26,6 +28,9 @@
               'text-white/70 hover:bg-white/10 hover:text-white'
             }" do %>
         <%= item[:label] %>
+        <% if item[:path] == admin_approvals_path %>
+          <%= render "admin/shared/sidebar_badge", badge_count: badge_count %>
+        <% end %>
       <% end %>
     <% end %>
   </div>

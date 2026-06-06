@@ -21,6 +21,12 @@
         </span>
       <% end %>
 
+      <% if (holiday = brazilian_holiday_for(date)) %>
+        <span class="text-xs text-red-400 block truncate leading-snug mt-0.5" title="<%= holiday %>">
+          <%= truncate(holiday, length: 15) %>
+        </span>
+      <% end %>
+
       <% visible = artes_do_dia.first(3) %>
       <% overflow = artes_do_dia.size - 3 %>
 

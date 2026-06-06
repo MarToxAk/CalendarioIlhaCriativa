@@ -6,7 +6,8 @@
 - ✅ **v1.1 Fix Art Upload & Client Association** — Fases 7 + 7.1 (shipped 2026-06-02) → [Archive](.planning/milestones/v1.1-ROADMAP.md)
 - ✅ **v1.2 Calendar Summary & Approval Fix** — Fases 8 + 9 (shipped 2026-06-03) → [Archive](.planning/milestones/v1.2-ROADMAP.md)
 - ✅ **v1.3 Arte UI Polish** — Fases 10–12 (shipped 2026-06-03) → [Archive](.planning/milestones/v1.3-ROADMAP.md)
-- 🔄 **v1.4 Admin Pages + Brazilian Calendar** — Fases 13–16 (in progress)
+- ✅ **v1.4 Admin Pages + Brazilian Calendar** — Fases 13–16 (shipped 2026-06-04) → [Archive](.planning/milestones/v1.4-ROADMAP.md)
+- 🔄 **v1.5 Real-time & Notifications** — Fases 17–20 (in progress)
 
 ## Phases
 
@@ -57,96 +58,113 @@ Full details: [.planning/milestones/v1.3-ROADMAP.md](.planning/milestones/v1.3-R
 
 </details>
 
-### v1.4 Admin Pages + Brazilian Calendar
+<details>
+<summary>✅ v1.4 Admin Pages + Brazilian Calendar (Fases 13–16) — SHIPPED 2026-06-04</summary>
 
-- [x] **Phase 13: Página Aprovações** — Histórico completo de respostas com filtros por cliente e status (completed 2026-06-04)
-- [x] **Phase 14: Calendário Admin** — Calendário unificado com artes de todos os clientes, cor por cliente, navegação e links (completed 2026-06-04)
-- [ ] **Phase 15: Configurações** — Página de configurações com alteração de senha e dados da agência
-- [ ] **Phase 16: Feriados Brasileiros** — Lista hardcoded de feriados e comemorativos visível nos calendários do admin e do cliente
+- [x] Phase 13: Página Aprovações (3/3 plans) — completed 2026-06-04
+- [x] Phase 14: Calendário Admin (3/3 plans) — completed 2026-06-04
+- [x] Phase 15: Configurações (3/3 plans) — completed 2026-06-04
+- [x] Phase 16: Feriados Brasileiros (2/2 plans) — completed 2026-06-04
+
+Full details: [.planning/milestones/v1.4-ROADMAP.md](.planning/milestones/v1.4-ROADMAP.md)
+
+</details>
+
+### v1.5 Real-time & Notifications
+
+- [x] **Phase 17: Cable Foundation + Admin Channel + Badge + Toast** - Estabelece a infraestrutura WebSocket e monta o sistema de badge e toast no painel admin (completed 2026-06-05)
+- [x] **Phase 18: ApprovalResponse Broadcast + Admin Live Rows** - Broadcasts em tempo real das novas respostas de aprovação para o dashboard e página Aprovações do admin (completed 2026-06-05)
+- [x] **Phase 19: Client Real-time + Arte Status Broadcast** - Canal do cliente e broadcasts quando admin marca arte como revisada (completed 2026-06-06)
+- [ ] **Phase 20: Admin Calendar Chips Real-time** - Chips do calendário admin atualizam em tempo real quando status de arte muda
 
 ## Phase Details
 
-### Phase 13: Página Aprovações
+### Phase 17: Cable Foundation + Admin Channel + Badge + Toast
 
-**Goal**: Admin consegue consultar o histórico completo de todas as respostas de aprovação num único lugar, com filtros e link direto para cada arte
-**Depends on**: Phase 12 (painel admin estilizado)
-**Requirements**: APRO-03, APRO-04, APRO-05, APRO-06, APRO-07
+**Goal**: Estabelecer a infraestrutura WebSocket funcional, o canal do admin, o badge numérico no sidebar e a infraestrutura de toast para que o painel admin esteja pronto para receber broadcasts em tempo real
+**Depends on**: Phase 16 (painel admin completo)
+**Requirements**: CABLE-01, CABLE-02
 **Success Criteria** (what must be TRUE):
 
-  1. Admin clica em "Aprovações" no sidebar e é levado à página (link não aponta mais para `#`)
-  2. Admin vê lista paginada de respostas ordenada da mais recente para a mais antiga
-  3. Cada item da lista exibe: nome do cliente, título/identificação da arte, status da resposta, data e comentário quando presente
-  4. Admin seleciona um cliente ou um status no filtro e a lista atualiza mostrando apenas os itens correspondentes
-  5. Admin clica num item da lista e acessa a página da arte correspondente diretamente
+  1. Admin abre o painel e o WebSocket conecta sem erros no console do browser (nenhum reject de connection.rb)
+  2. Sidebar do admin exibe badge numérico com a contagem atual de artes com "Pediu Alteração" não revisadas
+  3. Badge exibe "0" (ou some) quando não há artes pendentes de revisão
+  4. Região de toast `id="admin-toast-region"` existe no layout admin pronta para receber broadcasts
+  5. Stimulus toast_controller está registrado e responde ao evento de append de toast no DOM
 
-**Plans**: 3 plansPlans:
+**Plans**: 4 plansPlans:
 **Wave 1**
 
-- [x] 13-01-PLAN.md — Infraestrutura Pagy + rota + sidebar wired + arquivo de testes
+- [x] 17-00-PLAN.md — Infraestrutura de testes: ApplicationCable::Channel base class, fixtures clients/sessions, stubs RED
+- [x] 17-01-PLAN.md — connection.rb: autenticação dual admin (cookie) + cliente (token URL)
+- [x] 17-02-PLAN.md — AdminNotificationsChannel: canal per-user com stream_for e defesa em profundidade
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [x] 13-02-PLAN.md — Controller ApprovalsController + testes de integração
-
-**Wave 3** *(blocked on Wave 2 completion)*
-
-- [x] 13-03-PLAN.md — Views: index, _approval_row, _decision_badge
+- [x] 17-03-PLAN.md — Badge sidebar + toast region no layout + toast_controller.js
 
 **UI hint**: yes
 
-### Phase 14: Calendário Admin
+### Phase 18: ApprovalResponse Broadcast + Admin Live Rows
 
-**Goal**: Admin visualiza num único calendário mensal as artes de todos os clientes, diferenciadas por cor e nome de cliente, e navega entre meses e acessa artes diretamente
-**Depends on**: Phase 13
-**Requirements**: CADM-01, CADM-02, CADM-03, CADM-04, CADM-05
+**Goal**: Quando um cliente registra aprovação ou pedido de alteração, o admin recebe toast imediato em qualquer página e as listas do dashboard e da página Aprovações ganham a nova linha sem recarregar
+**Depends on**: Phase 17
+**Requirements**: RTUP-01 (incremento do badge), RTUP-02, RTUP-03, RTUP-04
 **Success Criteria** (what must be TRUE):
 
-  1. Admin clica em "Calendário" no sidebar e é levado à página do calendário admin (link não aponta mais para `#`)
-  2. Admin vê calendário mensal com todas as artes de todos os clientes distribuídas nos dias corretos
-  3. Cada arte exibe cor de fundo distinta por cliente e o nome ou iniciais do cliente visível na célula do dia
-  4. Admin clica nas setas de navegação (mês anterior / próximo) e o calendário atualiza sem recarregar a página completa
-  5. Admin clica numa arte do calendário e é levado à página de show da arte correspondente
-
-**Plans**: TBD
-**UI hint**: yes
-
-### Phase 15: Configurações
-
-**Goal**: Admin consegue alterar sua senha e o nome da agência através de uma página de configurações acessível pelo sidebar
-**Depends on**: Phase 14
-**Requirements**: CONF-01, CONF-02, CONF-03
-**Success Criteria** (what must be TRUE):
-
-  1. Admin clica em "Configurações" no sidebar e é levado à página de configurações (link não aponta mais para `#`)
-  2. Admin preenche formulário de troca de senha (senha atual + nova + confirmação) e a senha é atualizada com feedback de sucesso ou erro
-  3. Admin edita o nome da agência e salva, o novo nome aparece refletido no painel
+  1. Admin logado em qualquer página do painel recebe um toast visível dentro de 2 segundos após cliente submeter resposta
+  2. Dashboard admin exibe nova linha de arte no topo da tabela sem recarregar a página quando cliente aprova ou pede alteração
+  3. Página Aprovações do admin exibe nova linha no topo da lista em tempo real quando nova resposta chega
+  4. Badge do sidebar incrementa em 1 quando nova resposta "Pediu Alteração" chega (sem recarregar)
 
 **Plans**: 3 plans
-
+Plans:
 **Wave 1**
 
-- [ ] 15-01-PLAN.md — Migração agency_name + rota settings + sidebar wired + scaffold testes
+- [x] 18-00-PLAN.md — RED tests para broadcasts_to_admin (callback, streams, eager-load)
+- [x] 18-01-PLAN.md — Cirurgia nas views: sidebar badge sempre no DOM, toast partial, approvals ids
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 15-02-PLAN.md — Controller Admin::SettingsController + testes de integração
-
-**Wave 3** *(blocked on Wave 2 completion)*
-
-- [ ] 15-03-PLAN.md — View: show com cards de senha e dados da agência
+- [x] 18-02-PLAN.md — Dashboard partial + model after_create_commit → GREEN
 
 **UI hint**: yes
 
-### Phase 16: Feriados Brasileiros
+### Phase 19: Client Real-time + Arte Status Broadcast
 
-**Goal**: Feriados nacionais e dias comemorativos de marketing brasileiros ficam visualmente destacados nos calendários do admin e do cliente, sem depender de API externa
-**Depends on**: Phase 15
-**Requirements**: FERI-01, FERI-02, FERI-03
+**Goal**: Quando o admin marca uma arte como revisada, o calendário do cliente atualiza a célula e o resumo de status em tempo real e exibe um toast de notificação — tudo sem recarregar a página
+**Depends on**: Phase 18
+**Requirements**: RTUP-05, RTUP-06, RTUP-07, RTUP-01 (decremento do badge)
 **Success Criteria** (what must be TRUE):
 
-  1. O sistema possui lista hardcoded com feriados nacionais e comemorativos de marketing (Dia das Mães, Namorados, Pais, etc.) para os anos em uso
-  2. No calendário do cliente, dias com feriado ou comemorativo exibem fundo destacado e o nome do evento legível na célula
-  3. No calendário do admin, dias com feriado ou comemorativo exibem fundo destacado e o nome do evento legível na célula
+  1. Cliente com calendário aberto vê o badge de status da arte mudar (de "Pediu Alteração" para "Revisado") dentro de 2 segundos após admin marcar como revisada
+  2. Faixa de resumo no topo do calendário do cliente atualiza os contadores em tempo real quando status de arte muda
+  3. Cliente recebe toast visível no calendário quando admin marca arte como revisada
+  4. Badge do sidebar admin decrementa em 1 quando admin marca arte como revisada (RTUP-01 parcial)
+  5. Autenticação do canal do cliente via token de URL funciona sem expor sessão do admin
+
+**Plans**: 2 plans
+Plans:
+**Wave 1**
+
+- [x] 19-00-PLAN.md — Canal ClientCalendarChannel + layout cliente + partials com DOM IDs estáveis + testes RED
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [x] 19-01-PLAN.md — Arte#broadcasts_revised_to_all → Turbo Streams para cliente (chip, summary, toast) + decremento badge admin → GREEN + checkpoint visual
+
+**UI hint**: yes
+
+### Phase 20: Admin Calendar Chips Real-time
+
+**Goal**: Chips do calendário admin refletem mudanças de status de artes em tempo real, completando o ciclo de atualizações em tempo real para todas as views do admin
+**Depends on**: Phase 19
+**Requirements**: RTUP-08, RTUP-01 (finalizado)
+**Success Criteria** (what must be TRUE):
+
+  1. Admin com calendário aberto vê o chip de uma arte atualizar visualmente (cor ou texto de status) dentro de 2 segundos após cliente registrar resposta
+  2. Badge do sidebar reflete o estado correto após qualquer sequência de eventos (aprovação, pedido de alteração, revisão) — RTUP-01 completo
+  3. Nenhum broadcast duplica chips ou cria elementos DOM extras no calendário admin
 
 **Plans**: TBD
 **UI hint**: yes
@@ -172,5 +190,9 @@ Full details: [.planning/milestones/v1.3-ROADMAP.md](.planning/milestones/v1.3-R
 | 12. Arte Show & Dashboard Fix | v1.3 | 1/1 | Complete | 2026-06-03 |
 | 13. Página Aprovações | v1.4 | 3/3 | Complete    | 2026-06-04 |
 | 14. Calendário Admin | v1.4 | 3/3 | Complete    | 2026-06-04 |
-| 15. Configurações | v1.4 | 0/? | Not started | - |
-| 16. Feriados Brasileiros | v1.4 | 0/? | Not started | - |
+| 15. Configurações | v1.4 | 3/3 | Complete    | 2026-06-04 |
+| 16. Feriados Brasileiros | v1.4 | 2/2 | Complete    | 2026-06-04 |
+| 17. Cable Foundation + Admin Channel + Badge + Toast | v1.5 | 4/4 | Complete    | 2026-06-05 |
+| 18. ApprovalResponse Broadcast + Admin Live Rows | v1.5 | 4/4 | Complete   | 2026-06-05 |
+| 19. Client Real-time + Arte Status Broadcast | v1.5 | 3/3 | Complete    | 2026-06-06 |
+| 20. Admin Calendar Chips Real-time | v1.5 | 0/2 | Not started | - |

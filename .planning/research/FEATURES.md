@@ -1,158 +1,285 @@
-# Features Research: Calendário de Aprovação de Artes
+# Features Research — Real-time UX Patterns
 
-**Domain:** Social media content approval calendar for agencies
-**Researched:** 2026-05-24
-**Reference tools studied:** Planable, Gain, Hootsuite, ContentCal, Later, Sked Social, ContentStudio
+**Project:** Calendário Livia — v1.5 Real-time & Notifications
+**Researched:** 2026-06-05
+**Stack context:** Rails 8.1.3, Turbo (turbo-rails), Stimulus, ActionCable, Tailwind v4, PostgreSQL
 
 ---
 
-## Table Stakes
-
-Features clients and admins expect. Missing any of these and the tool feels incomplete or untrustworthy compared to just using WhatsApp or email.
-
-### Client-Facing
+## Table Stakes (must have)
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Monthly calendar view of scheduled posts | Core mental model — "what is going live when" | Low | Grid by day, posts shown as cards with thumbnail |
-| Post preview showing actual content (image/video/caption) | Clients need to see *exactly* what will publish to give meaningful feedback | Medium | Lightbox or inline expand per post card |
-| One-click approve or request-changes action per post | The entire job of the client; must be frictionless | Low | Two-button UI, no form to fill out before choosing |
-| Comment field when requesting changes | Without this, "request changes" is useless — admin has no direction | Low | Required or optional when status = Request Changes |
-| Access via link + password, no account creation | Clients refuse to create yet another account; friction kills adoption | Low | Session-based auth keyed to client token |
-| Visual indicator of post status (approved / needs changes / pending) | Clients need to know what they have already handled vs what still needs review | Low | Color badges per post card |
-| See which platform each post targets (Instagram / Facebook / LinkedIn) | Context for judgment — what works on IG differs from LinkedIn | Low | Platform icon on card |
-| See the approval deadline per post | Clients need external pressure; without a due date, they procrastinate | Low | Shown on card or post detail |
-| Ability to navigate between months | Calendar is temporal; clients may review ahead or check past approvals | Low | Prev/Next month navigation |
+| Turbo Stream subscription tag in each view | Without `turbo_stream_from`, no cable updates reach that page | Low | One line per view that needs live updates |
+| Broadcast from model callback (`after_create_commit`) | Standard Rails pattern — controller should not manually broadcast in most cases | Low | Use `_later` variants to offload to ActiveJob |
+| Scoped streams (admin vs client) | Admin sees all; client sees only their own — must be enforced server-side | Medium | Two separate stream names per broadcast |
+| Toast that auto-dismisses | Users expect transient feedback, not a permanent banner | Low-Med | CSS transition + Stimulus timeout |
+| Badge counter on sidebar | Admin needs to know pending items without opening Aprovações | Low | Turbo Stream `replace` on a dedicated DOM element |
+| Calendar cell partial replace | Chips must update without morphing the entire grid | Medium | Requires stable DOM IDs per day cell |
 
-### Admin-Facing
+---
 
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Client list management (create, edit, deactivate) | Admin must manage the portfolio without developer help | Low | CRUD on clients with name, link slug, password |
-| Add posts to specific calendar days per client | Core content scheduling action | Medium | Date picker + file upload or external URL |
-| Upload image or video per post | The primary content artifact | Medium | Direct upload; store file or reference |
-| Attach external link (Drive, Dropbox) as post asset | Admin may not want to re-upload files already in cloud storage | Low | URL field alongside upload |
-| Write or paste caption per post | Caption is primary copy for all three platforms | Low | Textarea, plain text sufficient for v1 |
-| Set approval deadline per post | Drives client behavior; without it there is no urgency | Low | Date picker field |
-| Dashboard / list view of all client responses | Admin must triage feedback without opening every calendar individually | Medium | Filterable list: client, status, date |
-| Mark a post as "revised" after making requested changes | Closes the loop; tells clients their feedback was acted on | Low | Admin-only status update |
-| See all comments left by clients | Cannot action feedback that is buried | Low | Shown in dashboard and on post detail |
-| Per-post status visible in admin calendar | Admin needs same calendar awareness as client | Low | Same status badges, admin view |
+## Implementation Patterns
+
+### Turbo Streams over Cable
+
+**How it works (HIGH confidence — verified via Context7/turbo-rails official docs):**
+
+1. The view subscribes with the `turbo_stream_from` helper, which renders a `<turbo-cable-stream-source>` custom element. The stream name is signed (HMAC) by the Rails helper — clients cannot forge subscriptions.
+2. The server broadcasts using `Turbo::StreamsChannel.broadcast_*_to(streamable, ...)` or model-level `broadcasts_to`.
+3. The browser receives a `<turbo-stream action="..." target="...">` fragment over the cable socket and applies it to the DOM immediately.
+
+**The eight available actions:** `append`, `prepend`, `replace`, `update`, `remove`, `before`, `after`, `refresh`.
+
+**From model (recommended for this project):**
+
+```ruby
+# app/models/approval_response.rb
+after_create_commit :broadcast_to_admin
+
+private
+
+def broadcast_to_admin
+  # Broadcasts to ALL admins watching "admin_approvals" stream
+  broadcast_append_later_to "admin_approvals",
+    target: "approvals_list",
+    partial: "admin/approvals/approval_row",
+    locals: { approval: self }
+
+  # Also update badge counter on same stream
+  broadcast_replace_later_to "admin_approvals",
+    target: "pending_badge",
+    partial: "admin/shared/pending_badge"
+end
+```
+
+**From controller (for one-off cases like "marcar revisada"):**
+
+```ruby
+# app/controllers/admin/artes_controller.rb
+def mark_revised
+  @arte.update!(status: :revised)
+
+  # Notify the specific client watching their calendar
+  Turbo::StreamsChannel.broadcast_replace_to(
+    "client_#{@arte.client.token}",
+    target: "day_cell_#{@arte.scheduled_on.strftime('%Y-%m-%d')}",
+    partial: "client/calendar/day_cell",
+    locals: { date: @arte.scheduled_on, artes: @arte.client.artes.on_date(@arte.scheduled_on) }
+  )
+
+  # Notify all admins watching the admin calendar
+  Turbo::StreamsChannel.broadcast_replace_to(
+    "admin_calendar",
+    target: "day_cell_#{@arte.scheduled_on.strftime('%Y-%m-%d')}",
+    partial: "admin/calendar/day_cell",
+    locals: { date: @arte.scheduled_on, artes: Arte.on_date(@arte.scheduled_on) }
+  )
+end
+```
+
+**View subscription (one tag per stream the view needs):**
+
+```erb
+<%# Admin layout — outside any Turbo Frame %>
+<%= turbo_stream_from "admin_approvals" %>
+<%= turbo_stream_from "admin_calendar" %>
+
+<%# Client calendar view %>
+<%= turbo_stream_from "client_#{@client.token}" %>
+```
+
+**CRITICAL: use `_later_` variants in model callbacks.** Synchronous `broadcast_*_to` inside a DB transaction can deadlock — the cable push happens before the commit is flushed. Use `broadcast_append_later_to` / `broadcast_replace_later_to` — these enqueue an ActiveJob that runs after commit. When broadcasting from a controller action (outside a transaction), synchronous variants are fine.
+
+---
+
+### Toast System
+
+**Recommended pattern: Turbo Stream `append` to a dedicated container + Stimulus auto-dismiss controller.**
+
+The server broadcasts a toast fragment onto the same stream already open for other updates — no extra WebSocket subscription needed.
+
+```erb
+<%# app/views/layouts/admin.html.erb — in <body>, outside Turbo Frames %>
+<div id="toast_container"
+     class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
+</div>
+```
+
+```ruby
+# Alongside every approval broadcast, append a toast on the same stream
+Turbo::StreamsChannel.broadcast_append_to(
+  "admin_approvals",
+  target: "toast_container",
+  partial: "admin/shared/toast",
+  locals: { message: "#{response.client.name} respondeu a uma arte", type: :info }
+)
+```
+
+```erb
+<%# app/views/admin/shared/_toast.html.erb %>
+<div id="toast_<%= SecureRandom.hex(4) %>"
+     data-controller="toast"
+     data-toast-duration-value="4000"
+     class="pointer-events-auto bg-white border border-gray-200 shadow-lg rounded-lg
+            px-4 py-3 flex items-center gap-3 transition-all duration-300">
+  <%= message %>
+  <% if defined?(link_path) && link_path %>
+    <%= link_to "Ver arte", link_path, class: "text-green-600 font-medium text-sm" %>
+  <% end %>
+</div>
+```
+
+```javascript
+// app/javascript/controllers/toast_controller.js
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static values = { duration: { type: Number, default: 4000 } }
+
+  connect() {
+    setTimeout(() => this.dismiss(), this.durationValue)
+  }
+
+  dismiss() {
+    this.element.classList.add("opacity-0", "translate-x-full")
+    setTimeout(() => this.element.remove(), 300) // wait for CSS transition
+  }
+}
+```
+
+**Why not a Stimulus controller that listens to cable events:** ActionCable does not emit DOM events that Stimulus can intercept natively. You would need to create a custom channel JS class and wire up event listeners — more complexity for zero gain. Turbo Stream append to a container is idiomatic and needs only the auto-dismiss controller shown above.
+
+---
+
+### Badge Counter
+
+**Pattern: dedicated partial with a stable DOM ID, replaced by broadcast.**
+
+```erb
+<%# app/views/admin/shared/_pending_badge.html.erb %>
+<% count = Art.where(status: :requested_change).count %>
+<span id="pending_badge"
+      class="<%= count > 0 ? 'inline-flex bg-red-500 text-white' : 'hidden' %>
+             items-center justify-center w-5 h-5 text-xs font-bold rounded-full">
+  <%= count %>
+</span>
+```
+
+```ruby
+# Called after any approval_response create or arte revised update
+Turbo::StreamsChannel.broadcast_replace_to(
+  "admin_approvals",
+  target: "pending_badge",
+  partial: "admin/shared/pending_badge"
+  # no locals — partial queries DB directly for accuracy
+)
+```
+
+**Key points:**
+- The partial re-queries the DB so the count is always accurate, not computed incrementally. This avoids race conditions when multiple clients respond simultaneously.
+- Use `replace` (swaps the entire element including root tag) rather than `update` (replaces only innerHTML) — safer when the CSS classes on the root span vary with count.
+- The badge must live in the layout (outside any Turbo Frame) so it persists across Turbo Frame navigations.
+- `turbo_stream_from "admin_approvals"` in the layout means the badge updates on every page in the admin, not only on the Aprovações page.
+
+---
+
+### Calendar Cell Updates
+
+**Pattern: stable DOM ID per day cell, broadcast `replace` targeting that ID.**
+
+The calendar grid renders each cell as a partial with a predictable, date-keyed ID:
+
+```erb
+<%# app/views/admin/calendar/_day_cell.html.erb %>
+<td id="day_cell_<%= date.strftime('%Y-%m-%d') %>"
+    data-date="<%= date %>">
+  <%# chips for each arte on that day %>
+</td>
+```
+
+```erb
+<%# app/views/client/calendar/_day_cell.html.erb %>
+<td id="day_cell_<%= date.strftime('%Y-%m-%d') %>"
+    data-date="<%= date %>">
+  <%# arte cards with status badges %>
+</td>
+```
+
+Broadcast when arte status changes:
+
+```ruby
+Turbo::StreamsChannel.broadcast_replace_to(
+  "admin_calendar",
+  target: "day_cell_#{arte.scheduled_on.strftime('%Y-%m-%d')}",
+  partial: "admin/calendar/day_cell",
+  locals: { date: arte.scheduled_on, artes: Arte.where(scheduled_on: arte.scheduled_on).includes(:client) }
+)
+```
+
+**CRITICAL constraint for this project:** The admin calendar is rendered inside a Turbo Frame for month navigation. The `turbo_stream_from` tag must live in the layout (outside the frame) — not inside the frame. When the user navigates to the next month, the frame content is replaced; if the subscription tag was inside the frame, the cable subscription would be destroyed.
+
+```erb
+<%# app/views/layouts/admin.html.erb — OUTSIDE any turbo_frame_tag %>
+<%= turbo_stream_from "admin_calendar" %>
+```
+
+The broadcast targets individual `day_cell_YYYY-MM-DD` elements. If the current view is showing a different month, the target element does not exist in the DOM — Turbo silently ignores the broadcast. No special handling needed.
+
+---
+
+### Broadcast Scoping (admin vs client)
+
+**Two stream name conventions. Keep them simple.**
+
+| Audience | Stream name | Subscription location |
+|----------|-------------|-----------------------|
+| All admins | `"admin_approvals"` | Admin layout (persistent) |
+| All admins | `"admin_calendar"` | Admin layout (persistent) |
+| Specific client | `"client_#{client.token}"` | Client calendar view only |
+
+**Why `client.token` not `client.id`:** The token is the client's existing authentication credential (already used as URL slug). Using the database ID would expose an enumerable integer — a malicious user could craft `turbo_stream_from "client_1"`, `"client_2"`, etc. The token is a random secret the client must know to even reach the page.
+
+**Signing:** `turbo_stream_from` signs stream names with `Rails.application.message_verifier`. The signed name is embedded in the `<turbo-cable-stream-source>` element. A browser cannot subscribe to a stream name it did not receive from server-rendered HTML. This protection is built in — no extra work required.
+
+**Per-admin streams (not needed for v1.5):** If a future version has multiple admins with role-specific visibility, use `"admin_#{admin.id}"` per admin. One admin session, one subscription.
 
 ---
 
 ## Differentiators
 
-Features that set a tool apart. Not expected on day one, but they create stickiness and reduce the most common friction points.
-
-| Feature | Value Proposition | Complexity | Build When |
-|---------|-------------------|------------|------------|
-| Status summary strip at top of calendar ("3 approved, 2 need changes, 5 pending") | Clients immediately see their outstanding work without scanning every card | Low | Phase 2 — one query, render numbers |
-| Admin notification digest (daily email summary of unreviewed posts) | Admin currently checks manually; a digest reduces the risk of missed deadlines | Medium | Phase 2 or 3; requires mailer setup |
-| Post-level revision thread (admin replies to client comment) | Without this, admin must respond via WhatsApp; conversation lives outside the tool | Medium | Phase 2; threaded comments per post |
-| "Revised — please re-review" status that notifies client | Closes the revision cycle explicitly; clients know to re-visit | Medium | Requires some notification mechanism |
-| Bulk approve (client approves all pending posts at once) | Reduces friction for clients who trust the content and just need to confirm | Low | Phase 2; checkbox select + batch action |
-| Post history / audit log (who approved what and when) | Protects admin if client disputes a published post; also useful for billing transparency | Low | Timestamps on status changes, simple table |
-| Password reset or link regeneration by admin | Admin must be able to rotate access without developer help | Low | Admin UI button, regenerates token |
-| Caption character count and platform limits indicator | LinkedIn (3000), Instagram (2200), Facebook (63206) — helps admin write correctly | Low | Client-side JS counter |
-| Copy post to another day or duplicate for another platform | Admin often repurposes content across platforms | Medium | Phase 3 |
-| Preview how post looks in-platform (simulated feed) | Planable and Gain both offer this; reduces "I didn't know it would look like that" complaints | High | Defer — requires per-platform rendering logic |
+| Feature | Value | Complexity | Recommendation |
+|---------|-------|------------|---------------|
+| Toast with "Ver arte" action button | Lets admin jump directly to the arte that changed | Low | Include — add `link_path` local to the toast partial |
+| Badge count from DB query (not incremental) | Accurate under concurrent responses; survives partial failures | Trivial | Include by default (see pattern above) |
+| Connection status indicator in admin header | Shows cable disconnected state so admin knows updates may be missed | Low | Worth adding — listen to `turbo:connected`/`turbo:disconnected` events on `document` |
+| Toast on client calendar when arte is revisada | Client sees immediate feedback without reloading | Low | Include — broadcast to `"client_#{client.token}"` stream |
 
 ---
 
-## Anti-Features (Explicitly Avoid in v1)
+## Anti-features (don't build)
 
-Things that seem useful but will slow down delivery, add maintenance burden, or solve problems this project does not have at 10-30 clients.
-
-| Anti-Feature | Why Avoid | Warning | What to Do Instead |
-|--------------|-----------|---------|-------------------|
-| Multi-stage approval workflows (draft → legal → client → final) | This tool has one client and one admin. Multi-stage is for enterprise teams with compliance requirements | Adds state machine complexity; UI branching | Binary status: Approved / Request Changes |
-| Role-based permissions within a client (e.g. viewer vs approver) | Single client contact is the model; sub-roles inside a client org are out of scope | Premature architecture for 10-30 clients | One password per client link — done |
-| Real-time collaboration (live cursors, concurrent editing) | Neither party edits posts simultaneously; admin writes, client reviews asynchronously | WebSockets complexity for zero perceived benefit | Static page with reload is fine |
-| Direct publishing to Instagram / Facebook / LinkedIn via API | Platform APIs (especially Meta) require app review, token management, webhook handling — a project in itself | Can block v1 indefinitely if attempted | Admin publishes manually using approved content as reference |
-| Mobile push notifications | Requires a native app or PWA push setup; overkill for a web tool at this scale | Significant infrastructure for marginal gain | Email digest is sufficient for now |
-| In-app analytics (reach, engagement, impressions) | Requires platform API access; out of scope and orthogonal to approval workflow | Scope creep; clients can check platform natively | Link to native platform insights if needed |
-| Client account creation / OAuth login | Adds password reset flows, email verification, token management | Every extra auth step loses clients who could just use the link | Token-in-URL + simple password is the right call |
-| Drag-and-drop calendar rescheduling | Admin rarely reschedules at scale; adds JS complexity and state sync risk | Complex UX for infrequent action | Edit post form with date picker |
-| White-labeling / custom domains | Relevant for SaaS resellers; not needed for a single-agency internal tool | Infrastructure and DNS management cost | Admin controls branding via CSS variables if needed |
-| Revision round limits (automatic lockout after N rounds) | Gain and others offer this for SaaS billing reasons; irrelevant here | Adds policy logic; creates adversarial client relationship | Admin handles rounds informally; set expectations in person |
-| AI caption generation or content suggestions | Trendy but entirely orthogonal to approval workflow | Scope creep with no grounding in the problem | Admin writes captions externally, pastes in |
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| Custom ActionCable channel class in JS | `Turbo::StreamsChannel` handles everything; custom channels add JS complexity with no gain for this use case | Use `turbo_stream_from` + `broadcast_*_to` exclusively |
+| Polling fallback | Single-admin local deploy — polling wastes resources and adds code paths to maintain | ActionCable with adapter `async` (dev) or `redis` (prod) is sufficient |
+| Client-side event bus (custom JS pubsub) | Turbo Streams already handles DOM targeting; a JS event bus duplicates this layer | Let Turbo apply DOM changes; use Stimulus only for dismiss/animation |
+| Broadcasting full page HTML or full calendar grid | Replaces too much DOM, loses scroll position and user focus | Always broadcast the smallest possible partial — one row, one cell, one badge |
+| Synchronous broadcasts inside model callbacks | Fires before DB commit, causing the ActiveJob or cable push to read an uncommitted row (deadlock or stale data) | Always use `broadcast_*_later_to` in `after_create_commit` / `after_update_commit` callbacks |
+| Separate WebSocket channel per client stream | `Turbo::StreamsChannel` is multiplexed — all streams share one WS connection per browser tab | No extra ActionCable channel classes needed |
+| Optimistic UI (approve instantly, revert on error) | Adds JS state management complexity; at 10-30 clients the round trip is imperceptible | Server-authoritative updates via Turbo Stream are fast enough |
 
 ---
 
-## Feature Dependencies
+## Confidence Assessment
 
-Which features require other features to work correctly.
-
-```
-Client calendar view
-  └─ Requires: post exists with date, platform, content asset
-  └─ Requires: client auth via link + password
-
-Post approval / request changes action
-  └─ Requires: client is authenticated (session active)
-  └─ Requires: post is in "pending" state (not already decided)
-  └─ Enables: comment field (shown when "Request Changes" chosen)
-
-Admin dashboard (response triage)
-  └─ Requires: client approval status stored on post
-  └─ Requires: comments stored per post
-  └─ Requires: at least one client with posts
-
-Mark post as "revised" (admin)
-  └─ Requires: post is in "Request Changes" state
-  └─ Requires: admin is authenticated
-
-Approval deadline display
-  └─ Requires: admin has set deadline on post
-  └─ Informs: urgency cue on client calendar card
-
-Post-level revision thread (differentiator)
-  └─ Requires: comments feature (table stakes)
-  └─ Requires: admin reply UI + per-comment authorship
-
-Admin notification digest (differentiator)
-  └─ Requires: post status tracking (table stakes)
-  └─ Requires: mailer configured (ActionMailer + SMTP)
-
-Bulk approve (differentiator)
-  └─ Requires: individual approve action (table stakes)
-  └─ Requires: checkbox UI + batch route
-```
-
----
-
-## MVP Recommendation
-
-Build exactly the table stakes list above, in this priority order:
-
-**Phase 1 (Core loop):**
-1. Admin creates clients, generates link + password
-2. Admin adds posts (upload or external URL, caption, platform, deadline, date)
-3. Client opens calendar, sees posts, approves or requests changes with comment
-4. Admin dashboard shows all responses, comments, pending reviews
-5. Admin marks post as revised
-
-**Defer to Phase 2:**
-- Status summary strip (low effort, high client UX value)
-- Post-level admin reply to client comment
-- Password / link regeneration by admin
-
-**Defer to Phase 3+:**
-- Email digest notifications
-- Bulk approve
-- Post history / audit log
-- Duplicate / copy post
-
----
-
-## Sources
-
-- [Planable product page](https://planable.io/product/) — calendar views, approval layers, locking mechanism
-- [Gain approvals feature page](https://gainapp.com/features/approving) — no-login magic approver, one-click decisions, private queues
-- [Hootsuite social media approval tool](https://www.hootsuite.com/platform/social-media-approval-tool) — role-based access, separate client environments
-- [Gain blog: 6 best social media approval tools](https://blog.gainapp.com/social-media-approval-tools/) — table stakes vs differentiator analysis
-- [Sked Social: streamline agency approvals](https://skedsocial.com/blog/agency-social-media-content-approvals) — revision round limits, pain points, good vs bad client experience
-- [Social media approval workflow top tools 2026](https://wifitalents.com/best/social-media-approval-software/) — approval gates, audit trails, calendar-first differentiators
-- [Sugar Punch Marketing: approval process UX](https://sugarpunchmarketing.com/podcast-episodes/content-calendar-approval-process-create-systems-clients-actually-use-no-more-chasing-feedback/) — client adoption pitfalls, complexity vs simplicity tradeoffs
-- [TrustyPost: social media approval workflow SOPs](https://trustypost.ai/blog/social-media-approval-workflow-2026-simple-sops/) — deadline management, post status lifecycle, revision history
+| Area | Confidence | Source |
+|------|------------|--------|
+| `turbo_stream_from` / `broadcast_*_to` API | HIGH | Context7 / turbo-rails official docs |
+| `_later_` variants to avoid commit-timing deadlock | HIGH | Context7 / turbo-rails official docs |
+| Stimulus `connect` lifecycle + `dispatch` | HIGH | Context7 / stimulus official docs |
+| Toast via Turbo Stream append | HIGH | Established Hotwire community pattern, consistent with official docs |
+| Stream name signing (HMAC, built in) | HIGH | turbo-rails source — built into `turbo_stream_from` helper |
+| Badge counter via `broadcast_replace_to` + DB query partial | HIGH | Direct application of documented broadcast API |
+| `turbo_stream_from` must be outside Turbo Frame | HIGH | Turbo architecture constraint — frame navigation destroys child elements |
+| `client.token` for stream name scoping | MEDIUM | Security reasoning sound; not explicitly documented as recommended pattern, but consistent with signed-stream design |

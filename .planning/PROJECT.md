@@ -12,6 +12,8 @@ Sistema web em Ruby on Rails para agências e freelancers de social media gerenc
 
 **v1.3 shipped 2026-06-03** — painel admin totalmente estilizado com Tailwind puro: form de artes (fields, radio pills Stimulus, locals), pages new/edit (card + back link), index (tabela formatada, mobile cards, empty state), show (barra de ações semântica com turbo_confirm) e dashboard (link "Ver" com borda visível).
 
+**v1.4 shipped 2026-06-04** — todas as páginas admin completadas (Aprovações com filtros Turbo Frame e paginação Pagy, Calendário Admin com cor por cliente e navegação por mês, Configurações com troca de senha e nome da agência) e feriados/comemorativos brasileiros destacados em vermelho nos dois calendários.
+
 ## Core Value
 
 O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
@@ -70,8 +72,19 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - ✓ Cada cliente tem cor e iniciais distintas nos chips do calendário admin — CADM-03 — v1.4 Phase 14
 - ✓ Admin navega por meses via setas com Turbo Frame (sem full page reload) — CADM-04 — v1.4 Phase 14
 - ✓ Chip do calendário admin é link direto para a arte — CADM-05 — v1.4 Phase 14
+- ✓ Admin acessa Configurações via sidebar (link wired para admin_settings_path) — CONF-01 — v1.4 Phase 15
+- ✓ Admin altera senha com validação (senha atual + nova + confirmação) e feedback — CONF-02 — v1.4 Phase 15
+- ✓ Admin edita nome da agência e o novo nome aparece refletido no sidebar — CONF-03 — v1.4 Phase 15
 
-### Backlog (v1.4+)
+### Validated (v1.5)
+
+- ✓ AdminNotificationsChannel com stream per-user e defesa de autenticação — CABLE-01 — v1.5 Phase 17
+- ✓ WebSocket dual-auth: admin via cookie de sessão, cliente via token de URL — CABLE-01 — v1.5 Phase 17
+- ✓ Badge numérico sidebar exibe contagem de artes com mudança solicitada — CABLE-02 — v1.5 Phase 17
+- ✓ Layout admin com turbo_stream_from e toast region fixo (bottom-right) — CABLE-02 — v1.5 Phase 17
+- ✓ toast_controller.js com auto-dismiss 5s e limite MAX_TOASTS=3 — CABLE-02 — v1.5 Phase 17
+
+### Backlog (v1.5+)
 
 - [ ] Notificações por e-mail ao admin quando cliente aprova ou pede alteração (NOTF-01)
 - [ ] Notificações por e-mail ao cliente quando arte é revisada (NOTF-02)
@@ -88,20 +101,21 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - White-labeling / domínio personalizado — complexidade sem benefício imediato v1
 - IA para geração de legendas — fora do escopo de aprovação
 - Drag-and-drop de artes no calendário — v2+ UX
-- Real-time collaboration — WebSockets desnecessário neste volume
+- Real-time collaboration — WebSockets sendo implementado no v1.5 para notificações admin (não para colaboração multi-usuário)
 
 ## Context
 
-**Estado atual (v1.4 shipped 2026-06-04):**
+**Estado atual (v1.5 em progresso — Phase 17 completa 2026-06-05):**
 - Carteira de 10–30 clientes ativos
 - Conteúdo para Instagram, Facebook e LinkedIn
 - Admin faz upload direto de arquivos OU cola links externos (Google Drive, Dropbox)
 - Status simplificado: Pendente → Aprovado / Pediu Alteração → Revisado → Pendente
 - Prazo de aprovação por arte (data limite definida pelo admin)
 - Notificações: admin verifica o painel quando quiser, sem alertas automáticos
-- **Tech stack:** Rails 8.1.3, PostgreSQL (192.168.3.203), Tailwind v4, Stimulus, Turbo, ActiveStorage
-- **Codebase:** ~290 arquivos, ~27.000+ linhas de código
+- **Tech stack:** Rails 8.1.3, PostgreSQL (192.168.3.203), Tailwind v4, Stimulus, Turbo, ActiveStorage, Pagy
+- **Codebase:** ~300+ arquivos, ~27.000+ linhas de código
 - **Storage:** ActiveStorage local (upload) + URLs externas (Drive/Dropbox) — S3 para produção
+- **Painel admin completo:** Dashboard, Artes (CRUD), Clientes (CRUD), Aprovações (histórico), Calendário (unificado), Configurações (senha + agência)
 
 ## Constraints
 
@@ -165,15 +179,30 @@ This document evolves at phase transitions and milestone boundaries.
 - 2026-06-02 — v1.1 SHIPPED — 3 requisitos (ARTE-08, ARTE-09, ARTE-10) validados
 - Phase 08 complete (2026-06-03) — Fix "Resposta inválida": scope: :approval_response adicionado nos dois form_with de aprovação (APRO-01, APRO-02 validados)
 
-## Current Milestone: v1.4 Admin Pages + Brazilian Calendar
+## Shipped: v1.4 Admin Pages + Brazilian Calendar
 
-**Goal:** Completar as páginas inacabadas do painel admin (Aprovações, Calendário, Configurações) e marcar feriados e dias comemorativos brasileiros nos calendários do admin e do cliente.
+**Shipped:** 2026-06-04
+**Archive:** [.planning/milestones/v1.4-ROADMAP.md](.planning/milestones/v1.4-ROADMAP.md)
+
+**What was delivered:**
+- Página "Aprovações" com paginação Pagy, filtros Turbo Frame por cliente e decisão, tabela desktop + cards mobile, badges verde/vermelho
+- Calendário Admin unificado com cor por cliente (8 cores determinísticas), iniciais, overflow "+N", navegação por mês via Turbo Frame
+- Página "Configurações" com troca de senha (valida senha atual) e edição de agency_name refletida dinamicamente no sidebar
+- BrazilianHolidays: módulo hardcoded 2025-2027 com 17+ feriados/comemorativos brasileiros, span text-red-400 nos dois calendários
+
+## Current Milestone: v1.5 Real-time & Notifications
+
+**Goal:** Admin e cliente veem atualizações em tempo real via ActionCable/Turbo Streams — sem recarregar a página — e recebem toasts globais quando eventos relevantes ocorrem.
 
 **Target features:**
-- Página "Aprovações" com histórico completo de todas as respostas, com filtros por cliente e status
-- Calendário admin unificado mostrando artes de todos os clientes com cor e nome por cliente
-- Página "Configurações" para alterar senha e dados da agência
-- Feriados nacionais e dias comemorativos brasileiros destacados visualmente nos calendários
+- Badge numérico no sidebar do admin mostrando artes com "Pediu Alteração" não revisadas, atualiza em tempo real
+- Dashboard de aprovações e página Aprovações do admin atualizam via Turbo Stream quando cliente registra nova resposta
+- Calendário admin: chips atualizam quando status de arte muda
+- Toast global no painel admin em qualquer página quando nova resposta de cliente chega
+- Calendário do cliente: células e badges de status atualizam quando admin marca arte como revisada
+- Toast no calendário do cliente quando arte é revisada
 
 ---
-*Last updated: 2026-06-04 — Phase 14 complete: Calendário Admin com chips coloridos por cliente, turbo-frame navigation e suite de testes.*
+**Phases complete:** 17 (Cable foundation + badge admin), 18 (ApprovalResponse broadcast), 19 (Cliente real-time — chips, summary, toast via WebSocket autenticado com token).
+
+*Last updated: 2026-06-06 — Phase 19 complete. Next: Phase 20 (admin calendar chips real-time).*

@@ -98,4 +98,19 @@ class Admin::CalendarControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "+2"
   end
+
+  # FERI-03: feriados brasileiros no calendário do admin
+  test "exibe nome de feriado no calendário admin" do
+    get admin_calendar_index_url, params: { month: "2026-04" }
+    assert_response :success
+    assert_includes response.body, "Tiradentes"
+    assert_includes response.body, "Páscoa"
+  end
+
+  test "dias sem feriado não exibem texto de feriado (regressão FERI-03)" do
+    get admin_calendar_index_url, params: { month: "2026-04" }
+    assert_response :success
+    assert_no_match(/brazilianholiday/i, response.body)
+    assert_no_match(/undefined method/i, response.body)
+  end
 end

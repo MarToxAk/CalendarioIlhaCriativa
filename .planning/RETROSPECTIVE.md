@@ -108,15 +108,68 @@
 
 ---
 
+## Milestone: v1.4 — Admin Pages + Brazilian Calendar
+
+**Shipped:** 2026-06-04
+**Phases:** 4 (13–16) | **Plans:** 11 | **Timeline:** 1 dia
+
+---
+
+### What Was Built
+
+1. **Página Aprovações** — Admin::ApprovalsController com query anti-N+1 (joins+includes), paginação Pagy 25 itens, filtros Turbo Frame por cliente e decisão (enum seguro com .decisions.key?), tabela desktop + cards mobile, badges verde/vermelho
+2. **Calendário Admin** — Admin::CalendarController com client_color helper (8 cores determinísticas via id % 8), grade mensal 7 colunas, chips coloridos com iniciais, overflow "+N", navegação por mês via Turbo Frame
+3. **Configurações** — Admin::SettingsController com troca de senha (valida atual + mismatch + blank) e edição de agency_name; coluna agency_name na tabela users; nome da agência dinâmico no sidebar
+4. **BrazilianHolidays** — Módulo Ruby puro em app/lib/ com HOLIDAYS frozen, 17+ datas/ano para 2025-2027; span text-red-400 nos dois calendários; testes unitários + integração
+
+### What Worked
+
+- **TDD RED/GREEN por plano** — todos os planos com testes seguiram o ciclo RED/GREEN explicitamente, com commits separados. A suite cresceu de 117 para 144 testes sem regressões.
+- **Deterministic client_color via id % 8** — não precisou de coluna de cor no model, sem estado externo, sem consulta adicional ao banco. Elegante e testável.
+- **Pagy via include (não initializer)** — habilitar Pagy::Backend no BaseController e Pagy::Frontend no ApplicationHelper manteve o escopo circunscrito ao namespace admin sem poluir o restante da aplicação.
+- **Rack::Attack.cache.store.clear no setup de testes** — fix cirúrgico que resolve o problema de rate-limit entre testes sem desabilitar Rack::Attack globalmente. Padrão reutilizável.
+- **Holiday span fora do if/else** — colocar o span de feriado fora de qualquer branch do número do dia garante que hoje + feriado exibe ambos. Detalhe sutil que o planejamento identificou como pitfall.
+
+### What Was Inefficient
+
+- **View mínima como desvio Rule 3** — em 3 fases (13-02, 14-02, 16-01), a view precisou ser criada antecipadamente para os testes passarem. Isso é uma variante recorrente: o plano separa controller de view em planos distintos mas os testes do controller precisam de template. Considerar criar view stub vazia no mesmo plano do controller.
+- **.bundle/config no worktree** — cada worktree precisou de configuração manual de BUNDLE_PATH e credenciais de DB. Isso foi resolvido mas consumiu tempo em cada plano. Processo: documentar o workaround no CLAUDE.md ou criar script de bootstrap de worktree.
+
+### Patterns Established
+
+- **client_color helper**: paleta de 8 hashes `{bg:, text:}` com strings Tailwind hex literais completas, índice via `client.id % palette.size`
+- **Turbo Frame para filtros de listagem**: form fora do frame, `<turbo-frame id="...">` envolvendo tabela + paginação + estado vazio
+- **Rack::Attack em testes**: `Rack::Attack.cache.store.clear if defined?(Rack::Attack)` no setup de testes com múltiplos logins
+- **app/lib/ para módulos Ruby puros**: autoloaded pelo Rails Engine, sem require manual
+- **Holiday span nil-safe**: `<% if (holiday = brazilian_holiday_for(date)) %>` — evita variável temporária separada
+- **resources :calendar (plural)**: garante helper _index_path e action index; resource singular não funciona
+
+### Key Lessons
+
+1. **Turbo Frame pattern é maduro no projeto** — fases 13 e 14 aplicaram o pattern de filtros com Turbo Frame já estabelecido na fase 6 (dashboard). Reutilização sem fricção.
+2. **Worktree precisa de bootstrap** — os primeiros minutos de cada plano foram gastos configurando BUNDLE_PATH e credenciais. Documentar isso reduz o overhead.
+3. **11 planos em 1 dia** — velocity alta, sem regressões. O projeto está em estado de execução fluida com a base estabilizada.
+4. **Rack::Attack interfere em testes de controller** — qualquer teste que faz múltiplos `post session_path` em setup precisa limpar o cache do throttle. Isso agora está documentado e o padrão está estabelecido.
+
+### Cost Observations
+
+- **Sessions:** ~1 sessão de trabalho
+- **Timeline:** 1 dia (2026-06-04)
+- **Commits:** ~87
+- **Velocity:** 11 planos em 1 dia (recorde do projeto)
+
+---
+
 ## Cross-Milestone Trends
 
-| Metric | v1.0 | v1.1 |
-|--------|------|------|
-| Days to ship | 3 | 1 |
-| Phases | 8 | 2 |
-| Plans | 23 | 5 |
-| Gap phases inserted | 2 | 1 |
-| Bugs found by audit | 2 critical | 0 |
-| Bugs found by code review | 2 (XSS + HTTP desync) | 3 critical + 2 UX |
-| Requirements coverage | 35/35 | 3/3 |
-| TDD coverage | partial | 26 tests, 65 assertions |
+| Metric | v1.0 | v1.1 | v1.2+v1.3 | v1.4 |
+|--------|------|------|-----------|------|
+| Days to ship | 3 | 1 | 1 | 1 |
+| Phases | 8 | 2 | 5 | 4 |
+| Plans | 23 | 5 | 7 | 11 |
+| Gap phases inserted | 2 | 1 | 0 | 0 |
+| Bugs found by audit | 2 critical | 0 | 0 | 0 |
+| Bugs found by code review | 2 (XSS + HTTP desync) | 3 critical + 2 UX | — | — |
+| Requirements coverage | 35/35 | 3/3 | 9/9 | 16/16 |
+| TDD coverage | partial | 26 tests | partial | 144 tests, 407 assertions |
+| Velocity (plans/day) | 7.7 | 5 | 7 | 11 |

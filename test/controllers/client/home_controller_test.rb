@@ -57,7 +57,7 @@ class Client::HomeControllerTest < ActionDispatch::IntegrationTest
     sign_in_as_client(@client)
     get client_root_path(token: @client.access_token)
     assert_response :success
-    assert_no_match(/role="status"/, response.body)
+    assert_select "#calendar-summary.hidden"
   end
 
   test "summary strip aparece quando há artes no mês corrente" do
@@ -128,5 +128,22 @@ class Client::HomeControllerTest < ActionDispatch::IntegrationTest
     get client_root_path(token: @client.access_token)
     assert_response :success
     assert_match(/1.*pediu alteração/m, response.body)
+  end
+
+  # FERI-02: feriados brasileiros no calendário do cliente
+  test "exibe nome de feriado no calendário do cliente" do
+    sign_in_as_client(@client)
+    get client_root_path(token: @client.access_token, month: "2026-04")
+    assert_response :success
+    assert_includes response.body, "Tiradentes"
+    assert_includes response.body, "Páscoa"
+  end
+
+  test "dias sem feriado não exibem texto de feriado (regressão FERI-02)" do
+    sign_in_as_client(@client)
+    get client_root_path(token: @client.access_token, month: "2026-04")
+    assert_response :success
+    assert_no_match(/brazilianholiday/i, response.body)
+    assert_no_match(/undefined method/i, response.body)
   end
 end

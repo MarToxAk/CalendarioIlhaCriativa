@@ -1,0 +1,20 @@
+<%# Locals: arte (Arte), client (Client) %>
+<%# Renderizado via Turbo Stream append em #client-toast-region %>
+<div data-controller="toast"
+     class="bg-white border border-gray-200 shadow-lg rounded-lg px-4 py-3 flex items-start gap-3 w-80">
+  <div class="flex-1 min-w-0">
+    <p class="text-sm font-semibold text-slate-900">Arte revisada</p>
+    <p class="text-xs text-slate-500 truncate">
+      <%= arte.title.presence || arte.platform.humanize %>
+      &middot;
+      <%= l(arte.scheduled_on, format: :short) %>
+    </p>
+  </div>
+  <%= link_to "Ver arte", client_arte_path(token: client.access_token, id: arte),
+        class: "text-xs text-[#0F7949] font-medium hover:underline shrink-0" %>
+  <button data-action="click->toast#dismiss"
+          class="text-slate-400 hover:text-slate-600 shrink-0 leading-none"
+          aria-label="Fechar notificação">
+    &times;
+  </button>
+</div>

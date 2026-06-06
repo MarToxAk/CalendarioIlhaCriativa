@@ -31,6 +31,8 @@
         <p class="text-sm text-slate-500">Ainda não há respostas de aprovação registradas.</p>
       <% end %>
     </div>
+    <%# tbody vazio sempre presente na DOM — target para Turbo Stream broadcast (SC3/RTUP-04) %>
+    <table class="hidden" aria-hidden="true"><tbody id="approvals-tbody"></tbody></table>
   <% else %>
     <%# Tabela desktop %>
     <div class="bg-white rounded-xl border border-gray-200 shadow-card overflow-hidden hidden sm:block">
@@ -46,7 +48,7 @@
             <th scope="col" class="py-3 px-4 w-[48px]"><span class="sr-only">Ações</span></th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="approvals-tbody">
           <% @approval_responses.each do |ar| %>
             <%= render "approval_row", approval_response: ar %>
           <% end %>
@@ -82,7 +84,7 @@
 
     <%# Paginação dentro do turbo-frame %>
     <div class="flex justify-center mt-6">
-      <%= pagy_nav(@pagy) %>
+      <%= @pagy.series_nav %>
     </div>
   <% end %>
 </turbo-frame>

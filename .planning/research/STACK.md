@@ -1,223 +1,163 @@
-# Stack Research: Calendário de Aprovação de Artes
+# Stack Research — ActionCable + Turbo Streams (Rails 8.1.3)
 
-**Project:** Rails content-approval calendar for social media agency
-**Researched:** 2026-05-24
-**Overall confidence:** HIGH (core stack), MEDIUM (calendar UI), HIGH (auth pattern)
-
----
-
-## Recommended Stack
-
-### Core
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Ruby | 3.3.x | Language runtime | LTS, ships with Rails 8.1's recommended Ruby |
-| Rails | 8.1.3 | Web framework | Current stable as of March 2026; Propshaft + importmap default; built-in auth generator eliminates need for Devise for admin |
-| PostgreSQL | 16.x | Primary database | Array columns, UUID support, full-text search; overkill for 10-30 clients but correct choice for production — avoid SQLite in multi-user concurrent writes |
-
-**Rails 8.1.3** is the latest stable release (March 24, 2026, RubyGems). Rails 8.0.x is also supported until May 2026, but 8.1 is the recommended target for new projects.
+**Researched:** 2026-06-05
+**Confidence:** HIGH — findings based entirely on gems already installed in vendor/bundle and config files present in the repo.
 
 ---
 
-### Authentication
+## Already Available (no changes needed)
 
-This project has two distinct access patterns that must be handled separately:
+**ActionCable** is built into Rails. No gem needed. Already available at Rails 8.1.3.
 
-#### Admin (back-office panel)
+**turbo-rails 2.0.23** is already installed (confirmed in vendor/bundle). It ships `Turbo::StreamsChannel` and the full `Turbo::Broadcastable` concern. Turbo Streams over WebSockets work out of the box — zero additional gems.
 
-**Use Rails 8 built-in authentication generator — not Devise.**
+**solid_cable 4.0.0** is already in the Gemfile and vendor/bundle. It is the database-backed ActionCable adapter for Rails 8, developed by 37signals alongside Solid Queue and Solid Cache. No Redis needed.
+
+**The `cable.yml` is already fully configured** for production (`adapter: solid_cable`) and development (`adapter: async`). The production config already points to the `cable` database defined in `database.yml` with `polling_interval: 0.1.seconds` and `message_retention: 1.day`.
+
+**`db/cable_schema.rb`** already exists with the `solid_cable_messages` table definition.
+
+**`app/channels/application_cable/connection.rb`** already exists. The Rails generator created it and it already contains admin session auth via `cookies.signed[:session_id]` — exactly matching the app's auth mechanism in the `Authentication` concern.
+
+**`app/javascript/application.js`** already imports `@hotwired/turbo-rails`, which automatically connects ActionCable when a `turbo_stream_from` tag is present on the page. No additional JS import needed.
+
+**`importmap.rb`** already pins `@hotwired/turbo-rails` to `turbo.min.js`.
+
+---
+
+## Config Changes Required
+
+### 1. `cable.yml` — development adapter
+
+The current development adapter is `async`. This works within a single Puma process but broadcasts from model callbacks triggered by HTTP requests are delivered correctly because Puma runs everything in the same process. For this app's development workflow (single `bin/dev` process), `async` is fine.
+
+**Decision: keep `async` for development, no change needed.** Production is already correct with `solid_cable`.
+
+### 2. `routes.rb` — ActionCable mount
+
+Rails mounts ActionCable at `/cable` automatically when the app boots — no manual route needed. The `routes.rb` does not and should not have `mount ActionCable::Server`.
+
+### 3. `cable_schema.rb` migration for production
+
+The `db/cable_schema.rb` exists. On first production deploy, run:
 
 ```bash
-bin/rails generate authentication
+bin/rails db:create:cable db:schema:load:cable
 ```
 
-This generates:
-- `User` model with `has_secure_password` (bcrypt)
-- `Session` model with `has_secure_token` (DB-persisted sessions)
-- `Authentication` concern with `require_authentication` before_action
-- Password reset flow with signed, time-limited tokens
+In development with `async` adapter, no cable table is needed.
 
-Devise is not needed here. The built-in generator produces readable, ownable code that lives in your project. For a single-admin or small-team back-office with no self-registration, it is the correct choice. Devise's value is in multi-model, multi-strategy setups — that is not this project.
+### 4. Content Security Policy
 
-If a second admin needs to be added later, handle it directly in the User model or via a rake task. Do not add Devise to get "user management" — it adds 15+ modules you will not use.
-
-#### Client (public link + simple password)
-
-**Custom `has_secure_token` + password-on-session pattern — no gem needed.**
-
-The client access model is not a user account. It is a shareable resource with a simple password. Implement it as:
+`config/initializers/content_security_policy.rb` exists. If it restricts `connect-src`, it must allow `ws:` / `wss:` for WebSockets. Add if missing:
 
 ```ruby
-# Client model
-class Client < ApplicationRecord
-  has_secure_token :access_token   # unique URL slug
-  has_secure_password              # bcrypt password (simple, admin-set)
+policy.connect_src :self, :https, "ws://localhost:3000", "wss://yourdomain.com"
+```
+
+---
+
+## PostgreSQL Adapter Setup
+
+**solid_cable IS the PostgreSQL adapter** for this app. It uses the `pg` gem (already installed) and polls the `solid_cable_messages` table. No Redis, no `actioncable-postgresql-adapter` gem, no external dependency.
+
+How it works:
+- Broadcasts write a row to `solid_cable_messages`
+- The `SolidCable::Listener` thread polls the table every `polling_interval` (0.1s in production)
+- Messages are delivered to subscribers and trimmed after `message_retention` (1 day)
+- At this app's scale (10–30 clients, 1 admin), polling at 0.1s on PostgreSQL is entirely adequate
+
+**No changes needed to the adapter setup** — already wired correctly in `cable.yml` and `database.yml`.
+
+---
+
+## Authentication in Channels
+
+### Admin connection — already coded correctly
+
+`app/channels/application_cable/connection.rb` already handles admin auth:
+
+```ruby
+def set_current_user
+  if session = Session.find_by(id: cookies.signed[:session_id])
+    self.current_user = session.user
+  end
 end
 ```
 
-The public URL is `GET /c/:access_token` — rendered without any authentication concern. When the client submits the password form, store `client_id` in the Rails session (standard cookie). No gem is needed for this. It is 30 lines of controller code.
+This matches exactly how `Authentication` concern works in controllers (`find_session_by_cookie`). Admin channels use `current_user` as the identifier — if nil, `reject_unauthorized_connection` fires.
 
-Do not use Devise for clients. The token-link pattern is architecturally incompatible with Devise's model-centric session management. Mixing them adds complexity with no benefit.
+**No changes needed for admin channel auth.**
 
----
+### Client connection — two options
 
-### File Handling
+The client portal authenticates via a `token` in the URL path (`/c/:token`) plus a simple password. There is no `session_id` cookie for clients. The current `Connection` class only handles the admin case and calls `reject_unauthorized_connection` for clients.
 
-#### Direct uploads (images, videos)
+**Option A — Signed stream names via Turbo::StreamsChannel (recommended for client streams)**
 
-**Use ActiveStorage** with local disk in development and S3-compatible storage (e.g., DigitalOcean Spaces or AWS S3) in production.
+`Turbo::StreamsChannel` verifies a signed stream name in the subscription params — it does not rely on `Connection#connect` auth at all. When views use `turbo_stream_from @client`, the helper generates an HMAC-signed stream name using `Rails.application.message_verifier`. The channel verifies the signature on subscribe and rejects if invalid.
+
+This means: admin pages guard with `current_user` in the channel; client pages use signed stream names from `turbo_stream_from @client` — the signed name is the auth token. No connection-level client auth needed for Turbo Stream subscriptions.
+
+**Option B — Second identifier for client in Connection (needed only for custom channels)**
+
+If custom client-side channels are created (not `Turbo::StreamsChannel`), add a second identifier:
 
 ```ruby
-# Art model
-class Art < ApplicationRecord
-  has_one_attached :media_file
+identified_by :current_user, :current_client
+
+def connect
+  set_current_user || set_current_client || reject_unauthorized_connection
+end
+
+def set_current_client
+  # Client auth cookie set after portal login
+  token = cookies.signed[:client_token]
+  self.current_client = Client.active.find_by(token: token) if token
 end
 ```
 
-ActiveStorage is the correct choice here because:
-- Built into Rails — no gem to maintain
-- Supports direct browser-to-storage upload (avoids routing large video files through Dyno/server memory)
-- Handles image variants via `libvips` (generate thumbnails for calendar preview)
-- Video preview frames supported out of the box
-- Scale of 10-30 clients with social-media-sized files (images up to ~10MB, videos up to ~100MB) is well within ActiveStorage's reliable range
-
-Shrine is the alternative if you need complex derivative pipelines or multi-step processing. This project does not.
-
-#### External links (Google Drive, Dropbox)
-
-**Store as a plain string column on the `Art` model.** ActiveStorage does not handle external URLs — that is intentional. The correct pattern is:
-
-```ruby
-# arts table
-add_column :arts, :external_url, :string
-```
-
-The `Art` model has a polymorphic source: either `media_file` (ActiveStorage attachment) or `external_url` (string). Render conditionally in views. A model validation should enforce that exactly one is present.
-
-Do not attempt to proxy or re-upload Drive/Dropbox links — they are access-controlled, short-lived, or user-managed. Treat them as opaque display links.
+**Recommendation: Use Option A (signed stream names) for all client-facing Turbo Streams. Use Option B only if custom client channels are added beyond Turbo::StreamsChannel.**
 
 ---
 
-### Frontend
+## Versions & Compatibility
 
-**Hotwire (Turbo + Stimulus) — no React, no Vue.**
+| Component | Version | Status |
+|-----------|---------|--------|
+| Rails / ActionCable | 8.1.3 | Built-in, no gem needed |
+| turbo-rails | 2.0.23 | Already installed — supports Turbo Streams over WS |
+| solid_cable | 4.0.0 | Already installed — DB-backed adapter, no Redis |
+| stimulus-rails | (installed) | Already wired — Stimulus controllers for toast work normally |
+| importmap-rails | (installed) | turbo-rails already pinned |
+| pg | ~1.1 | Already installed — solid_cable uses it |
+| good_job | ~4.0 | Already installed — `broadcast_later` jobs enqueue here |
 
-The default Rails 8 stack ships with `turbo-rails` and `stimulus-rails` via importmap. Use them.
-
-This application's interactivity needs are:
-1. Approve / Request Changes buttons on each art card — inline update, no page reload
-2. Comment textarea that appears conditionally on "Request Changes"
-3. Admin panel list updates after status changes
-4. Calendar month navigation
-
-All of these are solved by Turbo Frames and Turbo Streams + one or two Stimulus controllers. A React SPA would add a build pipeline, API layer, state management, and hydration concerns for zero user-visible benefit at this scale.
-
-**Asset pipeline:** Propshaft (Rails 8 default) + importmap for JS + `tailwindcss-rails` gem for CSS (standalone Tailwind binary, no Node required).
-
-```ruby
-# Gemfile
-gem "tailwindcss-rails"
-gem "turbo-rails"
-gem "stimulus-rails"
-```
+**`broadcast_later` methods in `Turbo::Broadcastable` enqueue ActiveJob jobs.** The app already has `good_job` as the ActiveJob backend. Confirm `config.active_job.queue_adapter = :good_job` is set in `application.rb` or `production.rb` — if missing, broadcasts will use the default inline adapter and may block requests.
 
 ---
 
-### Supporting Libraries
+## What NOT to Add
 
-| Gem | Version | Purpose | Conditions |
-|-----|---------|---------|------------|
-| `tailwindcss-rails` | ~> 4.x | Utility-first CSS, no Node build | Default Rails 8 CSS choice for Hotwire apps |
-| `simple_calendar` | ~> 3.1 | Monthly calendar rendering helper | Renders calendar grid; handles start_date, wraps any ORM objects |
-| `image_processing` | ~> 1.x | ActiveStorage variant processing via libvips | Required for thumbnail generation from uploaded images |
-| `pagy` | ~> 9.x | Pagination for admin art/client lists | 100x lighter than Kaminari; use in admin panel |
-| `pundit` | ~> 2.x | Authorization policies for admin actions | Not needed for client access (custom token); needed to protect admin-only routes if roles expand |
-| `dotenv-rails` | ~> 3.x | Environment variable management | S3 credentials, app secret key in development |
-| `good_job` | ~> 4.x | Background job processing | For future email notifications or async file processing; uses PostgreSQL — no Redis needed |
-
-**`simple_calendar` rationale:** Version 3.1.0 released January 2025, requires Rails >= 6.1, Rails 8 compatible. It renders a month grid and maps any collection of objects to calendar days via a `start_time` attribute. The admin and client views both need a monthly calendar — this avoids building a grid from scratch. Customize via partials.
-
-**`good_job` rationale:** Not needed in v1 (no background processing required), but the project will need it the moment email notifications or async thumbnails are added. Including it from the start costs nothing (PostgreSQL-backed, no new infrastructure). The alternative — Sidekiq — requires Redis, which adds operational cost for a 10-30 client app.
+- **Redis** — solid_cable replaces it entirely
+- **`actioncable-postgresql-adapter` gem** — an older community gem; solid_cable is the Rails-official successor
+- **Anycable or separate cable server** — overkill for 10–30 clients; solid_cable polling is sufficient
+- **`hotwire-rails` gem** — project already uses `turbo-rails` + `stimulus-rails` directly; do not add
+- **Separate `@hotwired/turbo` JS import** — already covered by `@hotwired/turbo-rails` in application.js
+- **Any turbo-rails version upgrade** — 2.0.23 is current enough; do not bump without reason
 
 ---
 
-## What NOT to Use
+## Summary: What Actually Needs to Happen
 
-| Technology | Reason |
-|------------|--------|
-| **Devise** | Overkill for this project. Admin auth is one user type with standard session-based login — Rails 8 built-in handles it. Client access is a token pattern incompatible with Devise's model. Adding Devise means wrestling with its generators, routes, and views for no benefit. |
-| **React / Vue / Inertia** | Full JS frontend is not justified. Turbo Frames + 2-3 Stimulus controllers cover all dynamic UI requirements. React adds build pipeline, SSR considerations, API serialization, and state management — none of which are needed here. |
-| **CarrierWave** | Predates ActiveStorage, requires manual cloud configuration, no longer the Rails default. ActiveStorage is bundled and better maintained. |
-| **Shrine** | Architecturally superior to ActiveStorage for complex pipelines, but that complexity is not needed here. File sizes and processing requirements (thumbnails + previews) are within ActiveStorage's reliable range. |
-| **Kaminari / will_paginate** | Slower and heavier than Pagy. Pagy is the current standard recommendation. |
-| **Sprockets** | Rails 8 defaults to Propshaft. Sprockets is legacy — only add it if a gem you depend on explicitly requires it (none in this stack do). |
-| **SQLite in production** | Rails 8 now includes Solid Cache/Queue/Cable that enable SQLite in production for single-server deploys. Appropriate for some projects — not this one. Concurrent writes from 10-30 clients approving arts simultaneously will cause lock contention. Use PostgreSQL. |
-| **Redis** | Not needed. Good Job uses PostgreSQL for queuing. Action Cable can use the PostgreSQL adapter. Avoid adding Redis infrastructure for this scale. |
-| **JWT** | No API clients consume this app. JWT adds complexity (expiry, refresh, key management) for a session-cookie flow that already works. The Rails session cookie is sufficient for admin; the custom token URL is sufficient for clients. |
+| Task | Effort | Notes |
+|------|--------|-------|
+| Add `turbo_stream_from` tags to admin views | Low | Helper available from turbo-rails already |
+| Add `after_create_commit :broadcast_later_to` in `ApprovalResponse` | Low | `Turbo::Broadcastable` already available |
+| Create Stimulus controller for toast notifications | Low | Standard Stimulus, no new libs |
+| Check/update CSP for ws:/wss: | Low | Check `content_security_policy.rb` |
+| Confirm `good_job` as queue adapter | Low | Check `application.rb` or env configs |
+| Run `db:schema:load:cable` on production deploy | One-time | `cable_schema.rb` already exists |
+| Update `Connection` for client token (if custom client channels) | Medium | Only needed if going beyond `Turbo::StreamsChannel` |
 
----
-
-## Confidence Levels
-
-| Area | Confidence | Notes |
-|------|------------|-------|
-| Rails 8.1.3 as target | HIGH | Verified on RubyGems.org, March 2026 release |
-| Rails built-in auth for admin | HIGH | Official Rails feature since 8.0; well documented |
-| `has_secure_token` client pattern | HIGH | Core Rails feature; standard pattern for shareable links |
-| ActiveStorage for uploads | HIGH | Built-in, official docs confirm all required features |
-| External URL as plain string column | HIGH | Confirmed: ActiveStorage does not handle external links; string column is the correct approach |
-| Hotwire (Turbo + Stimulus) | HIGH | Ships with Rails 8 by default; Context7 docs verified |
-| `simple_calendar` gem | MEDIUM | Latest version 3.1.0 (Jan 2025), Rails 8 compatible per gemspec; no explicit Rails 8 integration test found, but no breaking changes identified |
-| `good_job` for background jobs | HIGH | Actively maintained, PostgreSQL-backed, Rails 8 compatible |
-| Pundit for authorization | MEDIUM | Not strictly needed in v1; include only if admin roles are added |
-| Tailwind CSS via `tailwindcss-rails` | HIGH | Official Rails gem, Propshaft-compatible, no Node required |
-
----
-
-## Gemfile Skeleton
-
-```ruby
-ruby "3.3.5"
-
-gem "rails", "~> 8.1.3"
-gem "pg", "~> 1.5"
-gem "puma", ">= 5.0"
-
-gem "turbo-rails"
-gem "stimulus-rails"
-gem "tailwindcss-rails"
-
-gem "image_processing", "~> 1.2"   # for ActiveStorage variants
-gem "simple_calendar", "~> 3.1"
-gem "pagy", "~> 9.3"
-gem "good_job", "~> 4.0"
-gem "dotenv-rails"
-
-group :development, :test do
-  gem "debug", platforms: %i[mri mswin]
-  gem "brakeman"              # security audit
-  gem "rubocop-rails-omakase"
-end
-
-group :development do
-  gem "web-console"
-  gem "rack-mini-profiler"
-end
-```
-
----
-
-## Sources
-
-- Rails 8.1.3 on RubyGems: https://rubygems.org/gems/rails/versions
-- Rails 8.1 release announcement: https://rubyonrails.org/2025/10/22/rails-8-1
-- Rails 8.0 release notes (auth generator): https://guides.rubyonrails.org/8_0_release_notes.html
-- Rails 8 authentication deep dive: https://andriifurmanets.com/blogs/built-in-authentication-in-rails
-- Rails built-in auth generator (Saeloun): https://blog.saeloun.com/2025/05/12/rails-8-adds-built-in-authentication-generator/
-- ActiveStorage overview (official): https://guides.rubyonrails.org/active_storage_overview.html
-- Turbo Rails (Context7): https://context7.com/hotwired/turbo-rails/llms.txt
-- simple_calendar gem: https://github.com/excid3/simple_calendar
-- Rails authorization patterns 2026: https://blog.saeloun.com/2026/04/28/rails-authorization-patterns-complete-guide/
-- Pagy pagination: https://github.com/ddnexus/pagy
-- Tailwind with Rails 8 Propshaft: https://radanskoric.com/articles/rails-assets-deep-dive-propshaft
+**No new gems. No new infrastructure. Everything needed is already installed.**

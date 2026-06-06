@@ -1,40 +1,31 @@
-# Requirements — v1.4 Admin Pages + Brazilian Calendar
+# Requirements — v1.5 Real-time & Notifications
 
-**Milestone:** v1.4 Admin Pages + Brazilian Calendar
-**Goal:** Completar as páginas inacabadas do painel admin (Aprovações, Calendário, Configurações) e marcar feriados e dias comemorativos brasileiros nos calendários do admin e do cliente.
-**Created:** 2026-06-03
+**Milestone:** v1.5 Real-time & Notifications
+**Goal:** Admin e cliente veem atualizações em tempo real via ActionCable/Turbo Streams — sem recarregar a página — e recebem toasts globais quando eventos relevantes ocorrem.
+**Created:** 2026-06-05
 
 ---
 
 ## Active Requirements
 
-### Aprovações (Histórico de aprovações)
+### Infraestrutura Cable
 
-- [x] **APRO-03**: Admin acessa a página "Aprovações" pelo link do sidebar (wired, não mais `#`)
-- [x] **APRO-04**: Admin vê lista paginada de todas as respostas de aprovação, ordenada pela mais recente
-- [x] **APRO-05**: Cada item da lista exibe: cliente, arte, status, data da resposta e comentário (se houver)
-- [x] **APRO-06**: Admin filtra a lista de aprovações por cliente e por status
-- [x] **APRO-07**: Admin acessa a arte correspondente diretamente a partir de um item da lista
+- [x] **CABLE-01**: ActionCable WebSocket conecta para admin (via sessão Rails) e para cliente (via token de URL) sem erro de conexão
+- [x] **CABLE-02**: Sidebar do admin exibe badge numérico com contagem de artes com "Pediu Alteração" não revisadas
 
-### Calendário Admin (Todos os clientes)
+### Notificações do Admin (acionadas por: cliente envia resposta de aprovação)
 
-- [x] **CADM-01**: Admin acessa a página "Calendário" pelo link do sidebar (wired, não mais `#`)
-- [x] **CADM-02**: Admin vê calendário mensal com artes de todos os clientes agrupadas por dia
-- [x] **CADM-03**: Cada arte no calendário admin exibe cor de fundo única por cliente e nome/iniciais do cliente visível
-- [x] **CADM-04**: Admin navega entre meses no calendário admin
-- [x] **CADM-05**: Admin clica numa arte no calendário admin e acessa a página da arte diretamente
+- [x] **RTUP-01**: Badge no sidebar do admin atualiza em tempo real — incrementa quando nova resposta "Pediu Alteração" chega, decrementa quando admin marca arte como revisada
+- [ ] **RTUP-02**: Admin recebe toast em qualquer página do painel quando nova resposta de cliente chega (sem recarregar)
+- [ ] **RTUP-03**: Dashboard admin recebe nova linha de arte em tempo real quando cliente registra aprovação ou pedido de alteração
+- [ ] **RTUP-04**: Página Aprovações do admin recebe nova linha em tempo real quando nova resposta chega
 
-### Configurações
+### Real-time do Cliente (acionadas por: admin marca arte como revisada)
 
-- [ ] **CONF-01**: Admin acessa a página "Configurações" pelo link do sidebar (wired)
-- [ ] **CONF-02**: Admin altera sua própria senha pelo formulário de configurações
-- [ ] **CONF-03**: Admin edita o nome da agência visível no painel
-
-### Feriados Brasileiros
-
-- [ ] **FERI-01**: Sistema contém lista hardcoded dos feriados nacionais brasileiros e dias comemorativos de marketing (Dia das Mães, Namorados, Pais, etc.) para os anos correntes
-- [ ] **FERI-02**: Calendário do cliente exibe dias de feriado/comemorativo com fundo destacado e nome visível na célula
-- [ ] **FERI-03**: Calendário do admin exibe dias de feriado/comemorativo com fundo destacado e nome visível na célula
+- [x] **RTUP-05**: Célula do calendário do cliente atualiza em tempo real quando admin marca arte como revisada (badge de status muda)
+- [x] **RTUP-06**: Faixa de resumo de status no topo do calendário do cliente atualiza em tempo real quando arte muda de status
+- [x] **RTUP-07**: Cliente recebe toast no calendário quando arte é revisada pelo admin
+- [ ] **RTUP-08**: Chips do calendário admin atualizam em tempo real quando status de arte muda
 
 ---
 
@@ -50,12 +41,12 @@
 
 ## Out of Scope
 
-- Feriados estaduais ou municipais — escopo restrito a feriados nacionais e comemorativos de marketing
-- Feriados via API externa — lista hardcoded é suficiente para o volume do sistema
-- Feriados bloqueando agendamento — apenas indicadores visuais, não restrições
-- Calendário admin com view semanal — view mensal é suficiente para planejamento
-- Filtros de calendário admin por status — complexidade desnecessária neste ciclo
-- Sistema de temas ou personalização visual por agência — fora de escopo
+- Push notifications do browser (Web Push API) — toast in-page é suficiente para o volume atual
+- Notificações por e-mail — deferred para próximo milestone
+- Contador de "não lidas" persistente no banco — badge calculado dinamicamente é suficiente
+- Real-time para a página de Clientes ou Configurações — sem eventos relevantes nessas páginas
+- Presença de usuário (quem está online) — complexidade desnecessária
+- WebSockets via Redis — solid_cable (já instalado) usa PostgreSQL sem Redis
 
 ---
 
@@ -63,19 +54,13 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| APRO-03 | Phase 13 | Complete |
-| APRO-04 | Phase 13 | Complete |
-| APRO-05 | Phase 13 | Complete |
-| APRO-06 | Phase 13 | Complete |
-| APRO-07 | Phase 13 | Complete |
-| CADM-01 | Phase 14 | Complete |
-| CADM-02 | Phase 14 | Complete |
-| CADM-03 | Phase 14 | Complete |
-| CADM-04 | Phase 14 | Complete |
-| CADM-05 | Phase 14 | Complete |
-| CONF-01 | Phase 15 | Pending |
-| CONF-02 | Phase 15 | Pending |
-| CONF-03 | Phase 15 | Pending |
-| FERI-01 | Phase 16 | Pending |
-| FERI-02 | Phase 16 | Pending |
-| FERI-03 | Phase 16 | Pending |
+| CABLE-01 | Phase 17 | Not started |
+| CABLE-02 | Phase 17 | Not started |
+| RTUP-01 | Phase 18 (incremento), Phase 19 (decremento), Phase 20 (finalizado) | Not started |
+| RTUP-02 | Phase 18 | Not started |
+| RTUP-03 | Phase 18 | Not started |
+| RTUP-04 | Phase 18 | Not started |
+| RTUP-05 | Phase 19 | Not started |
+| RTUP-06 | Phase 19 | Not started |
+| RTUP-07 | Phase 19 | Not started |
+| RTUP-08 | Phase 20 | Not started |

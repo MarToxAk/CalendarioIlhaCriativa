@@ -1,5 +1,5 @@
 class ClientController < ApplicationController
-  layout 'client'
+  layout "client"
 
   skip_before_action :require_authentication
 

@@ -1,0 +1,19 @@
+<%# app/views/admin/shared/_approval_toast.html.erb %>
+<%# Renderizado via Turbo Stream append em #admin-toast-region               %>
+<%# Locals: approval_response (ApprovalResponse), arte (Arte com :client eager-loaded) %>
+<div data-controller="toast"
+     class="bg-white border border-gray-200 shadow-lg rounded-lg px-4 py-3 flex items-start gap-3 w-80">
+  <div class="flex-1 min-w-0">
+    <p class="text-sm font-semibold text-slate-900 truncate">
+      <%= arte.client.name %>
+    </p>
+    <%= render "admin/approvals/decision_badge", approval_response: approval_response %>
+  </div>
+  <%= link_to "Ver arte", admin_arte_path(arte),
+        class: "text-xs text-[#0F7949] font-medium hover:underline shrink-0" %>
+  <button data-action="click->toast#dismiss"
+          class="text-slate-400 hover:text-slate-600 shrink-0 leading-none"
+          aria-label="Fechar notificação">
+    &times;
+  </button>
+</div>
