@@ -27,7 +27,7 @@ gem "rack-attack", "~> 6.8"
 
 # Domain gems
 gem "simple_calendar", "~> 3.1"
-gem "pagy", "~> 9.3"
+gem "pagy", "~> 43.5"
 gem "good_job", "~> 4.0"
 gem "active_storage_validations"
 
@@ -46,7 +46,7 @@ gem "bootsnap", require: false
 gem "kamal", require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
-gem "image_processing", "~> 1.2"
+gem "image_processing", "~> 2.0"
 
 gem "dotenv-rails", groups: [:development, :test]
 
