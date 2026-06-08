@@ -23,16 +23,29 @@
           </svg>
           Abrir arquivo
         <% end %>
-      <% elsif @arte.image? && @arte.media_file.attached? %>
-        <%= image_tag rails_blob_path(@arte.media_file, disposition: "inline"),
-              class: "max-w-full max-h-[480px] object-contain mx-auto block rounded-lg",
-              alt: "Preview da arte" %>
-      <% elsif @arte.video? && @arte.media_file.attached? %>
-        <video controls class="max-w-full max-h-[480px] block mx-auto rounded-lg">
-          <source src="<%= rails_service_blob_proxy_path(@arte.media_file.blob) %>"
-                  type="<%= @arte.media_file.content_type %>">
-          Seu navegador não suporta reprodução de vídeo.
-        </video>
+      <% elsif @arte.media_file.attached? %>
+        <% if @arte.media_file.image? %>
+          <%= image_tag rails_storage_proxy_path(@arte.media_file),
+                class: "max-w-full max-h-[480px] object-contain mx-auto block rounded-lg",
+                alt: "Preview da arte" %>
+        <% elsif @arte.media_file.video? %>
+          <video controls playsinline preload="metadata" class="max-w-full max-h-[480px] block mx-auto rounded-lg shadow-sm">
+            <source src="<%= rails_storage_proxy_path(@arte.media_file) %>"
+                    type="<%= @arte.media_file.content_type %>">
+            Seu navegador não suporta reprodução de vídeo.
+          </video>
+        <% else %>
+          <%= link_to rails_blob_path(@arte.media_file, disposition: "attachment"),
+                class: "inline-flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Baixar <%= @arte.media_file.filename %>
+          <% end %>
+        <% end %>
       <% elsif @arte.caption_only? %>
         <div class="p-6 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap bg-white rounded-xl w-full">
           <%= @arte.caption.presence || "Legenda não informada." %>

@@ -166,3 +166,9 @@ Phase 20: Admin Calendar Chips Real-time — Not started
 - [Phase 19]: Arte#broadcasts_revised_to_all callback — after_update_commit condicional, guard saved_change_to_status? && revised?
 - [Phase 19]: Broadcast duplo por transação: ClientCalendarChannel (3 streams) + AdminNotificationsChannel (1 stream)
 - [Phase 19]: ActionView::RecordIdentifier.dom_id() para geração segura de IDs no model
+
+## Quick Tasks Completed
+
+| Date | Slug | Description | Status |
+|------|------|-------------|--------|
+| 2026-06-08 | fix-client-media-display | Corrigir visualização de media (vídeo e imagem) no portal do cliente, tratando mismatch de enums e melhorando proxying. | complete ✓ |
