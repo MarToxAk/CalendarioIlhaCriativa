@@ -15,6 +15,21 @@ module ApplicationHelper
     palette[client.id % palette.size]
   end
 
+  # Returns Tailwind ring classes for the given arte's status.
+  # Hex values are kept in sync with STATUS_MAP in arte_preview_controller.js.
+  # pending has no ring (neutral/initial state).
+  def arte_status_ring_class(arte)
+    if arte.approved?
+      "ring-2 ring-inset ring-[#14A958]"
+    elsif arte.change_requested?
+      "ring-2 ring-inset ring-[#EE3537]"
+    elsif arte.revised?
+      "ring-2 ring-inset ring-[#475569]"
+    else
+      ""
+    end
+  end
+
   def brazilian_holiday_for(date)
     BrazilianHolidays.for(date.year)[date]
   end
