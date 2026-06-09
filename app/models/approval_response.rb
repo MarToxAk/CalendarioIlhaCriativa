@@ -47,12 +47,17 @@ class ApprovalResponse < ApplicationRecord
       partial: "admin/approvals/approval_row",
       locals:  { approval_response: self, arte: arte_with_client }
     )
+    chip_html = render_partial_html(
+      partial: "admin/calendar/admin_calendar_chip",
+      locals:  { arte: arte_with_client }
+    )
 
     content = [
       turbo_stream_tag("append",  "admin-toast-region",          toast_html),
       turbo_stream_tag("replace", "sidebar-badge",               badge_html),
       turbo_stream_tag("replace", ActionView::RecordIdentifier.dom_id(arte_with_client), dashboard_html),
-      turbo_stream_tag("prepend", "approvals-tbody",             approvals_html)
+      turbo_stream_tag("prepend", "approvals-tbody",             approvals_html),
+      turbo_stream_tag("replace", ActionView::RecordIdentifier.dom_id(arte_with_client, "admin_calendar_chip"), chip_html)
     ].join
 
     AdminNotificationsChannel.broadcast_to(admin, content)
