@@ -25,7 +25,7 @@
 - [x] **RTUP-05**: Célula do calendário do cliente atualiza em tempo real quando admin marca arte como revisada (badge de status muda)
 - [x] **RTUP-06**: Faixa de resumo de status no topo do calendário do cliente atualiza em tempo real quando arte muda de status
 - [x] **RTUP-07**: Cliente recebe toast no calendário quando arte é revisada pelo admin
-- [ ] **RTUP-08**: Chips do calendário admin atualizam em tempo real quando status de arte muda
+- [x] **RTUP-08**: Chips do calendário admin atualizam em tempo real quando status de arte muda
 
 ---
 

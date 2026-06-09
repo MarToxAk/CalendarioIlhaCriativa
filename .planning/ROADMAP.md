@@ -170,7 +170,7 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 20-00-PLAN.md — Extrair chip para partial _admin_calendar_chip.html.erb + helper arte_status_ring_class + atualizar grid
+- [x] 20-00-PLAN.md — Extrair chip para partial _admin_calendar_chip.html.erb + helper arte_status_ring_class + atualizar grid
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -204,4 +204,4 @@ Plans:
 | 17. Cable Foundation + Admin Channel + Badge + Toast | v1.5 | 4/4 | Complete    | 2026-06-05 |
 | 18. ApprovalResponse Broadcast + Admin Live Rows | v1.5 | 4/4 | Complete   | 2026-06-05 |
 | 19. Client Real-time + Arte Status Broadcast | v1.5 | 3/3 | Complete    | 2026-06-06 |
-| 20. Admin Calendar Chips Real-time | v1.5 | 0/2 | Not started | - |
+| 20. Admin Calendar Chips Real-time | v1.5 | 1/2 | In Progress|  |

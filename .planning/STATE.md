@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Real-time & Notifications
-status: planning
-last_updated: "2026-06-09T11:16:34.447Z"
-last_activity: 2026-06-06
+status: executing
+last_updated: "2026-06-09T13:34:45.057Z"
+last_activity: 2026-06-09
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 13
+  completed_plans: 12
   percent: 75
 ---
 
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-05)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 20 — admin calendar chips real time
+**Current focus:** Phase 20 — admin-calendar-chips-real-time
 
 ## Current Position
 
-Phase: 20
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-06-06
+Phase: 20 (admin-calendar-chips-real-time) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
+Last activity: 2026-06-09
 
 ## Progress Bar
 
@@ -159,12 +159,15 @@ Phase 20: Admin Calendar Chips Real-time — Not started
 |-------|------|----------|-------|
 | Phase 19 P00 | 30min | 3 tasks | 7 files |
 | Phase 19 P01 | 20min | 2 tasks | 1 file |
+| Phase 20 P00 | 7 | 2 tasks | 3 files |
 
 ## Decisions
 
 - [Phase 19]: Arte#broadcasts_revised_to_all callback — after_update_commit condicional, guard saved_change_to_status? && revised?
 - [Phase 19]: Broadcast duplo por transação: ClientCalendarChannel (3 streams) + AdminNotificationsChannel (1 stream)
 - [Phase 19]: ActionView::RecordIdentifier.dom_id() para geração segura de IDs no model
+- [Phase ?]: Phase 20 Plan 00: ring-inset em arte_status_ring_class — evita expansão do layout no chip compacto (px-1 py-0.5 text-xs)
+- [Phase ?]: Phase 20 Plan 00: Hex values copiados literalmente do STATUS_MAP JS — approved #14A958, change_requested #EE3537, revised #475569
 
 ## Quick Tasks Completed
 
