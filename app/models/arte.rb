@@ -53,6 +53,10 @@ class Arte < ApplicationRecord
       partial: "admin/shared/sidebar_badge",
       locals:  { badge_count: badge_count }
     )
+    admin_chip_html = render_partial_html(
+      partial: "admin/calendar/admin_calendar_chip",
+      locals:  { arte: self }
+    )
 
     # Envia apenas chip e toast ao cliente; o #calendar-summary não é atualizado
     # em tempo real porque a arte revisada pode pertencer a um mês diferente do
@@ -62,7 +66,10 @@ class Arte < ApplicationRecord
       turbo_stream_tag("replace", chip_target,           chip_html),
       turbo_stream_tag("append",  "client-toast-region", toast_html)
     ].join
-    admin_stream = turbo_stream_tag("replace", "sidebar-badge", badge_html)
+    admin_stream = [
+      turbo_stream_tag("replace", "sidebar-badge",                                                        badge_html),
+      turbo_stream_tag("replace", ActionView::RecordIdentifier.dom_id(self, "admin_calendar_chip"), admin_chip_html)
+    ].join
 
     ClientCalendarChannel.broadcast_to(client, client_streams)
     AdminNotificationsChannel.broadcast_to(admin, admin_stream)
