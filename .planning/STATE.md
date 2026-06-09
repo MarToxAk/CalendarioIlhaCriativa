@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Real-time & Notifications
-status: executing
-last_updated: "2026-06-09T13:34:45.057Z"
+status: verifying
+last_updated: "2026-06-09T13:55:10.114Z"
 last_activity: 2026-06-09
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 13
-  completed_plans: 12
-  percent: 75
+  completed_plans: 13
+  percent: 100
 ---
 
 # Project State
@@ -26,17 +26,17 @@ See: .planning/PROJECT.md (updated 2026-06-05)
 
 Phase: 20 (admin-calendar-chips-real-time) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-09
 
 ## Progress Bar
 
 ```
-v1.5: [███████████████░░░░░] 75% (3/4 phases)
+v1.5: [████████████████████] 100% (4/4 phases)
 Phase 17: Cable Foundation + Admin Channel + Badge + Toast — Complete (2026-06-05)
 Phase 18: ApprovalResponse Broadcast + Admin Live Rows — Complete (2026-06-05)
 Phase 19: Client Real-time + Arte Status Broadcast — Complete (2026-06-06)
-Phase 20: Admin Calendar Chips Real-time — Not started
+Phase 20: Admin Calendar Chips Real-time — Complete (2026-06-09)
 ```
 
 ## Milestone v1.0 — Shipped
@@ -151,7 +151,7 @@ Phase 20: Admin Calendar Chips Real-time — Not started
 
 ## Operator Next Steps
 
-- Phase 19 completa — próximo passo: `/gsd-plan-phase 20` (Admin Calendar Chips Real-time)
+- Phase 20 completa — milestone v1.5 Real-time & Notifications concluído. Próximo passo: verificação UAT do admin calendar chips em tempo real.
 
 ## Performance Metrics
 
@@ -160,14 +160,17 @@ Phase 20: Admin Calendar Chips Real-time — Not started
 | Phase 19 P00 | 30min | 3 tasks | 7 files |
 | Phase 19 P01 | 20min | 2 tasks | 1 file |
 | Phase 20 P00 | 7 | 2 tasks | 3 files |
+| Phase 20 P01 | 15 | 3 tasks | 4 files |
 
 ## Decisions
 
 - [Phase 19]: Arte#broadcasts_revised_to_all callback — after_update_commit condicional, guard saved_change_to_status? && revised?
 - [Phase 19]: Broadcast duplo por transação: ClientCalendarChannel (3 streams) + AdminNotificationsChannel (1 stream)
 - [Phase 19]: ActionView::RecordIdentifier.dom_id() para geração segura de IDs no model
-- [Phase ?]: Phase 20 Plan 00: ring-inset em arte_status_ring_class — evita expansão do layout no chip compacto (px-1 py-0.5 text-xs)
-- [Phase ?]: Phase 20 Plan 00: Hex values copiados literalmente do STATUS_MAP JS — approved #14A958, change_requested #EE3537, revised #475569
+- [Phase 20 P00]: ring-inset em arte_status_ring_class — evita expansão do layout no chip compacto (px-1 py-0.5 text-xs)
+- [Phase 20 P00]: Hex values copiados literalmente do STATUS_MAP JS — approved #14A958, change_requested #EE3537, revised #475569
+- [Phase 20 P01]: broadcasts_to_admin gera 5 turbo-streams (chip replace adicionado após approvals) — RTUP-08 closed for approved+change_requested
+- [Phase 20 P01]: admin_stream em Arte transformado em array de 2 elementos (badge + chip replace) via .join — RTUP-08 closed for revised
 
 ## Quick Tasks Completed
 
