@@ -115,7 +115,7 @@ class ApprovalResponseTest < ActiveSupport::TestCase
                  "AdminNotificationsChannel.broadcast_to deve ser chamado exatamente 1 vez para approved"
   end
 
-  # Test E (ATUALIZADO per CR-02): change_requested deve gerar 4 turbo-stream tags no content string
+  # Test E (ATUALIZADO Phase 20-01): change_requested deve gerar 5 turbo-stream tags no content string
   test "change_requested broadcast gera 4 turbo streams" do
     @broadcast_calls = []
     stub_fn = ->(user, content) { @broadcast_calls << { user: user, content: content } }
@@ -123,11 +123,11 @@ class ApprovalResponseTest < ActiveSupport::TestCase
       ApprovalResponse.create!(arte: @arte_pending, decision: :change_requested)
     end
     content = @broadcast_calls.first[:content]
-    assert_equal 4, content.scan(/<turbo-stream/).count,
-                 "change_requested deve gerar 4 turbo-stream tags: toast, badge, dashboard row e approvals prepend"
+    assert_equal 5, content.scan(/<turbo-stream/).count,
+                 "change_requested deve gerar 5 turbo-stream tags: toast, badge, dashboard row, approvals prepend e chip replace"
   end
 
-  # Test F (ATUALIZADO per CR-02): approved também deve gerar 4 turbo-stream tags (badge sempre — CR-02)
+  # Test F (ATUALIZADO Phase 20-01): approved também deve gerar 5 turbo-stream tags
   test "approved broadcast gera 4 turbo streams com badge" do
     arte_revised = Arte.create!(
       client: @client,
@@ -143,8 +143,20 @@ class ApprovalResponseTest < ActiveSupport::TestCase
       ApprovalResponse.create!(arte: arte_revised, decision: :approved)
     end
     content = @broadcast_calls.first[:content]
-    assert_equal 4, content.scan(/<turbo-stream/).count,
-                 "approved deve gerar 4 turbo-stream tags: toast, badge (sempre — CR-02), dashboard row e approvals prepend"
+    assert_equal 5, content.scan(/<turbo-stream/).count,
+                 "approved deve gerar 5 turbo-stream tags: toast, badge, dashboard row, approvals prepend e chip replace"
+  end
+
+  # Test H (Phase 20-01): broadcasts_to_admin inclui chip replace para o admin calendar chip
+  test "broadcasts_to_admin inclui chip replace para o admin calendar chip" do
+    @broadcast_calls = []
+    stub_fn = ->(user, content) { @broadcast_calls << { user: user, content: content } }
+    AdminNotificationsChannel.stub(:broadcast_to, stub_fn) do
+      ApprovalResponse.create!(arte: @arte_pending, decision: :change_requested)
+    end
+    content = @broadcast_calls.first[:content]
+    assert_match(/target="arte_\d+_admin_calendar_chip"/, content,
+                 "broadcasts_to_admin deve incluir turbo-stream com target arte_N_admin_calendar_chip")
   end
 
   # Test G: broadcasts_to_admin não deve disparar N+1 para arte.client

@@ -66,8 +66,33 @@ class ArteTest < ActiveSupport::TestCase
     assert_equal 1, admin_calls.length
     assert_equal 2, client_calls.first.scan(/<turbo-stream/).count,
                  "Cliente deve receber 2 turbo streams: chip e toast (summary removido do broadcast — CR-01)"
-    assert_equal 1, admin_calls.first.scan(/<turbo-stream/).count,
-                 "Admin deve receber 1 turbo stream: badge decremento"
+    assert_equal 2, admin_calls.first.scan(/<turbo-stream/).count,
+                 "Admin deve receber 2 turbo streams: badge decremento e chip replace (D-04 Phase 20)"
+  end
+
+  test "revised! broadcast admin inclui replace do admin calendar chip" do
+    assert User.exists?, "Este teste requer ao menos um User (fixture users.yml)"
+
+    arte = Arte.create!(
+      client: @client,
+      scheduled_on: Date.current,
+      platform: :instagram,
+      media_type: :image,
+      status: :change_requested,
+      external_url: "https://drive.google.com/file/test_chip"
+    )
+
+    admin_calls = []
+
+    ClientCalendarChannel.stub(:broadcast_to, ->(c, content) { }) do
+      AdminNotificationsChannel.stub(:broadcast_to, ->(u, content) { admin_calls << content }) do
+        arte.revised!
+      end
+    end
+
+    assert_equal 1, admin_calls.length
+    assert_match(/target="arte_\d+_admin_calendar_chip"/, admin_calls.first,
+                 "revised! deve fazer broadcast ao admin com turbo-stream target arte_N_admin_calendar_chip")
   end
 
   test "revised! nao dispara broadcast quando update nao muda status para revised" do
