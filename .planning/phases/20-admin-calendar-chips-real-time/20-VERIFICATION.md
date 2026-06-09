@@ -1,9 +1,10 @@
 ---
 phase: 20-admin-calendar-chips-real-time
 verified: 2026-06-09T00:00:00Z
-status: human_needed
+status: passed
 score: 7/7 must-haves verified
 overrides_applied: 0
+human_uat: passed 2026-06-09 — todos os 3 itens abaixo confirmados pelo usuário em 20-HUMAN-UAT.md (5/5 testes passaram, 0 issues)
 human_verification:
   - test: "Abrir o calendário admin em uma aba; em outra aba (ou dispositivo do cliente), registrar uma aprovação ou pedido de alteração via ApprovalResponse. Observar o chip da arte correspondente no calendário admin."
     expected: "O chip atualiza visualmente (anel colorido aparece/muda) dentro de aproximadamente 2 segundos, sem recarregar a página."
@@ -20,7 +21,7 @@ human_verification:
 
 **Phase Goal:** Chips do calendário admin refletem mudanças de status de artes em tempo real, completando o ciclo de atualizações em tempo real para todas as views do admin.
 **Verified:** 2026-06-09
-**Status:** human_needed (todos os checks automatizados passaram; 3 itens de UAT visual requerem execução humana)
+**Status:** passed (checks automatizados + 3 itens de UAT visual confirmados pelo usuário em 20-HUMAN-UAT.md — 5/5 testes, 0 issues)
 **Re-verification:** No — initial verification
 
 ---
