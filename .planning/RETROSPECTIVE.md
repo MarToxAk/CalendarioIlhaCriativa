@@ -160,16 +160,49 @@
 
 ---
 
+## Milestone: v1.5 — Real-time & Notifications
+
+**Shipped:** 2026-06-09
+**Phases:** 4 (17–20) | **Plans:** 13
+
+### What Was Built
+Camada de tempo real ponta a ponta sobre ActionCable + Turbo Streams: fundação WebSocket com auth dual (admin cookie / cliente token), badge e toast no admin (17), broadcasts de aprovação com linhas ao vivo (18), portal do cliente em tempo real com fix de autenticação WebSocket (19) e chips do calendário admin com anel de status ao vivo (20). 10/10 requirements (CABLE-01/02, RTUP-01..08).
+
+### What Worked
+- **Fundação primeiro paga dividendos:** a Phase 17 montou canal + helpers de broadcast (`turbo_stream_tag`, `render_partial_html`); as fases 18-20 só *estenderam* arrays de turbo-streams existentes — cada fase ficou menor e mais barata que a anterior.
+- **Extração de partial + `dom_id` como padrão repetível:** o mesmo movimento (extrair chip inline → partial com `dom_id` → replace cirúrgico) funcionou no cliente (19) e no admin (20).
+- **Decisões travadas no CONTEXT.md mantiveram o planner focado** — discuss-phase da fase 20 fechou o anel de status e a granularidade antes de planejar.
+
+### What Was Inefficient
+- **Suíte de testes não executável no ambiente** (banco de teste de outro usuário → `PG::InsufficientPrivilege`) forçou verificação estrutural via `bin/rails runner`/grep nas fases 18-20. Custo recorrente; agora documentado em memória.
+- **Code-review e verifier over-flagaram um falso N+1 (WR-02)** que exigiu refutação manual rastreando o cache da associação `belongs_to` — dois agentes erraram a mesma premissa.
+
+### Patterns Established
+- Broadcast = estender o array `content`/`admin_stream` existente com mais um `turbo_stream_tag("replace", dom_id(...), html)`.
+- Falha silenciosa de replace (alvo ausente — mês diferente / overflow) é tolerância aceita, não bug.
+- Anel de status reutiliza o `STATUS_MAP` do JS como fonte de verdade das cores.
+
+### Key Lessons
+- Validar achados de review contra o código antes de aplicar — nem todo flag é real (WR-02).
+- Em fases que estendem infra existente, pular pesquisa e UI-SPEC formal é seguro quando o CONTEXT.md já mapeia arquivos e padrões.
+
+### Cost Observations
+- **Model mix:** sonnet para todos os subagentes (planner, checker, executor, reviewer, verifier, security)
+- **Sessions:** 1 sessão encadeada (discuss→plan→execute→review→verify→UAT→secure→complete)
+- **Notável:** fases incrementais sobre infra pronta — Phase 20 fechou com 2 planos / 14 tasks no milestone
+
+---
+
 ## Cross-Milestone Trends
 
-| Metric | v1.0 | v1.1 | v1.2+v1.3 | v1.4 |
-|--------|------|------|-----------|------|
-| Days to ship | 3 | 1 | 1 | 1 |
-| Phases | 8 | 2 | 5 | 4 |
-| Plans | 23 | 5 | 7 | 11 |
-| Gap phases inserted | 2 | 1 | 0 | 0 |
-| Bugs found by audit | 2 critical | 0 | 0 | 0 |
-| Bugs found by code review | 2 (XSS + HTTP desync) | 3 critical + 2 UX | — | — |
-| Requirements coverage | 35/35 | 3/3 | 9/9 | 16/16 |
-| TDD coverage | partial | 26 tests | partial | 144 tests, 407 assertions |
-| Velocity (plans/day) | 7.7 | 5 | 7 | 11 |
+| Metric | v1.0 | v1.1 | v1.2+v1.3 | v1.4 | v1.5 |
+|--------|------|------|-----------|------|------|
+| Days to ship | 3 | 1 | 1 | 1 | 4 |
+| Phases | 8 | 2 | 5 | 4 | 4 |
+| Plans | 23 | 5 | 7 | 11 | 13 |
+| Gap phases inserted | 2 | 1 | 0 | 0 | 0 |
+| Bugs found by audit | 2 critical | 0 | 0 | 0 | 0 |
+| Bugs found by code review | 2 (XSS + HTTP desync) | 3 critical + 2 UX | — | — | 0 crit (2 warn, 1 falso-pos) |
+| Requirements coverage | 35/35 | 3/3 | 9/9 | 16/16 | 10/10 |
+| TDD coverage | partial | 26 tests | partial | 144 tests, 407 assertions | testes não executáveis no ambiente |
+| Velocity (plans/day) | 7.7 | 5 | 7 | 11 | 3.25 |
