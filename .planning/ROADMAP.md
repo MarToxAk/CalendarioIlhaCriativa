@@ -166,7 +166,16 @@ Plans:
   2. Badge do sidebar reflete o estado correto após qualquer sequência de eventos (aprovação, pedido de alteração, revisão) — RTUP-01 completo
   3. Nenhum broadcast duplica chips ou cria elementos DOM extras no calendário admin
 
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+**Wave 1**
+
+- [ ] 20-00-PLAN.md — Extrair chip para partial _admin_calendar_chip.html.erb + helper arte_status_ring_class + atualizar grid
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 20-01-PLAN.md — Estender broadcasts_to_admin e broadcasts_revised_to_all com chip replace + testes GREEN
+
 **UI hint**: yes
 
 ## Progress
