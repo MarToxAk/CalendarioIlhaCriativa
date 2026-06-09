@@ -116,7 +116,7 @@ class ApprovalResponseTest < ActiveSupport::TestCase
   end
 
   # Test E (ATUALIZADO Phase 20-01): change_requested deve gerar 5 turbo-stream tags no content string
-  test "change_requested broadcast gera 4 turbo streams" do
+  test "change_requested broadcast gera 5 turbo streams" do
     @broadcast_calls = []
     stub_fn = ->(user, content) { @broadcast_calls << { user: user, content: content } }
     AdminNotificationsChannel.stub(:broadcast_to, stub_fn) do
@@ -128,7 +128,7 @@ class ApprovalResponseTest < ActiveSupport::TestCase
   end
 
   # Test F (ATUALIZADO Phase 20-01): approved também deve gerar 5 turbo-stream tags
-  test "approved broadcast gera 4 turbo streams com badge" do
+  test "approved broadcast gera 5 turbo streams com badge" do
     arte_revised = Arte.create!(
       client: @client,
       scheduled_on: Date.current,
