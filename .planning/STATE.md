@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Real-time & Notifications
-status: verifying
-last_updated: "2026-06-09T13:55:10.114Z"
-last_activity: 2026-06-09
+status: Awaiting next milestone
+last_updated: "2026-06-09T16:08:04.938Z"
+last_activity: 2026-06-09 — Milestone v1.5 completed and archived
 progress:
   total_phases: 4
   completed_phases: 4
@@ -24,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-05)
 
 ## Current Position
 
-Phase: 20 (admin-calendar-chips-real-time) — EXECUTING
-Plan: 2 of 2
-Status: Phase complete — ready for verification
-Last activity: 2026-06-09
+Phase: Milestone v1.5 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-06-09 — Milestone v1.5 completed and archived
 
 ## Progress Bar
 
@@ -115,6 +115,10 @@ Phase 20: Admin Calendar Chips Real-time — Complete (2026-06-09)
 | verification | Phase 13: 13-VERIFICATION.md [human_needed] — validação visual da página Aprovações (score 15/15) | deferred | v1.4 close 2026-06-04 |
 | uat | Phase 14: 14-HUMAN-UAT.md [human_needed] — validação visual do calendário admin (score 9/9) | deferred | v1.4 close 2026-06-04 |
 | verification | Phase 14: 14-VERIFICATION.md [human_needed] — validação visual do calendário admin (score 9/9) | deferred | v1.4 close 2026-06-04 |
+| uat | Phase 17: 17-HUMAN-UAT.md [partial] — 2 cenários (badge/toast, validação visual) | deferred | v1.5 close 2026-06-09 |
+| verification | Phase 17: 17-VERIFICATION.md [human_needed] — badge/toast, validação visual | deferred | v1.5 close 2026-06-09 |
+| uat | Phase 18: 18-HUMAN-UAT.md [partial] — linhas ao vivo dashboard/aprovações (validação visual) | deferred | v1.5 close 2026-06-09 |
+| verification | Phase 18: 18-VERIFICATION.md [human_needed] — broadcasts admin, validação visual | deferred | v1.5 close 2026-06-09 |
 
 ## Accumulated Context
 
@@ -151,7 +155,7 @@ Phase 20: Admin Calendar Chips Real-time — Complete (2026-06-09)
 
 ## Operator Next Steps
 
-- Phase 20 completa — milestone v1.5 Real-time & Notifications concluído. Próximo passo: verificação UAT do admin calendar chips em tempo real.
+- Start the next milestone with /gsd-new-milestone
 
 ## Performance Metrics
 

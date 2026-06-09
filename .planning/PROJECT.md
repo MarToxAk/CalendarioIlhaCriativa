@@ -83,6 +83,9 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - ✓ Badge numérico sidebar exibe contagem de artes com mudança solicitada — CABLE-02 — v1.5 Phase 17
 - ✓ Layout admin com turbo_stream_from e toast region fixo (bottom-right) — CABLE-02 — v1.5 Phase 17
 - ✓ toast_controller.js com auto-dismiss 5s e limite MAX_TOASTS=3 — CABLE-02 — v1.5 Phase 17
+- ✓ Admin recebe toast + linhas ao vivo (dashboard/aprovações) + incremento de badge ao cliente responder — RTUP-01..04 — v1.5 Phase 18
+- ✓ Cliente vê chip, resumo e toast atualizarem ao vivo quando admin revisa; badge admin decrementa — RTUP-05..07, RTUP-01 — v1.5 Phase 19
+- ✓ Chips do calendário admin atualizam em tempo real (anel de status) quando status muda — RTUP-08, RTUP-01 — v1.5 Phase 20
 
 ### Backlog (v1.5+)
 
@@ -190,19 +193,25 @@ This document evolves at phase transitions and milestone boundaries.
 - Página "Configurações" com troca de senha (valida senha atual) e edição de agency_name refletida dinamicamente no sidebar
 - BrazilianHolidays: módulo hardcoded 2025-2027 com 17+ feriados/comemorativos brasileiros, span text-red-400 nos dois calendários
 
-## Current Milestone: v1.5 Real-time & Notifications
+## Shipped: v1.5 Real-time & Notifications (2026-06-09)
 
-**Goal:** Admin e cliente veem atualizações em tempo real via ActionCable/Turbo Streams — sem recarregar a página — e recebem toasts globais quando eventos relevantes ocorrem.
+**Goal entregue:** Admin e cliente veem atualizações em tempo real via ActionCable/Turbo Streams — sem recarregar a página — e recebem toasts globais quando eventos relevantes ocorrem.
 
-**Target features:**
-- Badge numérico no sidebar do admin mostrando artes com "Pediu Alteração" não revisadas, atualiza em tempo real
-- Dashboard de aprovações e página Aprovações do admin atualizam via Turbo Stream quando cliente registra nova resposta
-- Calendário admin: chips atualizam quando status de arte muda
-- Toast global no painel admin em qualquer página quando nova resposta de cliente chega
-- Calendário do cliente: células e badges de status atualizam quando admin marca arte como revisada
-- Toast no calendário do cliente quando arte é revisada
+**Entregue (4 fases, 13 planos):**
+- Badge numérico no sidebar do admin atualiza em tempo real (incrementa na resposta do cliente, decrementa na revisão)
+- Dashboard e página Aprovações do admin ganham linhas ao vivo quando cliente registra resposta
+- Calendário admin: chips atualizam em tempo real com anel de status quando o status da arte muda
+- Toast global no painel admin em qualquer página quando nova resposta chega
+- Calendário do cliente: chip e resumo atualizam + toast quando admin marca arte como revisada
+- Infra: ActionCable sobre PostgreSQL (solid_cable), auth dual (admin cookie / cliente token)
+
+**Requirements:** 10/10 (CABLE-01, CABLE-02, RTUP-01..08).
+**Deferred:** validações visuais de UAT/verification das fases 17/18 (ver STATE.md → Deferred Items).
+
+## Próximo Milestone: v1.6 API JSON (em planejamento)
+
+API REST versionada (`/api/v1/`) para app mobile (admin + cliente) e agente IA, com três modos de auth (JWT admin, token do portal, API key). Rascunhos em `.planning/milestones/v1.6-ROADMAP.md` e `v1.6-REQUIREMENTS.md`. Iniciar com `/gsd-new-milestone`.
 
 ---
-**Phases complete:** 17 (Cable foundation + badge admin), 18 (ApprovalResponse broadcast), 19 (Cliente real-time — chips, summary, toast via WebSocket autenticado com token).
 
-*Last updated: 2026-06-06 — Phase 19 complete. Next: Phase 20 (admin calendar chips real-time).*
+*Last updated: 2026-06-09 — v1.5 milestone shipped & archived. Next: v1.6 API JSON.*

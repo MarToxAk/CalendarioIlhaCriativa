@@ -1,5 +1,37 @@
 # Milestones
 
+## v1.5 Real-time & Notifications (Shipped: 2026-06-09)
+
+**Phases completed:** 4 phases, 13 plans, 14 tasks
+
+**Key accomplishments:**
+
+- **Fundação ActionCable (Phase 17):** `connection.rb` com autenticação dual — admin via cookie de sessão, cliente via token de URL; `AdminNotificationsChannel` per-user; badge numérico no sidebar e sistema de toast (auto-dismiss 5s, máx 3) via `toast_controller.js`. Adapter PostgreSQL (solid_cable), sem Redis.
+- **Broadcasts de aprovação (Phase 18):** `ApprovalResponse#broadcasts_to_admin` emite linhas ao vivo no dashboard e na página Aprovações do admin + incremento do badge + toast, sem recarregar.
+- **Cliente em tempo real (Phase 19):** callback `after_update_commit` em `Arte` emite broadcast duplo via 2 canais — cliente recebe replace do chip + resumo + toast; admin recebe decremento do badge. Completou o ciclo de RTUP-01.
+- **Fix de autenticação WebSocket (Phase 19):** meta tag `action-cable-url` com token no layout do cliente + `return reject` no `ClientCalendarChannel#subscribed` — desbloqueiam a conexão WebSocket real e eliminam a stream parasita.
+- **Chips do calendário admin ao vivo (Phase 20):** anel de status por cor (reutilizando o `STATUS_MAP`) no chip extraído para partial + replace cirúrgico do chip acrescentado aos dois broadcasts existentes, fechando RTUP-08.
+
+**Requirements:** 10/10 (CABLE-01, CABLE-02, RTUP-01..08).
+
+**Known deferred items at close:** 9 (validações visuais de UAT/verification das fases 13, 14, 17, 18 — ver STATE.md → Deferred Items). Nenhum é defeito funcional.
+
+---
+
+## v1.6 API JSON (Em planejamento)
+
+**Status:** 🟡 Em planejamento
+**Fases previstas:** 21–24
+**Requirements:** 16 (AUTH-01..05, APIADM-01..05, APICLI-01..03, APIAI-01..03, INFAPI-01..04)
+
+Expõe API REST versionada (`/api/v1/`) para app mobile (admin + cliente) e agente IA. Três modos de auth: JWT admin, token do portal para cliente, API key para IA.
+
+- Roadmap: `.planning/milestones/v1.6-ROADMAP.md`
+- Requirements: `.planning/milestones/v1.6-REQUIREMENTS.md`
+- Nota de design: `.planning/notes/api-auth-strategy.md`
+
+---
+
 ## v1.4 Admin Pages + Brazilian Calendar (Shipped: 2026-06-04)
 
 **Phases completed:** 4 phases, 11 plans
