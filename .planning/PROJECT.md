@@ -18,6 +18,16 @@ Sistema web em Ruby on Rails para agências e freelancers de social media gerenc
 
 O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
 
+## Current Milestone: v1.6 API JSON
+
+**Goal:** Expor uma API JSON REST versionada (`/api/v1/`) para app mobile (admin + cliente) e um agente de IA, com três modos de autenticação distintos.
+
+**Target features:**
+- Fundação da API versionada + autenticação (JWT admin, token do portal como Bearer p/ cliente, API key dedicada p/ IA) com envelope JSON consistente e erros estruturados
+- Endpoints admin: listar/criar clientes, listar/criar artes (com upload), histórico de aprovações
+- Endpoints cliente: listar artes pendentes, ver detalhe, submeter resposta de aprovação
+- Endpoints IA + rate limiting: listar aprovadas, inserir arte, ler resumo de aprovações por cliente
+
 ## Requirements
 
 ### Validated (v1.0)
@@ -208,10 +218,10 @@ This document evolves at phase transitions and milestone boundaries.
 **Requirements:** 10/10 (CABLE-01, CABLE-02, RTUP-01..08).
 **Deferred:** validações visuais de UAT/verification das fases 17/18 (ver STATE.md → Deferred Items).
 
-## Próximo Milestone: v1.6 API JSON (em planejamento)
+## Ativo: v1.6 API JSON (iniciado 2026-06-10)
 
-API REST versionada (`/api/v1/`) para app mobile (admin + cliente) e agente IA, com três modos de auth (JWT admin, token do portal, API key). Rascunhos em `.planning/milestones/v1.6-ROADMAP.md` e `v1.6-REQUIREMENTS.md`. Iniciar com `/gsd-new-milestone`.
+API REST versionada (`/api/v1/`) para app mobile (admin + cliente) e agente IA, com três modos de auth (JWT admin, token do portal, API key). Fases 21–24. Requisitos em `.planning/REQUIREMENTS.md`, roadmap em `.planning/ROADMAP.md`, nota de design em `.planning/notes/api-auth-strategy.md`.
 
 ---
 
-*Last updated: 2026-06-09 — v1.5 milestone shipped & archived. Next: v1.6 API JSON.*
+*Last updated: 2026-06-10 — v1.6 API JSON milestone iniciado (fases 21–24).*
