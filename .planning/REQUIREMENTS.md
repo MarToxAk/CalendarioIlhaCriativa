@@ -61,3 +61,18 @@ A autenticação usa três modos distintos (ver nota `api-auth-strategy.md`).
 - OAuth / social login — token do portal basta para o cliente
 - Documentação interativa (Swagger/OpenAPI) — pode ser adicionada em v1.7
 - SDK cliente — consumidores implementam diretamente contra REST
+
+---
+
+## Rastreabilidade (Requisito → Fase)
+
+20 requisitos, todos mapeados para exatamente uma fase (cobertura 100%).
+
+| Requisito | Fase |
+|-----------|------|
+| AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05 | Phase 21 |
+| INFAPI-01, INFAPI-02, INFAPI-03 | Phase 21 |
+| APIADM-01, APIADM-02, APIADM-03, APIADM-04, APIADM-05 | Phase 22 |
+| APICLI-01, APICLI-02, APICLI-03 | Phase 23 |
+| APIAI-01, APIAI-02, APIAI-03 | Phase 24 |
+| INFAPI-04 | Phase 24 |

@@ -22,7 +22,7 @@
 
 **Status:** 🟡 Em planejamento
 **Fases previstas:** 21–24
-**Requirements:** 16 (AUTH-01..05, APIADM-01..05, APICLI-01..03, APIAI-01..03, INFAPI-01..04)
+**Requirements:** 20 (AUTH-01..05, APIADM-01..05, APICLI-01..03, APIAI-01..03, INFAPI-01..04)
 
 Expõe API REST versionada (`/api/v1/`) para app mobile (admin + cliente) e agente IA. Três modos de auth: JWT admin, token do portal para cliente, API key para IA.
 

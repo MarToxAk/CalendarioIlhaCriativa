@@ -6,7 +6,7 @@ status: planning
 last_updated: "2026-06-10T16:27:30.454Z"
 last_activity: 2026-06-10
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,7 +20,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-05)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 20 — admin-calendar-chips-real-time
+**Current focus:** Phase 21 — Fundação da API + Autenticação (v1.6 API JSON)
 
 ## Current Position
 
@@ -32,11 +32,11 @@ Last activity: 2026-06-10 — Milestone v1.6 started
 ## Progress Bar
 
 ```
-v1.5: [████████████████████] 100% (4/4 phases)
-Phase 17: Cable Foundation + Admin Channel + Badge + Toast — Complete (2026-06-05)
-Phase 18: ApprovalResponse Broadcast + Admin Live Rows — Complete (2026-06-05)
-Phase 19: Client Real-time + Arte Status Broadcast — Complete (2026-06-06)
-Phase 20: Admin Calendar Chips Real-time — Complete (2026-06-09)
+v1.6: [░░░░░░░░░░░░░░░░░░░░] 0% (0/4 phases)
+Phase 21: Fundação da API + Autenticação — Not started
+Phase 22: Endpoints Admin — Not started
+Phase 23: Endpoints Cliente — Not started
+Phase 24: Endpoints IA + Rate Limiting — Not started
 ```
 
 ## Milestone v1.0 — Shipped
