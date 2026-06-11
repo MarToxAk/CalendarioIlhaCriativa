@@ -57,7 +57,7 @@ Plans:
 
 - [x] 22-02-PLAN.md — ClientsController (index paginado + create com credenciais) + testes
 - [x] 22-03-PLAN.md — ArtesController (index com filtros + create com upload) + testes + fixture
-- [ ] 22-04-PLAN.md — ApprovalResponsesController (histórico aninhado por arte) + testes
+- [x] 22-04-PLAN.md — ApprovalResponsesController (histórico aninhado por arte) + testes
 
 **Success criteria:**
 
@@ -196,6 +196,6 @@ Full details: [.planning/milestones/v1.5-ROADMAP.md](.planning/milestones/v1.5-R
 | 19. Client Real-time + Arte Status Broadcast | v1.5 | 3/3 | Complete    | 2026-06-06 |
 | 20. Admin Calendar Chips Real-time | v1.5 | 2/2 | Complete   | 2026-06-09 |
 | 21. Fundação da API + Autenticação | v1.6 | 5/5 | Complete    | 2026-06-11 |
-| 22. Endpoints Admin | v1.6 | 3/4 | In Progress|  |
+| 22. Endpoints Admin | v1.6 | 4/4 | Complete   | 2026-06-11 |
 | 23. Endpoints Cliente | v1.6 | 0/0 | Planned | — |
 | 24. Endpoints IA + Rate Limiting | v1.6 | 0/0 | Planned | — |
