@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: API JSON
 status: executing
-last_updated: "2026-06-11T19:11:11.449Z"
+last_updated: "2026-06-11T19:16:30.084Z"
 last_activity: 2026-06-11
 progress:
   total_phases: 27
   completed_phases: 9
   total_plans: 33
-  completed_plans: 66
+  completed_plans: 67
   percent: 33
 ---
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-05)
 ## Current Position
 
 Phase: 22 (endpoints-admin) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-06-11
 
@@ -171,6 +171,7 @@ Phase 24: Endpoints IA + Rate Limiting — Not started
 | Phase 21 P04 | 10 minutes | 2 tasks | 3 files |
 | Phase 21 P05 | 20 minutes | 2 tasks | 4 files |
 | Phase 22-endpoints-admin P01 | 10 minutes | 2 tasks | 5 files |
+| Phase 22-endpoints-admin P03 | 2 minutes | 2 tasks | 4 files |
 
 ## Decisions
 
@@ -184,6 +185,7 @@ Phase 24: Endpoints IA + Rate Limiting — Not started
 - [Phase ?]: anti-enumeration for inactive clients
 - [Phase 21-05]: Admin login API field is `email` (maps to User#email_address) — downstream phases 22/23 must send field `email`, not `email_address`
 - [Phase 21-05]: jwt_secret and api.ai_key provisioned via Rails encrypted credentials (not ENV) — production-safe, encrypted at rest
+- [Phase ?]: Phase 22-03: ArtesController usa params.permit flat (sem .require(:arte)) e apply_filters com Arte.statuses.key? + Date.strptime guards; validates :media_file ASVS L1 adicionado ao model
 
 ## Quick Tasks Completed
 
