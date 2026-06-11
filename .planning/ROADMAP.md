@@ -29,7 +29,7 @@ Plans:
 - [x] 21-02-PLAN.md — JwtService PORO + Api::V1::BaseController + rotas /api/v1/
 - [x] 21-03-PLAN.md — Session controllers (login admin e cliente)
 - [x] 21-04-PLAN.md — Auth middleware base controllers (admin, client, ai namespaces)
-- [ ] 21-05-PLAN.md — Credentials setup (jwt_secret, ai_key) + testes de controller
+- [x] 21-05-PLAN.md — Credentials setup (jwt_secret, ai_key) + testes de controller
 
 **Success criteria:**
 1. Admin faz POST com e-mail + senha e recebe um JWT válido com expiração configurável (padrão 24h)
@@ -178,7 +178,7 @@ Full details: [.planning/milestones/v1.5-ROADMAP.md](.planning/milestones/v1.5-R
 | 18. ApprovalResponse Broadcast + Admin Live Rows | v1.5 | 4/4 | Complete   | 2026-06-05 |
 | 19. Client Real-time + Arte Status Broadcast | v1.5 | 3/3 | Complete    | 2026-06-06 |
 | 20. Admin Calendar Chips Real-time | v1.5 | 2/2 | Complete   | 2026-06-09 |
-| 21. Fundação da API + Autenticação | v1.6 | 4/5 | In Progress|  |
+| 21. Fundação da API + Autenticação | v1.6 | 5/5 | Complete | 2026-06-11 |
 | 22. Endpoints Admin | v1.6 | 0/0 | Planned | — |
 | 23. Endpoints Cliente | v1.6 | 0/0 | Planned | — |
 | 24. Endpoints IA + Rate Limiting | v1.6 | 0/0 | Planned | — |

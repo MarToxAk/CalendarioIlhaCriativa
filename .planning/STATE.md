@@ -24,16 +24,16 @@ See: .planning/PROJECT.md (updated 2026-06-05)
 
 ## Current Position
 
-Phase: 21 (Fundação da API + Autenticação) — EXECUTING
+Phase: 21 (Fundação da API + Autenticação) — COMPLETE
 Plan: 5 of 5
-Status: Ready to execute
+Status: Complete — all 5 plans done
 Last activity: 2026-06-11
 
 ## Progress Bar
 
 ```
-v1.6: [░░░░░░░░░░░░░░░░░░░░] 0% (0/4 phases)
-Phase 21: Fundação da API + Autenticação — Planned (5 plans, ready to execute)
+v1.6: [█████░░░░░░░░░░░░░░░] 25% (1/4 phases)
+Phase 21: Fundação da API + Autenticação — Complete (5/5 plans) 2026-06-11
 Phase 22: Endpoints Admin — Not started
 Phase 23: Endpoints Cliente — Not started
 Phase 24: Endpoints IA + Rate Limiting — Not started
@@ -169,6 +169,7 @@ Phase 24: Endpoints IA + Rate Limiting — Not started
 | Phase 21 P02 | 15 | 2 tasks | 3 files |
 | Phase 21-funda-o-da-api-autentica-o P03 | 142 | 2 tasks | 2 files |
 | Phase 21 P04 | 10 minutes | 2 tasks | 3 files |
+| Phase 21 P05 | 20 minutes | 2 tasks | 4 files |
 
 ## Decisions
 
@@ -180,6 +181,8 @@ Phase 24: Endpoints IA + Rate Limiting — Not started
 - [Phase 20 P01]: broadcasts_to_admin gera 5 turbo-streams (chip replace adicionado após approvals) — RTUP-08 closed for approved+change_requested
 - [Phase 20 P01]: admin_stream em Arte transformado em array de 2 elementos (badge + chip replace) via .join — RTUP-08 closed for revised
 - [Phase ?]: anti-enumeration for inactive clients
+- [Phase 21-05]: Admin login API field is `email` (maps to User#email_address) — downstream phases 22/23 must send field `email`, not `email_address`
+- [Phase 21-05]: jwt_secret and api.ai_key provisioned via Rails encrypted credentials (not ENV) — production-safe, encrypted at rest
 
 ## Quick Tasks Completed
 
