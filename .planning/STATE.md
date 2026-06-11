@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: API JSON
 status: executing
-last_updated: "2026-06-11T11:36:21.328Z"
+last_updated: "2026-06-11T11:41:29.451Z"
 last_activity: 2026-06-11
 progress:
   total_phases: 27
   completed_phases: 8
   total_plans: 29
-  completed_plans: 61
+  completed_plans: 62
   percent: 30
 ---
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-05)
 ## Current Position
 
 Phase: 21 (Fundação da API + Autenticação) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-06-11
 
@@ -167,6 +167,7 @@ Phase 24: Endpoints IA + Rate Limiting — Not started
 | Phase 20 P01 | 15 | 3 tasks | 4 files |
 | Phase 21 P01 | 15 | 2 tasks | 4 files |
 | Phase 21 P02 | 15 | 2 tasks | 3 files |
+| Phase 21-funda-o-da-api-autentica-o P03 | 142 | 2 tasks | 2 files |
 
 ## Decisions
 
@@ -177,6 +178,7 @@ Phase 24: Endpoints IA + Rate Limiting — Not started
 - [Phase 20 P00]: Hex values copiados literalmente do STATUS_MAP JS — approved #14A958, change_requested #EE3537, revised #475569
 - [Phase 20 P01]: broadcasts_to_admin gera 5 turbo-streams (chip replace adicionado após approvals) — RTUP-08 closed for approved+change_requested
 - [Phase 20 P01]: admin_stream em Arte transformado em array de 2 elementos (badge + chip replace) via .join — RTUP-08 closed for revised
+- [Phase ?]: anti-enumeration for inactive clients
 
 ## Quick Tasks Completed
 
