@@ -38,6 +38,10 @@ Rails.application.routes.draw do
     namespace :v1 do
       namespace :admin do
         resource :session, only: [ :create ]   # POST /api/v1/admin/session
+        resources :clients, only: [ :index, :create ]
+        resources :artes, only: [ :index, :create ] do
+          resources :approval_responses, only: [ :index ]
+        end
       end
 
       namespace :client do
