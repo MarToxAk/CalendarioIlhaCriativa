@@ -23,7 +23,7 @@ A autenticação usa três modos distintos (ver nota `api-auth-strategy.md`).
 - [ ] **AUTH-02**: JWT de admin tem expiração configurável (padrão 24h)
 - [ ] **AUTH-03**: Cliente autentica na API usando o token existente do portal como Bearer
 - [ ] **AUTH-04**: IA autentica com API key dedicada via header `Authorization: Bearer <api_key>`
-- [ ] **AUTH-05**: Requisições sem autenticação válida retornam 401 com mensagem estruturada
+- [x] **AUTH-05**: Requisições sem autenticação válida retornam 401 com mensagem estruturada
 
 ### Endpoints Admin (APIADM)
 
@@ -47,7 +47,7 @@ A autenticação usa três modos distintos (ver nota `api-auth-strategy.md`).
 
 ### Infraestrutura (INFAPI)
 
-- [ ] **INFAPI-01**: API versionada em `/api/v1/`
+- [x] **INFAPI-01**: API versionada em `/api/v1/`
 - [ ] **INFAPI-02**: Respostas em JSON com formato consistente (data + meta + errors)
 - [ ] **INFAPI-03**: Erros retornam código HTTP correto e corpo estruturado
 - [ ] **INFAPI-04**: Rate limiting por API key/token
