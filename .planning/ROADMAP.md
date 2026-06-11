@@ -47,7 +47,7 @@ Plans:
 **Requirements:** APIADM-01, APIADM-02, APIADM-03, APIADM-04, APIADM-05
 **Depends on:** Phase 21
 
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 Plans:
 **Wave 1**
 
@@ -196,6 +196,6 @@ Full details: [.planning/milestones/v1.5-ROADMAP.md](.planning/milestones/v1.5-R
 | 19. Client Real-time + Arte Status Broadcast | v1.5 | 3/3 | Complete    | 2026-06-06 |
 | 20. Admin Calendar Chips Real-time | v1.5 | 2/2 | Complete   | 2026-06-09 |
 | 21. Fundação da API + Autenticação | v1.6 | 5/5 | Complete    | 2026-06-11 |
-| 22. Endpoints Admin | v1.6 | 4/4 | Complete   | 2026-06-11 |
+| 22. Endpoints Admin | v1.6 | 4/4 | Complete    | 2026-06-11 |
 | 23. Endpoints Cliente | v1.6 | 0/0 | Planned | — |
 | 24. Endpoints IA + Rate Limiting | v1.6 | 0/0 | Planned | — |
