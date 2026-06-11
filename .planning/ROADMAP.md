@@ -25,6 +25,7 @@
 **Plans:** 5/5 plans complete
 
 Plans:
+
 - [x] 21-01-PLAN.md — Gems jwt/rack-cors + CORS middleware + rack-attack JSON responder
 - [x] 21-02-PLAN.md — JwtService PORO + Api::V1::BaseController + rotas /api/v1/
 - [x] 21-03-PLAN.md — Session controllers (login admin e cliente)
@@ -32,6 +33,7 @@ Plans:
 - [x] 21-05-PLAN.md — Credentials setup (jwt_secret, ai_key) + testes de controller
 
 **Success criteria:**
+
 1. Admin faz POST com e-mail + senha e recebe um JWT válido com expiração configurável (padrão 24h)
 2. Cliente autentica com `access_token` + senha e recebe um JWT de cliente curto usado como `Authorization: Bearer`, acessando apenas endpoints do seu escopo
 3. IA autentica com API key dedicada (secret de ambiente) via `Authorization: Bearer`
@@ -46,14 +48,19 @@ Plans:
 **Depends on:** Phase 21
 
 **Plans:** 4 plans
-
 Plans:
+**Wave 1**
+
 - [ ] 22-01-PLAN.md — Base controller infra (Pagy + ActiveStorage host) + PORO serializers + rotas
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 22-02-PLAN.md — ClientsController (index paginado + create com credenciais) + testes
 - [ ] 22-03-PLAN.md — ArtesController (index com filtros + create com upload) + testes + fixture
 - [ ] 22-04-PLAN.md — ApprovalResponsesController (histórico aninhado por arte) + testes
 
 **Success criteria:**
+
 1. `GET` de clientes retorna lista paginada (metadados de paginação no envelope)
 2. `POST` de cliente cria um novo cliente e retorna o recurso criado
 3. `GET` de artes aceita filtros por cliente, status e mês
@@ -68,6 +75,7 @@ Plans:
 **Depends on:** Phase 21
 
 **Success criteria:**
+
 1. Cliente autenticado lista apenas suas artes pendentes de aprovação
 2. Cliente vê o detalhe de uma arte (mídia, data, legenda)
 3. Cliente submete aprovação (aprovado OU pediu alteração + comentário) e recebe confirmação
@@ -81,6 +89,7 @@ Plans:
 **Depends on:** Phase 21, 22
 
 **Success criteria:**
+
 1. IA lista artes aprovadas com filtros de período
 2. IA insere nova arte para aprovação (mesmo payload do admin)
 3. IA lê resumo do estado das aprovações por cliente (total, aprovadas, pendentes, alteração)

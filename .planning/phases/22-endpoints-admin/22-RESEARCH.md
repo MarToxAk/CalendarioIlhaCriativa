@@ -983,22 +983,16 @@ end
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Formato dos params do app mobile (flat vs. nested)**
-   - O que sabemos: O padrão Phase 21 usa params flat (`{ email: ..., password: ... }`)
-   - O que não está claro: Se o app mobile vai enviar `{ title: ..., client_id: ... }` ou `{ arte: { title: ..., client_id: ... } }`
-   - Recomendação: Implementar sem wrapper (flat), documentar na resposta da API que o padrão é flat. Se o mobile precisar de wrapper, basta trocar `params.permit(...)` por `params.require(:arte).permit(...)`.
+   - **RESOLVED:** Implementar **flat** (sem wrapper `:arte`/`:client`), alinhado ao padrão Phase 21 (`params.require(:email)` na raiz). Planos 22-02/22-03 usam `params.permit(...)` direto. Se o mobile precisar de wrapper no futuro, basta trocar para `params.require(:arte).permit(...)`.
 
 2. **Resposta do GET /clients inclui `password_plain`?**
-   - O que sabemos: D-04 diz que GET nunca retorna senha. `password_plain` está na coluna do banco.
-   - O que não está claro: O campo `password_plain` no banco existe para mostrar no web admin — no contexto de API o admin mobile precisaria de alguma forma de ver a senha depois? A decisão D-04 diz não.
-   - Recomendação: GET retorna apenas `id, name, active, created_at`. Implementar conforme D-04.
+   - **RESOLVED:** Não. Conforme D-04, GET retorna apenas `id, name, active, created_at` (+ portal_url derivado do token, sem senha). `password_plain`/senha só aparecem na resposta do POST de criação (D-05). Implementado nos serializers do plano 22-01.
 
 3. **Pagy::OverflowError — 404 ou 400?**
-   - O que sabemos: É um erro de parâmetro inválido (page fora do range)
-   - O que não está claro: O cliente mobile deve tratar como "recurso não encontrado" (404) ou "request inválido" (400)?
-   - Recomendação: 404 é mais idiomático para "a página N não existe neste contexto"; usar `render_error(code: "page_out_of_range", status: :not_found)`.
+   - **RESOLVED:** 404, idiomático para "a página N não existe". Capturar `Pagy::OverflowError` no base controller e responder `render_error(code: "page_out_of_range", status: :not_found)`. Implementado no plano 22-01.
 
 ---
 
