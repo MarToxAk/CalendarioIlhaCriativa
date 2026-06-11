@@ -25,6 +25,17 @@ module CalendarioLivia
     config.active_record.default_timezone = :local
     config.i18n.default_locale = :'pt-BR'
 
+    # CORS — insert before all other middleware so OPTIONS preflight
+    # is handled before any authentication middleware (RESEARCH.md Pitfall 6)
+    config.middleware.insert_before 0, Rack::Cors do
+      allow do
+        origins ENV.fetch("CORS_ORIGINS", "*")
+        resource "/api/*",
+          headers: :any,
+          methods: [ :get, :post, :patch, :put, :delete, :options, :head ]
+      end
+    end
+
     # config.eager_load_paths << Rails.root.join("extras")
   end
 end
