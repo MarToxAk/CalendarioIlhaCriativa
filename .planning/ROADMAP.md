@@ -45,6 +45,14 @@ Plans:
 **Requirements:** APIADM-01, APIADM-02, APIADM-03, APIADM-04, APIADM-05
 **Depends on:** Phase 21
 
+**Plans:** 4 plans
+
+Plans:
+- [ ] 22-01-PLAN.md — Base controller infra (Pagy + ActiveStorage host) + PORO serializers + rotas
+- [ ] 22-02-PLAN.md — ClientsController (index paginado + create com credenciais) + testes
+- [ ] 22-03-PLAN.md — ArtesController (index com filtros + create com upload) + testes + fixture
+- [ ] 22-04-PLAN.md — ApprovalResponsesController (histórico aninhado por arte) + testes
+
 **Success criteria:**
 1. `GET` de clientes retorna lista paginada (metadados de paginação no envelope)
 2. `POST` de cliente cria um novo cliente e retorna o recurso criado
@@ -179,6 +187,6 @@ Full details: [.planning/milestones/v1.5-ROADMAP.md](.planning/milestones/v1.5-R
 | 19. Client Real-time + Arte Status Broadcast | v1.5 | 3/3 | Complete    | 2026-06-06 |
 | 20. Admin Calendar Chips Real-time | v1.5 | 2/2 | Complete   | 2026-06-09 |
 | 21. Fundação da API + Autenticação | v1.6 | 5/5 | Complete    | 2026-06-11 |
-| 22. Endpoints Admin | v1.6 | 0/0 | Planned | — |
+| 22. Endpoints Admin | v1.6 | 0/4 | In Progress | — |
 | 23. Endpoints Cliente | v1.6 | 0/0 | Planned | — |
 | 24. Endpoints IA + Rate Limiting | v1.6 | 0/0 | Planned | — |
