@@ -75,5 +75,5 @@ group :test do
   gem "selenium-webdriver"
 
   # Minitest 6 removed Object#stub — pin to 5.x which Rails supports (>= 5.1)
-  gem "minitest", "~> 5.25"
+  gem "minitest", "~> 6.0"
 end
