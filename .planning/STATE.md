@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: API JSON
 status: executing
-last_updated: "2026-06-11T18:35:17.332Z"
-last_activity: 2026-06-11 -- Phase 22 planning complete
+last_updated: "2026-06-11T19:08:09.830Z"
+last_activity: 2026-06-11
 progress:
   total_phases: 27
   completed_phases: 9
   total_plans: 33
-  completed_plans: 64
+  completed_plans: 65
   percent: 33
 ---
 
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-05)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 22 — endpoints admin
+**Current focus:** Phase 22 — endpoints-admin
 
 ## Current Position
 
-Phase: 22
-Plan: Not started
+Phase: 22 (endpoints-admin) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-06-11 -- Phase 22 planning complete
+Last activity: 2026-06-11
 
 ## Progress Bar
 
@@ -170,6 +170,7 @@ Phase 24: Endpoints IA + Rate Limiting — Not started
 | Phase 21-funda-o-da-api-autentica-o P03 | 142 | 2 tasks | 2 files |
 | Phase 21 P04 | 10 minutes | 2 tasks | 3 files |
 | Phase 21 P05 | 20 minutes | 2 tasks | 4 files |
+| Phase 22-endpoints-admin P01 | 10 minutes | 2 tasks | 5 files |
 
 ## Decisions
 

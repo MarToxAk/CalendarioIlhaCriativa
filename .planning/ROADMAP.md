@@ -51,7 +51,7 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 22-01-PLAN.md — Base controller infra (Pagy + ActiveStorage host) + PORO serializers + rotas
+- [x] 22-01-PLAN.md — Base controller infra (Pagy + ActiveStorage host) + PORO serializers + rotas
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -196,6 +196,6 @@ Full details: [.planning/milestones/v1.5-ROADMAP.md](.planning/milestones/v1.5-R
 | 19. Client Real-time + Arte Status Broadcast | v1.5 | 3/3 | Complete    | 2026-06-06 |
 | 20. Admin Calendar Chips Real-time | v1.5 | 2/2 | Complete   | 2026-06-09 |
 | 21. Fundação da API + Autenticação | v1.6 | 5/5 | Complete    | 2026-06-11 |
-| 22. Endpoints Admin | v1.6 | 0/4 | In Progress | — |
+| 22. Endpoints Admin | v1.6 | 1/4 | In Progress|  |
 | 23. Endpoints Cliente | v1.6 | 0/0 | Planned | — |
 | 24. Endpoints IA + Rate Limiting | v1.6 | 0/0 | Planned | — |

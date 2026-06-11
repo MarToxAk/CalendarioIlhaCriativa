@@ -27,11 +27,11 @@ A autenticação usa três modos distintos (ver nota `api-auth-strategy.md`).
 
 ### Endpoints Admin (APIADM)
 
-- [ ] **APIADM-01**: Admin lista clientes (paginado)
-- [ ] **APIADM-02**: Admin cria novo cliente
-- [ ] **APIADM-03**: Admin lista artes (filtros por cliente, status, mês)
-- [ ] **APIADM-04**: Admin cria nova arte (upload de imagem incluído)
-- [ ] **APIADM-05**: Admin vê histórico de aprovações
+- [x] **APIADM-01**: Admin lista clientes (paginado)
+- [x] **APIADM-02**: Admin cria novo cliente
+- [x] **APIADM-03**: Admin lista artes (filtros por cliente, status, mês)
+- [x] **APIADM-04**: Admin cria nova arte (upload de imagem incluído)
+- [x] **APIADM-05**: Admin vê histórico de aprovações
 
 ### Endpoints Cliente (APICLI)
 
