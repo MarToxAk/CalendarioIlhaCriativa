@@ -33,6 +33,23 @@ Rails.application.routes.draw do
     end
   end
 
+  # JSON API — versioned namespace
+  namespace :api, defaults: { format: :json } do
+    namespace :v1 do
+      namespace :admin do
+        resource :session, only: [ :create ]   # POST /api/v1/admin/session
+      end
+
+      namespace :client do
+        resource :session, only: [ :create ]   # POST /api/v1/client/session
+      end
+
+      namespace :ai do
+        # Phase 24 resources
+      end
+    end
+  end
+
   # Health check
   get "up" => "rails/health#show", as: :rails_health_check
 end
