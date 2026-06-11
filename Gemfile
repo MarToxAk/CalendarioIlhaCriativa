@@ -25,6 +25,10 @@ gem "bcrypt", "~> 3.1"
 # Security — rate limiting / brute-force protection
 gem "rack-attack", "~> 6.8"
 
+# JSON API authentication
+gem "jwt", "~> 3.2"
+gem "rack-cors", "~> 3.0"
+
 # Domain gems
 gem "simple_calendar", "~> 3.1"
 gem "pagy", "~> 9.3"
