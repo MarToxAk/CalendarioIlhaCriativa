@@ -18,7 +18,7 @@ class Api::V1::Admin::BaseController < Api::V1::BaseController
     return render_unauthorized unless claims[:scope] == "admin"
 
     @current_user = User.find_by(id: claims[:sub])
-    render_unauthorized unless @current_user
+    return render_unauthorized unless @current_user
   rescue Api::Errors::TokenExpired, Api::Errors::TokenInvalid
     render_unauthorized
   end
