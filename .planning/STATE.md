@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: API JSON
 status: executing
-last_updated: "2026-06-11T11:41:29.451Z"
+last_updated: "2026-06-11T11:45:04.669Z"
 last_activity: 2026-06-11
 progress:
   total_phases: 27
   completed_phases: 8
   total_plans: 29
-  completed_plans: 62
+  completed_plans: 63
   percent: 30
 ---
 
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-05)
 ## Current Position
 
 Phase: 21 (Fundação da API + Autenticação) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-06-11
 
@@ -168,6 +168,7 @@ Phase 24: Endpoints IA + Rate Limiting — Not started
 | Phase 21 P01 | 15 | 2 tasks | 4 files |
 | Phase 21 P02 | 15 | 2 tasks | 3 files |
 | Phase 21-funda-o-da-api-autentica-o P03 | 142 | 2 tasks | 2 files |
+| Phase 21 P04 | 10 minutes | 2 tasks | 3 files |
 
 ## Decisions
 
