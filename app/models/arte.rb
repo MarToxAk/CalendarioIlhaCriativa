@@ -32,6 +32,14 @@ class Arte < ApplicationRecord
   validate :media_source_present
   validate :only_one_media_source
 
+  validates :media_file,
+    content_type: {
+      in: %w[image/jpeg image/png image/gif video/mp4 video/quicktime],
+      message: "deve ser imagem ou vídeo"
+    },
+    size: { less_than: 50.megabytes, message: "deve ter menos de 50MB" },
+    if: -> { media_file.attached? }
+
   private
 
   def broadcasts_revised_to_all
