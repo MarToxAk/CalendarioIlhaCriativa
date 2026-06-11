@@ -21,7 +21,7 @@ A autenticação usa três modos distintos (ver nota `api-auth-strategy.md`).
 
 - [x] **AUTH-01**: Admin autentica na API com e-mail e senha e recebe JWT
 - [x] **AUTH-02**: JWT de admin tem expiração configurável (padrão 24h)
-- [x] **AUTH-03**: Cliente autentica na API usando o token existente do portal como Bearer
+- [x] **AUTH-03**: Cliente autentica na API com access_token do portal + senha e recebe um JWT de cliente (usado como Bearer)
 - [x] **AUTH-04**: IA autentica com API key dedicada via header `Authorization: Bearer <api_key>`
 - [x] **AUTH-05**: Requisições sem autenticação válida retornam 401 com mensagem estruturada
 

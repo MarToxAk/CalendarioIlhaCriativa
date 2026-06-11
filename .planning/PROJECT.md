@@ -97,6 +97,16 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - ✓ Cliente vê chip, resumo e toast atualizarem ao vivo quando admin revisa; badge admin decrementa — RTUP-05..07, RTUP-01 — v1.5 Phase 19
 - ✓ Chips do calendário admin atualizam em tempo real (anel de status) quando status muda — RTUP-08, RTUP-01 — v1.5 Phase 20
 
+### Validated (v1.6 — em progresso)
+
+- ✓ Admin autentica na API (email+senha) e recebe JWT (scope admin, exp 24h configurável) — AUTH-01, AUTH-02 — v1.6 Phase 21
+- ✓ Cliente autentica na API com access_token + senha → JWT de cliente (scope client) — AUTH-03 — v1.6 Phase 21
+- ✓ IA autentica com API key dedicada `ak_` via Authorization: Bearer (secure_compare, secret em credentials) — AUTH-04 — v1.6 Phase 21
+- ✓ Requisições sem auth válida retornam 401 com envelope estruturado, sem enumeração — AUTH-05 — v1.6 Phase 21
+- ✓ API versionada em `/api/v1/` com namespaces admin/client/ai — INFAPI-01 — v1.6 Phase 21
+- ✓ Respostas em JSON com formato consistente `{ data, meta, errors }` — INFAPI-02 — v1.6 Phase 21
+- ✓ Erros retornam código HTTP correto e corpo estruturado (401/404/422/400) — INFAPI-03 — v1.6 Phase 21
+
 ### Backlog (v1.5+)
 
 - [ ] Notificações por e-mail ao admin quando cliente aprova ou pede alteração (NOTF-01)
@@ -158,6 +168,10 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 | set_arte usa @client.artes.find quando @client presente | Escopo por associação levanta RecordNotFound automaticamente para cross-client | ✓ Seguro — ARTE-10 satisfeito |
 | Phase 07.1 inserida pós-fase 7 | Code review encontrou 3 issues críticos + 2 UX gaps | ✓ CR-01..CR-03 + WR-01..WR-02 corrigidos |
 | uploadField SSR usa mesma lógica do radio | Evita estado contraditório (radio checked + campo hidden) sem JavaScript | ✓ WR-01 resolvido completamente |
+| API: cliente usa access_token + senha → JWT (não token-só) | access_token viaja no link do calendário (semi-público); mutação de aprovação exige auth real | ✓ Phase 21 — supera a nota de design original |
+| API: JWT único 24h sem refresh token | Alinha com o DNA enxuto do projeto; revogação por expiração | ✓ Phase 21 |
+| API: `Api::V1::BaseController < ActionController::API` | Isola CSRF/cookies/Session do auth web; alg HS256 fixo (defesa alg:none) | ✓ Phase 21 |
+| API: campo de login admin é `email` (→ User#email_address) | Contrato da API; fases 22/23 enviam `{ email, password }` | ✓ Phase 21 |
 
 ---
 
@@ -224,4 +238,4 @@ API REST versionada (`/api/v1/`) para app mobile (admin + cliente) e agente IA, 
 
 ---
 
-*Last updated: 2026-06-10 — v1.6 API JSON milestone iniciado (fases 21–24).*
+*Last updated: 2026-06-11 after Phase 21 — Fundação da API + Autenticação (8 requisitos validados; próximo: Phase 22 Endpoints Admin).*
