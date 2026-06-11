@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: API JSON
-status: ready_to_plan
-last_updated: 2026-06-11T19:59:52.898Z
+status: planning
+last_updated: "2026-06-11T20:39:20.477Z"
 last_activity: 2026-06-11
 progress:
   total_phases: 27
@@ -11,7 +11,6 @@ progress:
   total_plans: 33
   completed_plans: 68
   percent: 37
-stopped_at: Phase 22 complete (4/4) — ready to discuss Phase 23
 ---
 
 # Project State
