@@ -24,7 +24,7 @@
 
 **Success criteria:**
 1. Admin faz POST com e-mail + senha e recebe um JWT válido com expiração configurável (padrão 24h)
-2. Cliente autentica enviando o token do portal como `Authorization: Bearer` e acessa endpoints do seu escopo
+2. Cliente autentica com `access_token` + senha e recebe um JWT de cliente curto usado como `Authorization: Bearer`, acessando apenas endpoints do seu escopo
 3. IA autentica com API key dedicada (secret de ambiente) via `Authorization: Bearer`
 4. Requisição sem credencial válida retorna 401 com corpo JSON estruturado (`errors`)
 5. Toda resposta segue envelope consistente (`data` + `meta` + `errors`) sob `/api/v1/`, com código HTTP correto em erros
