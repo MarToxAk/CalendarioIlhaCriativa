@@ -22,6 +22,15 @@
 
 **Requirements:** AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05, INFAPI-01, INFAPI-02, INFAPI-03
 
+**Plans:** 5 plans
+
+Plans:
+- [ ] 21-01-PLAN.md — Gems jwt/rack-cors + CORS middleware + rack-attack JSON responder
+- [ ] 21-02-PLAN.md — JwtService PORO + Api::V1::BaseController + rotas /api/v1/
+- [ ] 21-03-PLAN.md — Session controllers (login admin e cliente)
+- [ ] 21-04-PLAN.md — Auth middleware base controllers (admin, client, ai namespaces)
+- [ ] 21-05-PLAN.md — Credentials setup (jwt_secret, ai_key) + testes de controller
+
 **Success criteria:**
 1. Admin faz POST com e-mail + senha e recebe um JWT válido com expiração configurável (padrão 24h)
 2. Cliente autentica com `access_token` + senha e recebe um JWT de cliente curto usado como `Authorization: Bearer`, acessando apenas endpoints do seu escopo
@@ -169,7 +178,7 @@ Full details: [.planning/milestones/v1.5-ROADMAP.md](.planning/milestones/v1.5-R
 | 18. ApprovalResponse Broadcast + Admin Live Rows | v1.5 | 4/4 | Complete   | 2026-06-05 |
 | 19. Client Real-time + Arte Status Broadcast | v1.5 | 3/3 | Complete    | 2026-06-06 |
 | 20. Admin Calendar Chips Real-time | v1.5 | 2/2 | Complete   | 2026-06-09 |
-| 21. Fundação da API + Autenticação | v1.6 | 0/0 | Planned | — |
+| 21. Fundação da API + Autenticação | v1.6 | 0/5 | In planning | — |
 | 22. Endpoints Admin | v1.6 | 0/0 | Planned | — |
 | 23. Endpoints Cliente | v1.6 | 0/0 | Planned | — |
 | 24. Endpoints IA + Rate Limiting | v1.6 | 0/0 | Planned | — |
