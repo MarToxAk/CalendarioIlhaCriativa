@@ -25,15 +25,15 @@ See: .planning/PROJECT.md (updated 2026-06-05)
 ## Current Position
 
 Phase: 21 — Fundação da API + Autenticação
-Plan: — (context gathered, ready for planning)
-Status: Phase 21 context gathered
-Last activity: 2026-06-11 — Phase 21 discuss complete; resume file: .planning/phases/21-funda-o-da-api-autentica-o/21-CONTEXT.md
+Plan: 0/5 plans executed (5 plans created, verified PASSED)
+Status: Phase 21 planned — ready to execute
+Last activity: 2026-06-11 — Phase 21 planned (5 plans, 4 waves, plan-checker PASSED)
 
 ## Progress Bar
 
 ```
 v1.6: [░░░░░░░░░░░░░░░░░░░░] 0% (0/4 phases)
-Phase 21: Fundação da API + Autenticação — Context gathered (ready to plan)
+Phase 21: Fundação da API + Autenticação — Planned (5 plans, ready to execute)
 Phase 22: Endpoints Admin — Not started
 Phase 23: Endpoints Cliente — Not started
 Phase 24: Endpoints IA + Rate Limiting — Not started
