@@ -74,6 +74,21 @@ Plans:
 **Requirements:** APICLI-01, APICLI-02, APICLI-03
 **Depends on:** Phase 21
 
+**Plans:** 3 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 23-01-PLAN.md — Base controller (Pagy + ActiveStorage) + serializers PORO + rotas
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 23-02-PLAN.md — ArtesController (index pending/revised + show com histórico) + ApprovalResponsesController (create com lock)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 23-03-PLAN.md — Testes de integração (ArtesController + ApprovalResponsesController)
+
 **Success criteria:**
 
 1. Cliente autenticado lista apenas suas artes pendentes de aprovação
@@ -197,5 +212,5 @@ Full details: [.planning/milestones/v1.5-ROADMAP.md](.planning/milestones/v1.5-R
 | 20. Admin Calendar Chips Real-time | v1.5 | 2/2 | Complete   | 2026-06-09 |
 | 21. Fundação da API + Autenticação | v1.6 | 5/5 | Complete    | 2026-06-11 |
 | 22. Endpoints Admin | v1.6 | 4/4 | Complete    | 2026-06-11 |
-| 23. Endpoints Cliente | v1.6 | 0/0 | Planned | — |
+| 23. Endpoints Cliente | v1.6 | 0/3 | In Progress | — |
 | 24. Endpoints IA + Rate Limiting | v1.6 | 0/0 | Planned | — |
