@@ -27,6 +27,12 @@ class Rack::Attack
     req.ip if req.path == "/api/v1/client/session" && req.post?
   end
 
+  throttle("api/ai_by_key", limit: 60, period: 60) do |req|
+    if req.path.start_with?("/api/v1/ai/")
+      req.get_header("HTTP_AUTHORIZATION")&.delete_prefix("Bearer ")&.strip.presence
+    end
+  end
+
   Rack::Attack.throttled_responder = lambda do |request|
     if request.path.start_with?("/api/")
       [429, { "Content-Type" => "application/json" },
