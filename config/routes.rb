@@ -46,6 +46,9 @@ Rails.application.routes.draw do
 
       namespace :client do
         resource :session, only: [ :create ]   # POST /api/v1/client/session
+        resources :artes, only: [ :index, :show ] do
+          resources :approval_responses, only: [ :create ]
+        end
       end
 
       namespace :ai do
