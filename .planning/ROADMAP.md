@@ -103,7 +103,7 @@ Plans:
 **Requirements:** APIAI-01, APIAI-02, APIAI-03, INFAPI-04
 **Depends on:** Phase 21, 22
 
-**Plans:** 3 plans
+**Plans:** 4 plans (3 executados + 1 gap closure)
 
 Plans:
 **Wave 1**
@@ -117,6 +117,10 @@ Plans:
 **Wave 3** *(blocked on Wave 2 completion)*
 
 - [x] 24-03-PLAN.md — Testes de integração (ArtesController + ClientsController + throttle AI rack_attack_test)
+
+**Gap Closure (Wave 1 — independent)**
+
+- [ ] 24-04-PLAN.md — Registrar Rack::Attack no middleware stack + corrigir contadores de status em ClientsController#summary
 
 **Success criteria:**
 
@@ -228,4 +232,4 @@ Full details: [.planning/milestones/v1.5-ROADMAP.md](.planning/milestones/v1.5-R
 | 21. Fundação da API + Autenticação | v1.6 | 5/5 | Complete    | 2026-06-11 |
 | 22. Endpoints Admin | v1.6 | 4/4 | Complete    | 2026-06-11 |
 | 23. Endpoints Cliente | v1.6 | 3/3 | Complete    | 2026-06-12 |
-| 24. Endpoints IA + Rate Limiting | v1.6 | 3/3 | Complete   | 2026-06-12 |
+| 24. Endpoints IA + Rate Limiting | v1.6 | 3/4 | Gap Closure | 2026-06-12 |
