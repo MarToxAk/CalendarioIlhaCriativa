@@ -35,9 +35,9 @@ A autenticação usa três modos distintos (ver nota `api-auth-strategy.md`).
 
 ### Endpoints Cliente (APICLI)
 
-- [ ] **APICLI-01**: Cliente lista suas artes pendentes de aprovação
-- [ ] **APICLI-02**: Cliente vê detalhe de uma arte (imagem, data, legenda)
-- [ ] **APICLI-03**: Cliente submete resposta de aprovação (aprovado / pediu alteração + comentário)
+- [x] **APICLI-01**: Cliente lista suas artes pendentes de aprovação
+- [x] **APICLI-02**: Cliente vê detalhe de uma arte (imagem, data, legenda)
+- [x] **APICLI-03**: Cliente submete resposta de aprovação (aprovado / pediu alteração + comentário)
 
 ### Endpoints IA (APIAI)
 

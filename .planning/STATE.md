@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: API JSON
-status: executing
-last_updated: "2026-06-12T15:00:43.107Z"
+status: ready_to_plan
+last_updated: 2026-06-12T16:10:48.557Z
 last_activity: 2026-06-12 -- Phase 23 execution started
 progress:
   total_phases: 27
   completed_phases: 10
   total_plans: 36
-  completed_plans: 68
+  completed_plans: 71
   percent: 37
+stopped_at: Phase 23 complete (3/3) — ready to discuss Phase 24
 ---
 
 # Project State
@@ -20,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-05)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 23 — endpoints-cliente
+**Current focus:** Phase 24 — endpoints ia + rate limiting
 
 ## Current Position
 
-Phase: 23 (endpoints-cliente) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 23
-Last activity: 2026-06-12 -- Phase 23 execution started
+Phase: 24
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-06-12
 
 ## Progress Bar
 
