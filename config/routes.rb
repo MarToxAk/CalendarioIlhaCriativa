@@ -52,7 +52,10 @@ Rails.application.routes.draw do
       end
 
       namespace :ai do
-        # Phase 24 resources
+        resources :artes, only: [ :index, :create ]
+        resources :clients, only: [] do
+          get :summary, on: :member
+        end
       end
     end
   end
