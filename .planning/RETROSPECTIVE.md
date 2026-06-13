@@ -57,6 +57,56 @@
 
 ---
 
+## Milestone: v1.6 — API JSON
+
+**Shipped:** 2026-06-13
+**Phases:** 4 (21–24) | **Plans:** 16 | **Timeline:** 3 days (2026-06-10 → 2026-06-13)
+**Files changed:** 39 | **Insertions:** 2.155
+
+---
+
+### What Was Built
+
+1. **Fundação da API (Phase 21)** — `Api::V1::BaseController < ActionController::API`, envelope JSON `{ data, meta, errors }`, JwtService HS256, 3 namespaces, credentials-based secrets
+2. **Endpoints Admin (Phase 22)** — 5 endpoints: clients (list/create), artes (list/create com upload), approval_responses (history); paginação Pagy, serializers PORO
+3. **Endpoints Cliente (Phase 23)** — 3 endpoints: artes pending/revised, detalhe, submit approval com row-level lock; isolamento cross-client por design
+4. **Endpoints IA + Rate Limiting (Phase 24)** — 3 endpoints IA (list approved, create, summary aggregate); Rack::Attack dual-layer (by key + by IP fallback)
+
+### What Worked
+
+- **Three-mode auth desde o design inicial** — definir os três modos (JWT admin, token+senha→JWT cliente, API key IA) antes de codificar evitou mudanças de arquitetura mid-flight. A nota `api-auth-strategy.md` foi o artefato mais reutilizado.
+- **Code review encontrou CR-01 crítico** — a ausência de throttle por IP para requisições sem auth (que retornam 401) permitia enumeração ilimitada. O review encontrou isso; a fase de execute não teria chegado lá.
+- **PORO serializers sem gem** — `serialize_collection` manual é mais previsível, fácil de testar e sem magia de gem. A abordagem de Phase 22 foi replicada em 23 e 24 sem atrito.
+- **`@client.artes.find` como padrão de isolamento** — a escolha de escopar todos os lookups via associação torna o isolamento cross-client impossível de quebrar acidentalmente.
+- **Gap closure via Phase 24-04** — a verificação pós-execução identificou que Rack::Attack não estava registrado no middleware stack. A fase de gap closure foi criada e executada no mesmo dia.
+
+### What Was Inefficient
+
+- **Phase 23 UAT e VERIFICATION deferidos** — os testes de integração precisam ser executados manualmente. Poderia ter sido sinalizado mais cedo no planejamento.
+- **23-HUMAN-UAT.md como placeholder** — para uma API, UAT deveria ser scripts `curl` ou arquivos `.http`, não comandos de teste interno.
+
+### Patterns Established
+
+- **`ActionController::API` base** — separação limpa; sem CSRF, cookies ou session no namespace de API.
+- **JWT com campo `scope` obrigatório** — `{ scope: "admin" | "client" }` no payload; base controllers fazem `require_admin_auth!` / `require_client_auth!` sem ambiguidade.
+- **`secure_compare` em todos os secrets** — comparação em tempo constante para api_key. Nunca `==` direto.
+- **Throttle dual-layer (by key + by IP)** — throttle by key cobre auth; throttle by IP cobre requests sem auth. Ambos necessários.
+
+### Key Lessons
+
+1. **Code review pós-execução é essencial para APIs** — surface de ataque maior que views HTML. CR-01 não seria detectado por testes funcionais.
+2. **UAT para APIs = scripts `curl`, não `bin/rails test`** — testes de integração são validação interna; UAT de API deve ser um cliente externo.
+3. **Credentials > ENV para secrets de API** — Rails credentials são cifrados em repouso. ENV vars podem vazar em logs ou `.env` files.
+4. **Throttle sem fallback por IP é proteção pela metade** — qualquer API que retorna 401 sem auth precisa de throttle por IP também.
+
+### Cost Observations
+
+- **Timeline:** 3 dias de 2026-06-10 a 2026-06-13
+- **Commits:** ~45 commits (incluindo docs e fixes)
+- **Velocity:** 16 planos em 3 dias (~5 planos/dia — maior complexidade de auth vs v1.0)
+
+---
+
 ## Milestone: v1.1 — Fix Art Upload & Client Association
 
 **Shipped:** 2026-06-02

@@ -18,17 +18,26 @@
 
 ---
 
-## v1.6 API JSON (Em planejamento)
+## v1.6 API JSON (Shipped: 2026-06-13)
 
-**Status:** 🟡 Em planejamento
-**Fases previstas:** 21–24
-**Requirements:** 20 (AUTH-01..05, APIADM-01..05, APICLI-01..03, APIAI-01..03, INFAPI-01..04)
+**Phases completed:** 4 phases (21–24), 16 plans
+**Timeline:** 2026-06-10 → 2026-06-13 (3 days)
+**Files:** 39 files changed, 2.155 insertions
+**Requirements:** 20/20 (AUTH-01..05, APIADM-01..05, APICLI-01..03, APIAI-01..03, INFAPI-01..04)
 
-Expõe API REST versionada (`/api/v1/`) para app mobile (admin + cliente) e agente IA. Três modos de auth: JWT admin, token do portal para cliente, API key para IA.
+**Key accomplishments:**
+
+- **Fundação da API (Phase 21):** `Api::V1::BaseController < ActionController::API` com envelope `{ data, meta, errors }` consistente; `JwtService` HS256 fixo (defesa alg:none); 3 namespaces isolados (admin/client/ai); `jwt_secret` e `api.ai_key` em Rails credentials; `secure_compare` em todos os auth checks. 8 requisitos implementados.
+- **Endpoints Admin (Phase 22):** `GET/POST /api/v1/admin/clients`, `GET/POST /api/v1/admin/artes` (filtros + upload ActiveStorage), `GET .../approval_responses` — 5 endpoints, paginação Pagy, serializers PORO. 5 requisitos (APIADM-01..05) implementados.
+- **Endpoints Cliente (Phase 23):** `GET /api/v1/client/artes` (pending/revised), `GET .../artes/:id`, `POST .../approval_responses` com row-level lock — isolamento cross-client por design via `@client.artes.find`. 3 requisitos (APICLI-01..03) + 14 testes de integração.
+- **Endpoints IA + Rate Limiting (Phase 24):** `GET /api/v1/ai/artes` (approved, filtros from/to), `POST /api/v1/ai/artes`, `GET /api/v1/ai/clients/:id/summary` — Rack::Attack dual-layer (60 req/min by key + 30 req/min by IP fallback). 4 requisitos (APIAI-01..03, INFAPI-04) implementados.
+
+**Known deferred items at close:** 2 (Phase 23 UAT e VERIFICATION — execução de testes de integração, ver STATE.md → Deferred Items). Nenhum é defeito funcional.
+
+### Archive
 
 - Roadmap: `.planning/milestones/v1.6-ROADMAP.md`
 - Requirements: `.planning/milestones/v1.6-REQUIREMENTS.md`
-- Nota de design: `.planning/notes/api-auth-strategy.md`
 
 ---
 

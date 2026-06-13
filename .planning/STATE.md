@@ -2,26 +2,26 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: API JSON
-status: milestone_complete
-last_updated: 2026-06-13T11:09:26.375Z
-last_activity: 2026-06-13 -- Phase 24 execution started
+status: archived
+last_updated: 2026-06-13T00:00:00Z
+last_activity: 2026-06-13 -- v1.6 archived, ready for next milestone
 progress:
-  total_phases: 27
-  completed_phases: 11
-  total_plans: 40
-  completed_plans: 75
-  percent: 41
-stopped_at: Milestone complete (Phase 24 was final phase)
+  total_phases: 24
+  completed_phases: 24
+  total_plans: 56
+  completed_plans: 56
+  percent: 100
+stopped_at: v1.6 complete and archived
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-05)
+See: .planning/PROJECT.md (updated 2026-06-13)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Milestone complete
+**Current focus:** v1.6 arquivado — iniciar próximo milestone com /gsd-new-milestone
 
 ## Current Position
 
@@ -80,13 +80,21 @@ Phase 24: Endpoints IA + Rate Limiting — Not started
 - **Plans:** 11/11 complete
 - **Requirements:** 16/16 (APRO-03..07, CADM-01..05, CONF-01..03, FERI-01..03)
 
-## Milestone v1.5 — In Progress
+## Milestone v1.5 — Shipped
 
-- **Started:** 2026-06-05
-- **Goal:** Real-time & Notifications via ActionCable/Turbo Streams
+- **Shipped:** 2026-06-09
+- **Archived:** 2026-06-09
 - **Phases:** 4 (Phase 17–20)
-- **Plans:** 11/11 complete (Phases 17+18+19 done; Phase 20 TBD)
-- **Requirements:** 8/10 complete (CABLE-01, CABLE-02, RTUP-01..07 done; RTUP-08 pending Phase 20)
+- **Plans:** 13/13 complete
+- **Requirements:** 10/10 (CABLE-01, CABLE-02, RTUP-01..08)
+
+## Milestone v1.6 — Shipped
+
+- **Shipped:** 2026-06-13
+- **Archived:** 2026-06-13
+- **Phases:** 4 (Phase 21–24)
+- **Plans:** 16/16 complete
+- **Requirements:** 20/20 (AUTH-01..05, APIADM-01..05, APICLI-01..03, APIAI-01..03, INFAPI-01..04)
 
 ## Deferred Items
 
@@ -120,6 +128,8 @@ Phase 24: Endpoints IA + Rate Limiting — Not started
 | verification | Phase 17: 17-VERIFICATION.md [human_needed] — badge/toast, validação visual | deferred | v1.5 close 2026-06-09 |
 | uat | Phase 18: 18-HUMAN-UAT.md [partial] — linhas ao vivo dashboard/aprovações (validação visual) | deferred | v1.5 close 2026-06-09 |
 | verification | Phase 18: 18-VERIFICATION.md [human_needed] — broadcasts admin, validação visual | deferred | v1.5 close 2026-06-09 |
+| uat | Phase 23: 23-HUMAN-UAT.md [partial] — 2 cenários pendentes (execução de testes automatizados de integração) | deferred | v1.6 close 2026-06-13 |
+| verification | Phase 23: 23-VERIFICATION.md [human_needed] — endpoints cliente, aguarda execução de testes | deferred | v1.6 close 2026-06-13 |
 
 ## Accumulated Context
 
@@ -156,7 +166,7 @@ Phase 24: Endpoints IA + Rate Limiting — Not started
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- `/gsd-new-milestone` — iniciar v1.7 (Swagger/OpenAPI, deploy S3, ou notificações por e-mail)
 
 ## Performance Metrics
 

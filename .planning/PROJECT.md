@@ -14,19 +14,19 @@ Sistema web em Ruby on Rails para agências e freelancers de social media gerenc
 
 **v1.4 shipped 2026-06-04** — todas as páginas admin completadas (Aprovações com filtros Turbo Frame e paginação Pagy, Calendário Admin com cor por cliente e navegação por mês, Configurações com troca de senha e nome da agência) e feriados/comemorativos brasileiros destacados em vermelho nos dois calendários.
 
+**v1.6 shipped 2026-06-13** — API JSON REST versionada (`/api/v1/`) com 20 endpoints para app mobile (admin + cliente) e agente IA; três modos de auth (JWT admin, token do portal como Bearer p/ cliente, API key p/ IA); rate limiting Rack::Attack dual-layer (by key + by IP).
+
 ## Core Value
 
 O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
 
-## Current Milestone: v1.6 API JSON
+## Shipped: v1.6 API JSON (2026-06-13)
 
-**Goal:** Expor uma API JSON REST versionada (`/api/v1/`) para app mobile (admin + cliente) e um agente de IA, com três modos de autenticação distintos.
+API JSON REST versionada (`/api/v1/`) completa — 20 endpoints para app mobile e agente IA; três modos de auth; rate limiting Rack::Attack. Ver archive em `.planning/milestones/v1.6-ROADMAP.md`.
 
-**Target features:**
-- Fundação da API versionada + autenticação (JWT admin, token do portal como Bearer p/ cliente, API key dedicada p/ IA) com envelope JSON consistente e erros estruturados
-- Endpoints admin: listar/criar clientes, listar/criar artes (com upload), histórico de aprovações
-- Endpoints cliente: listar artes pendentes, ver detalhe, submeter resposta de aprovação
-- Endpoints IA + rate limiting: listar aprovadas, inserir arte, ler resumo de aprovações por cliente
+## Next Milestone
+
+A definir com `/gsd-new-milestone`. Candidatos: Swagger/OpenAPI docs (v1.7), deploy em produção com S3 (INFRA-01), ou notificações por e-mail (NOTF-01, NOTF-02).
 
 ## Requirements
 
@@ -97,7 +97,7 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - ✓ Cliente vê chip, resumo e toast atualizarem ao vivo quando admin revisa; badge admin decrementa — RTUP-05..07, RTUP-01 — v1.5 Phase 19
 - ✓ Chips do calendário admin atualizam em tempo real (anel de status) quando status muda — RTUP-08, RTUP-01 — v1.5 Phase 20
 
-### Validated (v1.6 — completa)
+### Validated (v1.6 — completa 2026-06-13)
 
 - ✓ Admin autentica na API (email+senha) e recebe JWT (scope admin, exp 24h configurável) — AUTH-01, AUTH-02 — v1.6 Phase 21
 - ✓ Cliente autentica na API com access_token + senha → JWT de cliente (scope client) — AUTH-03 — v1.6 Phase 21
@@ -106,10 +106,12 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - ✓ API versionada em `/api/v1/` com namespaces admin/client/ai — INFAPI-01 — v1.6 Phase 21
 - ✓ Respostas em JSON com formato consistente `{ data, meta, errors }` — INFAPI-02 — v1.6 Phase 21
 - ✓ Erros retornam código HTTP correto e corpo estruturado (401/404/422/400) — INFAPI-03 — v1.6 Phase 21
+- ✓ Admin lista/cria clientes e artes via API; vê histórico de aprovações — APIADM-01..05 — v1.6 Phase 22
+- ✓ Cliente lista artes pendentes, vê detalhe, submete aprovação com isolamento cross-client — APICLI-01..03 — v1.6 Phase 23
 - ✓ GET /api/v1/ai/artes — lista paginada de artes aprovadas com filtros from/to e client_id — APIAI-01 — v1.6 Phase 24
-- ✓ GET /api/v1/ai/clients — lista paginada de clientes — APIAI-02 — v1.6 Phase 24
+- ✓ POST /api/v1/ai/artes — insere arte para aprovação com external_url — APIAI-02 — v1.6 Phase 24
 - ✓ GET /api/v1/ai/clients/:id/summary — contadores de status corretos via Arte.statuses — APIAI-03 — v1.6 Phase 24
-- ✓ Rack::Attack registrado no middleware stack; throttle api/ai_by_key 60 req/min por Bearer token ativo — INFAPI-04 — v1.6 Phase 24
+- ✓ Rack::Attack dual-layer (by key 60/min + by IP 30/min fallback) — INFAPI-04 — v1.6 Phase 24
 
 ### Backlog (v1.5+)
 
@@ -132,7 +134,7 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 
 ## Context
 
-**Estado atual (v1.6 completa — Phase 24 completa 2026-06-13):**
+**Estado atual (v1.6 shipped 2026-06-13):**
 - Carteira de 10–30 clientes ativos
 - Conteúdo para Instagram, Facebook e LinkedIn
 - Admin faz upload direto de arquivos OU cola links externos (Google Drive, Dropbox)
@@ -242,4 +244,9 @@ API REST versionada (`/api/v1/`) para app mobile (admin + cliente) e agente IA, 
 
 ---
 
-*Last updated: 2026-06-11 after Phase 21 — Fundação da API + Autenticação (8 requisitos validados; próximo: Phase 22 Endpoints Admin).*
+| API: `secure_compare` em todos os auth checks | Resistência a timing attacks em comparações de segredo | ✓ Phase 21 |
+| API: throttle dual-layer (by key + by IP) | Cobre requisições sem auth que retornam 401 indefinidamente | ✓ Phase 24 |
+
+---
+
+*Last updated: 2026-06-13 after v1.6 — API JSON (20 requisitos validados; 6 milestones shipped; próximo: v1.7 a definir).*
