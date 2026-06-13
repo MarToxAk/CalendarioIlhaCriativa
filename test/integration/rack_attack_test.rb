@@ -53,8 +53,11 @@ class RackAttackTest < ActionDispatch::IntegrationTest
     original = ENV["AI_API_KEY"]
     ENV["AI_API_KEY"] = AI_THROTTLE_KEY
     Rack::Attack.cache.store.clear
-    60.times { get "/api/v1/ai/artes?from=2026-06-01&to=2026-06-30", headers: ai_auth_headers }
-    assert_not_equal 429, response.status
+    60.times do |i|
+      get "/api/v1/ai/artes?from=2026-06-01&to=2026-06-30", headers: ai_auth_headers
+      assert_not_equal 429, response.status,
+        "Requisição #{i + 1}/60 retornou 429 inesperadamente"
+    end
   ensure
     ENV["AI_API_KEY"] = original
   end
