@@ -41,16 +41,16 @@ A autenticação usa três modos distintos (ver nota `api-auth-strategy.md`).
 
 ### Endpoints IA (APIAI)
 
-- [ ] **APIAI-01**: IA lista artes aprovadas (com filtros de período)
-- [ ] **APIAI-02**: IA insere nova arte para aprovação (mesmo payload do admin)
-- [ ] **APIAI-03**: IA lê resumo do estado das aprovações por cliente (total, aprovadas, pendentes, alteração)
+- [x] **APIAI-01**: IA lista artes aprovadas (com filtros de período)
+- [x] **APIAI-02**: IA insere nova arte para aprovação (mesmo payload do admin)
+- [x] **APIAI-03**: IA lê resumo do estado das aprovações por cliente (total, aprovadas, pendentes, alteração)
 
 ### Infraestrutura (INFAPI)
 
 - [x] **INFAPI-01**: API versionada em `/api/v1/`
 - [x] **INFAPI-02**: Respostas em JSON com formato consistente (data + meta + errors)
 - [x] **INFAPI-03**: Erros retornam código HTTP correto e corpo estruturado
-- [ ] **INFAPI-04**: Rate limiting por API key/token
+- [x] **INFAPI-04**: Rate limiting por API key/token
 
 ---
 
