@@ -27,9 +27,15 @@ module CalendarioLivia
 
     # CORS — insert before all other middleware so OPTIONS preflight
     # is handled before any authentication middleware (RESEARCH.md Pitfall 6)
+    # Em produção, CORS_ORIGINS deve ser explicitamente provisionado; a ausência
+    # da variável levanta KeyError (falha visível) em vez de aceitar qualquer origin.
+    allowed_origins = Rails.env.production? \
+      ? ENV.fetch("CORS_ORIGINS")
+      : ENV.fetch("CORS_ORIGINS", "http://localhost:3000")
+
     config.middleware.insert_before 0, Rack::Cors do
       allow do
-        origins ENV.fetch("CORS_ORIGINS", "*")
+        origins allowed_origins
         resource "/api/*",
           headers: :any,
           methods: [ :get, :post, :patch, :put, :delete, :options, :head ]
