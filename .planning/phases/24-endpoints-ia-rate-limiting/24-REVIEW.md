@@ -1,111 +1,92 @@
 ---
 phase: 24-endpoints-ia-rate-limiting
-reviewed: 2026-06-12T00:00:00Z
+reviewed: 2026-06-13T00:00:00Z
 depth: standard
-files_reviewed: 9
+files_reviewed: 10
 files_reviewed_list:
-  - app/controllers/api/v1/ai/base_controller.rb
   - app/controllers/api/v1/ai/artes_controller.rb
+  - app/controllers/api/v1/ai/base_controller.rb
   - app/controllers/api/v1/ai/clients_controller.rb
   - app/serializers/api/v1/ai/arte_serializer.rb
-  - config/routes.rb
+  - config/application.rb
   - config/initializers/rack_attack.rb
+  - config/routes.rb
   - test/controllers/api/v1/ai/artes_controller_test.rb
   - test/controllers/api/v1/ai/clients_controller_test.rb
   - test/integration/rack_attack_test.rb
 findings:
-  critical: 3
+  critical: 1
   warning: 4
   info: 2
-  total: 9
+  total: 7
 status: issues_found
 ---
 
 # Phase 24: Code Review Report
 
-**Reviewed:** 2026-06-12
+**Reviewed:** 2026-06-13
 **Depth:** standard
-**Files Reviewed:** 9
+**Files Reviewed:** 10
 **Status:** issues_found
 
 ## Summary
 
-Esta fase implementa três endpoints para integração com IA (`GET /api/v1/ai/artes`, `POST /api/v1/ai/artes`, `GET /api/v1/ai/clients/:id/summary`) protegidos por autenticação via API key com prefixo `ak_` e comparação em tempo constante, além de throttle via Rack::Attack. A autenticação e o throttle estão bem construídos. Porém, foram encontrados três defeitos críticos: o mais grave é um bug lógico no `ClientsController#summary` que faz com que todos os contadores retornem zero em produção; os outros dois são riscos de segurança — ausência de registro do middleware Rack::Attack e wildcard CORS sem restrição por ambiente. Há ainda quatro warnings de qualidade e robustez.
+Esta fase implementa três endpoints para integração com IA (`GET /api/v1/ai/artes`, `POST /api/v1/ai/artes`, `GET /api/v1/ai/clients/:id/summary`), protegidos por autenticação via API key com prefixo `ak_` e comparação em tempo constante (`secure_compare`). O Rack::Attack está corretamente registrado em `config/application.rb` (linha 39) e as regras de throttle estão configuradas. A lógica de paginação, o serializador e o tratamento de erros seguem os padrões do projeto.
+
+Foi encontrado um defeito crítico de segurança: o throttle de IA aplica-se apenas a requisições que incluem um token válido no header `Authorization`, deixando requisições sem autenticação (ou com bearer vazio) completamente fora do controle de taxa. Há também quatro warnings de robustez e dois itens informativos.
+
+**Nota sobre CR-01 do review anterior (2026-06-12):** O achado anterior apontava que `counts[Arte.statuses["approved"]]` retornaria sempre zero. Esse achado estava INCORRETO. `Arte.statuses["approved"]` retorna o inteiro `1`; `Arte.group(:status).count` com PostgreSQL e coluna `integer` retorna chaves inteiras (`{0=>N, 1=>M, ...}`); portanto `counts[1]` resolve corretamente. O bug não existe.
+
+**Nota sobre CR-02 do review anterior:** O achado anterior afirmava que Rack::Attack não estava registrado no middleware stack. Isso também estava INCORRETO. `config.middleware.use Rack::Attack` está presente em `config/application.rb:39`.
 
 ---
 
 ## Critical Issues
 
-### CR-01: `ClientsController#summary` — todos os contadores sempre retornam zero
+### CR-01: Throttle de IA não cobre requisições sem autenticação — endpoint exposto a enumeração ilimitada
 
-**File:** `app/controllers/api/v1/ai/clients_controller.rb:8-13`
+**File:** `config/initializers/rack_attack.rb:30-34`
 
-**Issue:** A query `Arte.where(client_id: client.id).group(:status).count` retorna um hash com **chaves inteiras** (vindas do banco), pois a coluna `status` é `integer` no schema (`t.integer "status"`). As enumerações do ActiveRecord **não traduzem** as chaves do resultado de `group().count` para os labels string do enum. O código acessa o hash com chaves string como `counts["approved"]`, que sempre retorna `nil` — portanto `.to_i` sempre retorna `0`. O campo `total` ainda é correto (`.values.sum` soma os valores inteiros), mas todos os campos individuais (`approved_count`, `pending_count`, `change_requested_count`, `revised_count`) serão sempre `0`. O teste `GET /summary counts são corretos` em `clients_controller_test.rb:78` falha silenciosamente se o banco de testes não mapeá-los corretamente.
-
-**Fix:** Usar os valores inteiros do enum como chaves, ou usar escopo por status separado:
+**Issue:** O throttle `"api/ai_by_key"` discrimina pelo valor do header `Authorization`:
 
 ```ruby
-# Opção 1: usar as chaves inteiras do enum
-STATUS_KEYS = Arte.statuses  # => { "pending" => 0, "approved" => 1, ... }
-
-counts = Arte.where(client_id: client.id).group(:status).count
-# counts => { 0 => 2, 1 => 1 }
-
-approved_count         = counts[Arte.statuses["approved"]].to_i
-pending_count          = counts[Arte.statuses["pending"]].to_i
-change_requested_count = counts[Arte.statuses["change_requested"]].to_i
-revised_count          = counts[Arte.statuses["revised"]].to_i
-
-# Opção 2: mais legível — contar por escopo
-base = Arte.where(client_id: client.id)
-approved_count         = base.approved.count
-pending_count          = base.pending.count
-change_requested_count = base.change_requested.count
-revised_count          = base.revised.count
-total                  = base.count
+throttle("api/ai_by_key", limit: 60, period: 60) do |req|
+  if req.path.start_with?("/api/v1/ai/")
+    req.get_header("HTTP_AUTHORIZATION")&.delete_prefix("Bearer ")&.strip.presence
+  end
+end
 ```
+
+Quando nenhum header `Authorization` é enviado, a expressão retorna `nil` (`.presence` de string vazia também retorna `nil`). O Rack::Attack interpreta `nil` como "não aplicar este throttle". Resultado: um ator externo pode fazer requisições ilimitadas para `/api/v1/ai/*` sem autenticação (recebendo 401 a cada vez) sem nunca ser bloqueado pelo rate limiter. Todos os outros endpoints de login do projeto possuem throttle por IP como segunda camada (ex: `api/admin_login_by_ip`, `api/client_login_by_ip`), mas o namespace de IA não tem essa proteção, ficando exposto a enumeração e ataques de timing não limitados.
+
+**Fix:** Adicionar um throttle por IP como fallback para o namespace de IA, análogo ao padrão já usado nos outros endpoints:
+
+```ruby
+# config/initializers/rack_attack.rb — adicionar após o throttle api/ai_by_key existente
+throttle("api/ai_by_ip", limit: 30, period: 60) do |req|
+  req.ip if req.path.start_with?("/api/v1/ai/")
+end
+```
+
+Isso garante que mesmo requisições sem credenciais sejam controladas por IP.
 
 ---
 
-### CR-02: Rack::Attack não está registrado no middleware stack
+## Warnings
 
-**File:** `config/initializers/rack_attack.rb:1` / `config/application.rb`
-
-**Issue:** O arquivo `config/initializers/rack_attack.rb` **configura** as regras da `Rack::Attack`, mas em nenhum lugar do projeto o middleware é **inserido no stack**. `rack-attack` só intercepta requisições se `config.middleware.use Rack::Attack` (ou equivalente) for chamado. O Rails não adiciona gems de middleware automaticamente pelo simples fato de estarem no `Gemfile`. Sem o registro, nenhuma das regras de throttle está ativa em produção — o endpoint de IA pode ser chamado sem limite de taxa.
-
-A verificação foi feita: nenhum `config.middleware.use Rack::Attack` existe em `config/application.rb`, `config/environments/production.rb`, `config/environments/development.rb` ou em qualquer initializer.
-
-**Fix:** Adicionar em `config/application.rb` (ou em um initializer carregado antes dos throttles):
-
-```ruby
-# config/application.rb — dentro do bloco class Application
-config.middleware.use Rack::Attack
-```
-
-Ou no initializer, antes de qualquer configuração de regras:
-
-```ruby
-# config/initializers/rack_attack.rb — primeira linha após o require (se necessário)
-Rails.application.config.middleware.use Rack::Attack
-```
-
----
-
-### CR-03: CORS com wildcard `*` sem restrição por ambiente
+### WR-01: CORS wildcard `"*"` como default em produção
 
 **File:** `config/application.rb:32`
 
-**Issue:** A configuração CORS usa `origins ENV.fetch("CORS_ORIGINS", "*")`. O default `"*"` permite requisições cross-origin de qualquer domínio para **todos** os endpoints `/api/*`, incluindo os endpoints de IA. Em produção, se a variável `CORS_ORIGINS` não for definida no ambiente de deploy (configuração omitida, erro de provisionamento), qualquer site poderá fazer requisições autenticadas ao namespace de IA, contornando intenções de acesso restrito. O risco é particularmente relevante porque a API key de IA é uma credencial estática — um vazamento combinado com CORS aberto amplifica o impacto.
+**Issue:** `origins ENV.fetch("CORS_ORIGINS", "*")` usa `"*"` como fallback. Se a variável `CORS_ORIGINS` não for provisionada no ambiente de produção (erro de deploy, rotação de configuração), todos os endpoints `/api/*` passam a aceitar requisições cross-origin de qualquer domínio. Para um serviço que inclui endpoints de sessão (`/api/v1/admin/session`, `/api/v1/client/session`), um origin wildcard combinado com credenciais é uma configuração insegura — e o default silencioso remove a visibilidade do problema.
 
-**Fix:** Falhar de forma segura em produção: não ter um default inseguro.
+**Fix:** Forçar configuração explícita em produção:
 
 ```ruby
 # config/application.rb
-allowed_origins = if Rails.env.production?
-  ENV.fetch("CORS_ORIGINS") # levanta KeyError se não definido — forçando configuração explícita
-else
-  ENV.fetch("CORS_ORIGINS", "http://localhost:3000")
-end
+allowed_origins = Rails.env.production? \
+  ? ENV.fetch("CORS_ORIGINS")            # levanta KeyError se ausente — falha visível
+  : ENV.fetch("CORS_ORIGINS", "http://localhost:3000")
 
 config.middleware.insert_before 0, Rack::Cors do
   allow do
@@ -119,13 +100,11 @@ end
 
 ---
 
-## Warnings
-
-### WR-01: `ArtesController#index` — sem validação de intervalo de datas `from > to`
+### WR-02: `ArtesController#index` — range invertido (`from > to`) retorna silenciosamente zero resultados
 
 **File:** `app/controllers/api/v1/ai/artes_controller.rb:15-17`
 
-**Issue:** O código parseia `from` e `to` mas não verifica se `from <= to`. Quando `from > to`, a query `where(scheduled_on: from..to)` gera um range inverso que retorna zero resultados sem nenhum erro, comportamento silencioso que pode confundir consumidores da API.
+**Issue:** Não há validação de que `from <= to`. Quando `from > to` (ex: `?from=2026-12-01&to=2026-01-01`), a query `where(scheduled_on: from..to)` gera um range inverso que o PostgreSQL executa como `BETWEEN '2026-12-01' AND '2026-01-01'` — resultando em zero linhas sem nenhum erro. O cliente de IA recebe uma resposta 200 com `data: []` e não tem como distinguir "nenhuma arte aprovada no período" de "período inválido informado", o que pode introduzir bugs silenciosos no sistema consumidor.
 
 **Fix:**
 
@@ -134,7 +113,11 @@ from = Date.parse(params[:from])
 to   = Date.parse(params[:to])
 
 if from > to
-  render_error(code: "bad_request", detail: "O parâmetro 'from' deve ser anterior ou igual a 'to'.", status: :bad_request)
+  render_error(
+    code:   "bad_request",
+    detail: "O parâmetro 'from' deve ser anterior ou igual a 'to'.",
+    status: :bad_request
+  )
   return
 end
 
@@ -143,48 +126,11 @@ scope = scope.where(scheduled_on: from..to)
 
 ---
 
-### WR-02: `Rack::Attack` — cache store não configurado para desenvolvimento
+### WR-03: `ArteSerializer#resolve_media_url` — exceção de storage derruba toda a coleção serializada
 
-**File:** `config/initializers/rack_attack.rb:2`
+**File:** `app/serializers/api/v1/ai/arte_serializer.rb:26-32`
 
-**Issue:** O cache store do Rack::Attack é configurado explicitamente apenas em `Rails.env.test?` (`MemoryStore`). Em desenvolvimento, `config.cache_store = :memory_store` está definido, mas o Rack::Attack usa `Rails.cache` por padrão — o que em desenvolvimento é `ActiveSupport::Cache::NullStore` (valor padrão do `config.cache_store` em desenvolvimento não garante funcionar para throttle). Se o desenvolvedor quiser testar throttle localmente, as regras não funcionarão de forma confiável, podendo mascarar problemas de configuração.
-
-**Fix:** Configurar explicitamente o cache para o desenvolvimento também:
-
-```ruby
-# config/initializers/rack_attack.rb
-if Rails.env.test?
-  Rack::Attack.cache.store = ActiveSupport::Cache::MemoryStore.new
-elsif Rails.env.development?
-  Rack::Attack.cache.store = ActiveSupport::Cache::MemoryStore.new
-end
-# Em produção, Rack::Attack usa Rails.cache (solid_cache) automaticamente
-```
-
----
-
-### WR-03: `ENV["AI_API_KEY"]` mutado em testes com workers paralelos
-
-**File:** `test/controllers/api/v1/ai/artes_controller_test.rb:9-10` / `test/controllers/api/v1/ai/clients_controller_test.rb:9-10`
-
-**Issue:** `test_helper.rb` configura `parallelize(workers: :number_of_processors)`. Ambos os arquivos de teste mutam `ENV["AI_API_KEY"]` no `setup` e o restauram no `teardown`. `ENV` é um hash global de processo — com múltiplos workers em threads no mesmo processo, a mutação de `ENV["AI_API_KEY"]` em um worker pode interferir com outro, causando falhas intermitentes de autenticação em testes que rodam concorrentemente.
-
-**Fix:** Usar `stub_const` ou `ClimateControl` para variáveis de ambiente, ou garantir que cada worker roda em processo separado (o padrão do Rails com `parallelize` é forked processes, não threads — mas vale documentar ou usar uma fixture de credentials em vez de ENV).
-
-Se o paralelismo for com processos (fork), não há race condition; mas se for threads, há. Confirmar o modo e adicionar um comentário ou usar uma abordagem thread-safe:
-
-```ruby
-# Opção thread-safe: usar Rails credentials stub em vez de ENV mutation
-# Ou: garantir Rails.application.credentials stubbing
-```
-
----
-
-### WR-04: `ArteSerializer#resolve_media_url` — sem tratamento de erro para URL do ActiveStorage
-
-**File:** `app/serializers/api/v1/ai/arte_serializer.rb:27-31`
-
-**Issue:** `arte.media_file.url` pode lançar exceção dependendo da configuração do storage service (e.g., `ActiveStorage::FileNotFoundError` ou erro de rede em serviço remoto). O método `resolve_media_url` é chamado durante a serialização da coleção em `serialize_collection`, o que significa que uma única arte com problema no storage pode derrubar toda a resposta paginada, retornando 500 em vez de degradar graciosamente.
+**Issue:** `arte.media_file.url` pode lançar exceção dependendo da configuração do serviço de storage (ex: `NotImplementedError` com disk service sem `url_options`, `ActiveStorage::FileNotFoundError`, ou erros de rede em provedores remotos). Esse método é chamado para cada elemento em `serialize_collection`, o que significa que uma única arte com problema no storage interrompe toda a resposta paginada com HTTP 500, em vez de degradar graciosamente.
 
 **Fix:**
 
@@ -203,21 +149,49 @@ end
 
 ---
 
-## Info
+### WR-04: Teste de throttle `"60 primeiras requisições"` verifica apenas a 60ª resposta
 
-### IN-01: Constante `AI_API_KEY` duplicada em dois arquivos de teste com o mesmo nome
+**File:** `test/integration/rack_attack_test.rb:52-60`
 
-**File:** `test/controllers/api/v1/ai/artes_controller_test.rb:6` / `test/controllers/api/v1/ai/clients_controller_test.rb:6`
+**Issue:** O teste executa `60.times { ... }` mas chama `assert_not_equal 429, response.status` apenas uma vez, ao final do bloco — verificando somente a última (60ª) resposta. Se qualquer uma das 59 anteriores retornar 429 (por estado de cache poluído de outro teste, por condição de corrida, ou por regressão futura no limite do throttle), o teste passa mesmo assim, mascarando o problema.
 
-**Issue:** Ambos os arquivos definem a constante `AI_API_KEY` no nível da classe de teste (não dentro de uma instância). Embora ambas sejam classes distintas e não haja colisão real de constantes de Ruby neste contexto (pois estão em namespaces de classe diferentes), o valor gerado por `SecureRandom.hex(8)` é diferente em cada arquivo pois são avaliados em momentos distintos. É uma prática que pode causar confusão na leitura e manutenção.
-
-**Fix:** Extrair para um módulo de helper de teste compartilhado ou usar uma constante compartilhada em `test_helper.rb`:
+**Fix:**
 
 ```ruby
-# test/test_helpers/ai_api_key_helper.rb
-module AiApiKeyHelper
-  AI_API_KEY = "ak_test_fixed_for_tests"
+test "60 primeiras requisições ao namespace AI não retornam 429" do
+  original = ENV["AI_API_KEY"]
+  ENV["AI_API_KEY"] = AI_THROTTLE_KEY
+  Rack::Attack.cache.store.clear
+  60.times do |i|
+    get "/api/v1/ai/artes?from=2026-06-01&to=2026-06-30", headers: ai_auth_headers
+    assert_not_equal 429, response.status,
+      "Requisição #{i + 1}/60 retornou 429 inesperadamente"
+  end
+ensure
+  ENV["AI_API_KEY"] = original
 end
+```
+
+---
+
+## Info
+
+### IN-01: Ausência de validação de esquema em `external_url`
+
+**File:** `app/models/arte.rb` (contexto para `app/controllers/api/v1/ai/artes_controller.rb:47`)
+
+**Issue:** O campo `external_url` não possui validação de formato de URI. O endpoint `POST /api/v1/ai/artes` aceita e persiste qualquer string como `external_url` (ex: `"javascript:alert(1)"`, `"file:///etc/passwd"`, strings sem protocolo). O serializer de IA devolve esse valor como `media_url`. Embora Rails 8 proteja contra `javascript:` em `link_to`, o valor não sanitizado é exposto via API e pode ser interpretado por clientes downstream.
+
+**Fix:** Adicionar validação de URI no modelo:
+
+```ruby
+# app/models/arte.rb
+validates :external_url,
+  format: {
+    with: /\Ahttps?:\/\/.+/i,
+    message: "deve ser uma URL HTTP ou HTTPS válida"
+  },
+  allow_blank: true
 ```
 
 ---
@@ -226,12 +200,12 @@ end
 
 **File:** `test/integration/rack_attack_test.rb:1`
 
-**Issue:** Os outros dois arquivos de teste desta fase incluem o magic comment `# frozen_string_literal: true` (linhas 1 de ambos). O `rack_attack_test.rb` não o inclui, quebrando a consistência do projeto.
+**Issue:** Os outros dois arquivos de teste desta fase incluem o magic comment `# frozen_string_literal: true`. O `rack_attack_test.rb` não o inclui, quebrando a consistência do projeto.
 
 **Fix:** Adicionar `# frozen_string_literal: true` como primeira linha do arquivo.
 
 ---
 
-_Reviewed: 2026-06-12_
+_Reviewed: 2026-06-13_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
