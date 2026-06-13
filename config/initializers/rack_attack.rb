@@ -33,6 +33,10 @@ class Rack::Attack
     end
   end
 
+  throttle("api/ai_by_ip", limit: 30, period: 60) do |req|
+    req.ip if req.path.start_with?("/api/v1/ai/")
+  end
+
   Rack::Attack.throttled_responder = lambda do |request|
     if request.path.start_with?("/api/")
       [429, { "Content-Type" => "application/json" },
