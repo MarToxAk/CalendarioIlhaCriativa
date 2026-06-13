@@ -8,10 +8,10 @@ class Api::V1::Ai::ClientsController < Api::V1::Ai::BaseController
     counts = Arte.where(client_id: client.id).group(:status).count
 
     total                  = counts.values.sum
-    approved_count         = counts["approved"].to_i
-    pending_count          = counts["pending"].to_i
-    change_requested_count = counts["change_requested"].to_i
-    revised_count          = counts["revised"].to_i
+    approved_count         = counts[Arte.statuses["approved"]].to_i
+    pending_count          = counts[Arte.statuses["pending"]].to_i
+    change_requested_count = counts[Arte.statuses["change_requested"]].to_i
+    revised_count          = counts[Arte.statuses["revised"]].to_i
 
     render_envelope(data: {
       client_id:             client.id,

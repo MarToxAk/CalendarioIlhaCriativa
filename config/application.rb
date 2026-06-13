@@ -36,6 +36,8 @@ module CalendarioLivia
       end
     end
 
+    config.middleware.use Rack::Attack
+
     # config.eager_load_paths << Rails.root.join("extras")
   end
 end
