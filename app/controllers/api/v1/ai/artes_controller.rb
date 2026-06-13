@@ -14,11 +14,21 @@ class Api::V1::Ai::ArtesController < Api::V1::Ai::BaseController
     begin
       from = Date.parse(params[:from])
       to   = Date.parse(params[:to])
-      scope = scope.where(scheduled_on: from..to)
     rescue Date::Error
       render_error(code: "bad_request", detail: "Formato de data inválido. Use YYYY-MM-DD.", status: :bad_request)
       return
     end
+
+    if from > to
+      render_error(
+        code:   "bad_request",
+        detail: "O parâmetro 'from' deve ser anterior ou igual a 'to'.",
+        status: :bad_request
+      )
+      return
+    end
+
+    scope = scope.where(scheduled_on: from..to)
 
     @pagy, @artes = pagy(scope, limit: per_page_param)
     render_envelope(
