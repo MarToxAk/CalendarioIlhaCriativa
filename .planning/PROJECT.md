@@ -97,7 +97,7 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - ✓ Cliente vê chip, resumo e toast atualizarem ao vivo quando admin revisa; badge admin decrementa — RTUP-05..07, RTUP-01 — v1.5 Phase 19
 - ✓ Chips do calendário admin atualizam em tempo real (anel de status) quando status muda — RTUP-08, RTUP-01 — v1.5 Phase 20
 
-### Validated (v1.6 — em progresso)
+### Validated (v1.6 — completa)
 
 - ✓ Admin autentica na API (email+senha) e recebe JWT (scope admin, exp 24h configurável) — AUTH-01, AUTH-02 — v1.6 Phase 21
 - ✓ Cliente autentica na API com access_token + senha → JWT de cliente (scope client) — AUTH-03 — v1.6 Phase 21
@@ -106,6 +106,10 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 - ✓ API versionada em `/api/v1/` com namespaces admin/client/ai — INFAPI-01 — v1.6 Phase 21
 - ✓ Respostas em JSON com formato consistente `{ data, meta, errors }` — INFAPI-02 — v1.6 Phase 21
 - ✓ Erros retornam código HTTP correto e corpo estruturado (401/404/422/400) — INFAPI-03 — v1.6 Phase 21
+- ✓ GET /api/v1/ai/artes — lista paginada de artes aprovadas com filtros from/to e client_id — APIAI-01 — v1.6 Phase 24
+- ✓ GET /api/v1/ai/clients — lista paginada de clientes — APIAI-02 — v1.6 Phase 24
+- ✓ GET /api/v1/ai/clients/:id/summary — contadores de status corretos via Arte.statuses — APIAI-03 — v1.6 Phase 24
+- ✓ Rack::Attack registrado no middleware stack; throttle api/ai_by_key 60 req/min por Bearer token ativo — INFAPI-04 — v1.6 Phase 24
 
 ### Backlog (v1.5+)
 
@@ -128,7 +132,7 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 
 ## Context
 
-**Estado atual (v1.5 em progresso — Phase 17 completa 2026-06-05):**
+**Estado atual (v1.6 completa — Phase 24 completa 2026-06-13):**
 - Carteira de 10–30 clientes ativos
 - Conteúdo para Instagram, Facebook e LinkedIn
 - Admin faz upload direto de arquivos OU cola links externos (Google Drive, Dropbox)
