@@ -29,5 +29,8 @@ module Api::V1::Ai::ArteSerializer
     else
       arte.external_url
     end
+  rescue => e
+    Rails.logger.error("ArteSerializer: falha ao resolver URL da mídia para arte##{arte.id}: #{e.message}")
+    nil
   end
 end
