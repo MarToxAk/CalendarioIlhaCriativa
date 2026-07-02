@@ -28,7 +28,7 @@ gem "rack-attack", "~> 6.8"
 # Domain gems
 gem "simple_calendar", "~> 3.1"
 gem "pagy", "~> 43.5"
-gem "good_job", "~> 4.0"
+gem "good_job", "~> 4.19"
 gem "active_storage_validations"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
