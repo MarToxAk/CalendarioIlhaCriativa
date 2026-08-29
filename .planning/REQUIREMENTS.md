@@ -137,17 +137,77 @@ Excluídos explicitamente, para impedir scope creep.
 
 ## Traceability
 
-Preenchido durante a criação do roadmap.
+Preenchido na criação do roadmap (2026-08-29). Fonte: `.planning/ROADMAP.md`.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (a mapear) | | |
+| INFRA-01 | Phase 25 | Pending |
+| INFRA-02 | Phase 25 | Pending |
+| INFRA-03 | Phase 25 | Pending |
+| INFRA-04 | Phase 26 | Pending |
+| INFRA-05 | Phase 25 | Pending |
+| INFRA-06 | Phase 29 | Pending |
+| INFRA-07 | Phase 30 | Pending |
+| EVO-01 | Phase 25 | Pending |
+| EVO-02 | Phase 25 | Pending |
+| EVO-03 | Phase 25 | Pending |
+| EVO-04 | Phase 26 | Pending |
+| PAIR-01 | Phase 26 | Pending |
+| PAIR-02 | Phase 26 | Pending |
+| PAIR-03 | Phase 26 | Pending |
+| PAIR-04 | Phase 26 | Pending |
+| PAIR-05 | Phase 26 | Pending |
+| PAIR-06 | Phase 26 | Pending |
+| PAIR-07 | Phase 26 | Pending |
+| PAIR-08 | Phase 26 | Pending |
+| GRUPO-01 | Phase 27 | Pending |
+| GRUPO-02 | Phase 27 | Pending |
+| GRUPO-03 | Phase 27 | Pending |
+| GRUPO-04 | Phase 27 | Pending |
+| GRUPO-05 | Phase 27 | Pending |
+| DIVU-01 | Phase 28 | Pending |
+| DIVU-02 | Phase 28 | Pending |
+| DIVU-03 | Phase 28 | Pending |
+| DIVU-04 | Phase 28 | Pending |
+| DIVU-05 | Phase 28 | Pending |
+| DIVU-06 | Phase 28 | Pending |
+| DIVU-07 | Phase 28 | Pending |
+| DIVU-08 | Phase 29 | Pending |
+| DIVU-09 | Phase 28 | Pending |
+| ENVIO-01 | Phase 29 | Pending |
+| ENVIO-02 | Phase 29 | Pending |
+| ENVIO-03 | Phase 29 | Pending |
+| ENVIO-04 | Phase 29 | Pending |
+| ENVIO-05 | Phase 29 | Pending |
+| ENVIO-06 | Phase 29 | Pending |
+| ENVIO-07 | Phase 29 | Pending |
+| ENVIO-08 | Phase 29 | Pending |
+| ENVIO-09 | Phase 29 | Pending |
+| ENVIO-10 | Phase 29 | Pending |
+| SEG-01 | Phase 28 | Pending |
+| SEG-02 | Phase 28 | Pending |
+| SEG-03 | Phase 29 | Pending |
+| SEG-04 | Phase 30 | Pending |
+| ACOMP-01 | Phase 30 | Pending |
+| ACOMP-02 | Phase 30 | Pending |
+| ACOMP-03 | Phase 30 | Pending |
+
+**Cobertura por fase:**
+
+| Phase | Nome | Requisitos | Qtd |
+|-------|------|-----------|-----|
+| 25 | Fundação — Transporte Evolution + Storage Alcançável | INFRA-01, INFRA-02, INFRA-03, INFRA-05, EVO-01, EVO-02, EVO-03 | 7 |
+| 26 | Instância de WhatsApp por Cliente + Pareamento | EVO-04, INFRA-04, PAIR-01..08 | 10 |
+| 27 | Grupos do Cliente — Sync, Cache e Seleção Escopada | GRUPO-01..05 | 5 |
+| 28 | Divulgação — Agendar sem Enviar | DIVU-01..07, DIVU-09, SEG-01, SEG-02 | 10 |
+| 29 | Motor de Envio | ENVIO-01..10, DIVU-08, SEG-03, INFRA-06 | 13 |
+| 30 | Acompanhamento ao Vivo + Hardening | ACOMP-01..03, SEG-04, INFRA-07 | 5 |
 
 **Coverage:**
 - v1.7 requirements: 50 total
-- Mapped to phases: 0
-- Unmapped: 50 ⚠️
+- Mapped to phases: 50 ✅
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-08-29*
-*Last updated: 2026-08-29 after research synthesis*
+*Last updated: 2026-08-29 after roadmap creation (Fases 25–30)*

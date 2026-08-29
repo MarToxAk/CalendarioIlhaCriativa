@@ -6,7 +6,7 @@ status: planning
 last_updated: "2026-08-29T14:41:57.318Z"
 last_activity: 2026-08-29
 progress:
-  total_phases: 0
+  total_phases: 6
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,26 +17,28 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-06-13)
+See: .planning/PROJECT.md (updated 2026-08-29)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** v1.6 arquivado — iniciar próximo milestone com /gsd-new-milestone
+**Current focus:** v1.7 WhatsApp Auto-Post + Deploy — Fases 25–30 planejadas, aguardando /gsd-discuss-phase 25
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 25 — Fundação: Transporte Evolution + Storage Alcançável (não iniciada)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-08-29 — Milestone v1.7 started
+Status: Roadmap aprovado, aguardando discuss/plan da fase 25
+Last activity: 2026-08-29 — Roadmap v1.7 criado (6 fases, 50 requisitos, cobertura 100%)
 
 ## Progress Bar
 
 ```
-v1.6: [█████░░░░░░░░░░░░░░░] 25% (1/4 phases)
-Phase 21: Fundação da API + Autenticação — Complete (5/5 plans) 2026-06-11
-Phase 22: Endpoints Admin — Not started
-Phase 23: Endpoints Cliente — Not started
-Phase 24: Endpoints IA + Rate Limiting — Not started
+v1.7: [░░░░░░░░░░░░░░░░░░░░] 0% (0/6 phases)
+Phase 25: Fundação — Transporte Evolution + Storage Alcançável — Not started
+Phase 26: Instância de WhatsApp por Cliente + Pareamento — Not started
+Phase 27: Grupos do Cliente — Sync, Cache e Seleção Escopada — Not started
+Phase 28: Divulgação — Agendar sem Enviar — Not started
+Phase 29: Motor de Envio — Not started
+Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 ```
 
 ## Milestone v1.0 — Shipped
