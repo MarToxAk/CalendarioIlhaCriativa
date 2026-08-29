@@ -5,16 +5,16 @@ milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 25
 current_phase_name: Fundação — Transporte Evolution + Storage Alcançável
 status: executing
-stopped_at: 25-02-PLAN.md paused at Task 2 <human-check> (SC4 restart proof) — Tasks 1-2 code committed; Task 3 pending
-last_updated: "2026-08-29T20:13:00.000Z"
+stopped_at: "25-02-PLAN.md completo (INFRA-02 fechado, SC4 provado por restart real; INFRA-01/SC1 deferido — MinIO). Próximo: 25-03 (deploy topology)."
+last_updated: "2026-08-29T20:44:10.840Z"
 last_activity: 2026-08-29
-last_activity_desc: Phase 25 execution started
-state_head: 65d6ed6ca6c69d427365b510a7d46e5b3ba5c3b9
+last_activity_desc: Plano 25-02 executado (storage MinIO config + solid_queue em dev + timezone_check no boot)
+state_head: 7f319a1f93fb50bf7b7f9c0693e1dba1dcf373c6
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 4
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -30,15 +30,15 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 ## Current Position
 
 Phase: 25 (Fundação — Transporte Evolution + Storage Alcançável) — EXECUTING
-Plan: 2 of 4
-Status: Plano 25-01 completo (EVO-02/EVO-03/INFRA-05); EVO-01 deferido (credenciais Evolution). Próximo: 25-02.
-Last activity: 2026-08-29 — Plano 25-01 executado (Evolution::Client + taxonomia + good_job removido)
+Plan: 3 of 4
+Status: Planos 25-01 e 25-02 completos. 25-02: INFRA-02 fechado (solid_queue em dev + prova de restart), storage.yml MinIO e timezone_check.rb entregues; INFRA-01/SC1 deferido (MinIO não provisionado), metade "TZ no container" de INFRA-03 fica no 25-03. Próximo: 25-03 (deploy topology).
+Last activity: 2026-08-29 — Plano 25-02 executado (aws-sdk-s3 + serviço amazon/MinIO + queue_adapter :solid_queue + Procfile jobs + timezone_check no boot)
 
 ## Progress Bar
 
 ```
-v1.7: [█░░░░░░░░░░░░░░░░░░░] 4% (0/6 phases · 1/4 planos da fase 25)
-Phase 25: Fundação — Transporte Evolution + Storage Alcançável — In progress (1/4 planos)
+v1.7: [██░░░░░░░░░░░░░░░░░░] 8% (0/6 phases · 2/4 planos da fase 25)
+Phase 25: Fundação — Transporte Evolution + Storage Alcançável — In progress (2/4 planos)
 Phase 26: Instância de WhatsApp por Cliente + Pareamento — Not started
 Phase 27: Grupos do Cliente — Sync, Cache e Seleção Escopada — Not started
 Phase 28: Divulgação — Agendar sem Enviar — Not started
@@ -194,6 +194,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 25 P01 | 11min | 3 tasks | 9 files |
+| Phase 25 P02 | 35min | 3 tasks | 7 files |
 
 ## Decisions
 
@@ -211,6 +212,10 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 25]: [Phase 25-01]: Evolution:: config vive em app/services/evolution.rb (namespace explícito) — module Evolution num initializer quebra o autoload do Zeitwerk para Evolution::Errors
 - [Phase 25]: [Phase 25-01]: EVO-01 (round-trip autenticado real contra o host da agência) DEFERIDO — EVOLUTION_BASE_URL/EVOLUTION_GLOBAL_API_KEY indisponíveis; artefatos de código entregues, fechamento aguarda credenciais (user_setup, D-06)
 - [Phase 25]: [Phase 25-01]: fugit permanece no lockfile — dep transitiva de solid_queue (~> 1.11), não exclusiva do good_job
+- [Phase 25]: [Phase 25-02]: storage.yml serviço amazon = S3 driver contra endpoint MinIO, force_path_style: true, bucket calendario-livia-#{Rails.env}, privado (sem chave public — toda mídia é presigned); endpoint ENV-first (S3_ENDPOINT) e chaves credentials-only
+- [Phase 25]: [Phase 25-02]: development.rb usa solid_queue como queue_adapter SEM connects_to — dev tem base única; tabelas solid_queue_* vivem na base primária, carregadas por bin/setup (db:schema:load:queue com fallback runner idempotente)
+- [Phase 25]: [Phase 25-02]: timezone_check.rb — raise em produção / warn (Rails.logger + $stderr) em development quando ENV['TZ'] != America/Sao_Paulo ou Time.zone != Brasilia; default_timezone = :local mantido (Out of Scope migrar p/ :utc)
+- [Phase 25]: [Phase 25-02]: INFRA-01/SC1 (round-trip presignado real MinIO) deferido como user_setup — MinIO não provisionado; config entregue (6ce3a06). Consistente com EVO-01 no 25-01
 
 ## Quick Tasks Completed
 
@@ -220,12 +225,16 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-29T20:13:00.000Z
-**Stopped at:** 25-02-PLAN.md — Task 2 <human-check> gate (SC4 restart-survival proof). Tasks 1-2 code committed (6ce3a06, 6fac8fd). Task 3 (timezone_check.rb) not yet executed.
-**Resume file:** .planning/phases/25-funda-o-transporte-evolution-storage-alcan-vel/25-02-PLAN.md
+**Last session:** 2026-08-29T20:43:00.000Z
+**Stopped at:** 25-02-PLAN.md completo — 3 tasks commitadas (6ce3a06, 6fac8fd, 7f319a1). Gate SC4 (restart-survival) satisfeito pelo orquestrador; timeline verbatim no 25-02-SUMMARY.md. INFRA-02 marcado completo em REQUIREMENTS.md.
+**Resume file:** None
 
 ### Blockers
 
 - EVO-01 / SC2: round-trip autenticado do Evolution::Client contra whatsapp.bomcustoilhabela.com.br não executado — falta EVOLUTION_BASE_URL + EVOLUTION_GLOBAL_API_KEY (user_setup 25-01, CONTEXT.md D-06). Código entregue; verificação empírica deferida.
-- INFRA-01 / SC1 (25-02 Task 1): round-trip presignado real contra o MinIO não executado — MinIO não provisionado no host e S3_ENDPOINT / aws.* indisponíveis (RESEARCH A6, user_setup). Config entregue e commitada (6ce3a06); `Aws::Errors::MissingCredentialsError` no probe. Fechamento aguarda provisionamento do MinIO (bucket calendario-livia-development privado + credenciais + S3_ENDPOINT no .env).
-- INFRA-02 / SC4 (25-02 Task 2): prova de sobrevivência a restart é gate humano — parar/reiniciar `bin/jobs` e confirmar que `tmp/phase25_job_marker.txt` é escrito após o restart. Linha durável já persistida em solid_queue_scheduled_executions (id 1, scheduled_at 2026-08-29T17:11:00-03:00). Timeline observada a colar no 25-02-SUMMARY.md.
+- INFRA-01 / SC1 (25-02 Task 1): round-trip presignado real contra o MinIO não executado — MinIO não provisionado no host e S3_ENDPOINT / aws.* indisponíveis (RESEARCH A6, user_setup). Config entregue e commitada (6ce3a06); `Aws::Errors::MissingCredentialsError` no probe. Fechamento aguarda provisionamento do MinIO (bucket calendario-livia-development privado + credenciais + S3_ENDPOINT no .env) — também requerido pelo plano 25-04.
+- INFRA-03 (25-02 Task 3): boot check `config/initializers/timezone_check.rb` entregue (7f319a1, raise prod / warn dev). A metade "TZ=America/Sao_Paulo no environment dos serviços web + jobs do docker-compose" fecha no plano 25-03. Requisito não marcado completo até lá.
+
+**Resolvido nesta sessão:**
+
+- ~~INFRA-02 / SC4~~: RESOLVIDO. Gate de restart executado pelo orquestrador com probe job em disco contra worker bin/jobs real — job enfileirado 17:35:34-03:00, worker parado 17:35:49, reiniciado 17:36:43, job disparou 17:37:04 (21s após o restart), zero falhas. Linha durável sobreviveu em solid_queue_scheduled_executions. Timeline verbatim no 25-02-SUMMARY.md. INFRA-02 marcado completo em REQUIREMENTS.md.

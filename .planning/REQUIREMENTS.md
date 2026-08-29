@@ -15,7 +15,7 @@
 ### Infraestrutura e Fundação
 
 - [ ] **INFRA-01**: ActiveStorage serve arquivos via S3 em produção, com URL alcançável pelo host público do Evolution
-- [ ] **INFRA-02**: Jobs agendados sobrevivem a reinício do servidor em development (queue adapter explícito + schema de fila carregado), viabilizando UAT de agendamento
+- [x] **INFRA-02**: Jobs agendados sobrevivem a reinício do servidor em development (queue adapter explícito + schema de fila carregado), viabilizando UAT de agendamento
 - [ ] **INFRA-03**: O fuso horário é determinístico entre development e produção (`TZ` fixado no deploy, com verificação no boot)
 - [ ] **INFRA-04**: Segredos do Evolution (`apikey`, `hash`, `token`, QR) nunca aparecem em log — `filter_parameters` corrigido, e nenhum segredo trafega como argumento de job
 - [x] **INFRA-05**: `good_job` removido do Gemfile, restando um único adapter de fila no bundle
@@ -142,7 +142,7 @@ Preenchido na criação do roadmap (2026-08-29). Fonte: `.planning/ROADMAP.md`.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | INFRA-01 | Phase 25 | Pending |
-| INFRA-02 | Phase 25 | Pending |
+| INFRA-02 | Phase 25 | Complete |
 | INFRA-03 | Phase 25 | Pending |
 | INFRA-04 | Phase 26 | Pending |
 | INFRA-05 | Phase 25 | Complete |
