@@ -2,9 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: WhatsApp Auto-Post + Deploy
+current_phase: 25
+current_phase_name: "Fundação: Transporte Evolution + Storage Alcançável"
 status: planning
-last_updated: "2026-08-29T14:41:57.318Z"
+stopped_at: Phase 25 context gathered
+last_updated: "2026-08-29T18:09:23.470Z"
 last_activity: 2026-08-29
+last_activity_desc: Roadmap v1.7 criado (6 fases, 50 requisitos, cobertura 100%)
+state_head: 997b8bda0cd9b97aa2b030cb94f33972c5d898d9
 progress:
   total_phases: 6
   completed_phases: 0
@@ -204,3 +209,9 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Date | Slug | Description | Status |
 |------|------|-------------|--------|
 | 2026-06-08 | fix-client-media-display | Corrigir visualização de media (vídeo e imagem) no portal do cliente, tratando mismatch de enums e melhorando proxying. | complete ✓ |
+
+## Session
+
+**Last session:** 2026-08-29T18:09:23.448Z
+**Stopped at:** Phase 25 context gathered
+**Resume file:** .planning/phases/25-funda-o-transporte-evolution-storage-alcan-vel/25-CONTEXT.md
