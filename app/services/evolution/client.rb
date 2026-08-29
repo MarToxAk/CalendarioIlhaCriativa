@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "net/http" # Net::OpenTimeout / Net::ReadTimeout — usados por classify_timeout
+
 module Evolution
   # A ÚNICA costura HTTP entre este app e o host Evolution da agência, para todas
   # as fases 25–30 (EVO-02). PORO com métodos de classe, espelhando
@@ -45,6 +47,14 @@ module Evolution
         resp.body.dig("instance", "state")
       end
 
+      # Transforma um estado de conexão que não seja "open" em NotConnected.
+      # Silencioso (retorna nil) quando o estado é "open".
+      def assert_open!(state)
+        return if state == "open"
+
+        raise Evolution::Errors::NotConnected, "instância não conectada (state=#{state.inspect})"
+      end
+
       private
 
       def request(method, path, api_key:, body: nil, read_timeout: nil)
@@ -61,28 +71,53 @@ module Evolution
         # nada foi enviado → retry seguro
         raise Evolution::Errors::Transient, e.message
       rescue Faraday::TimeoutError => e
-        # handler mínimo — Task 2 distingue connect-phase (Transient) de read-phase (Unknown).
-        # Default seguro: Unknown (a request pode ter sido processada).
-        raise Evolution::Errors::Unknown, e.message
+        # connect-phase (nada enviado) → Transient ; read-phase (pode ter processado) → Unknown
+        raise classify_timeout(e), e.message
       ensure
         ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started) * 1000).round
         Rails.logger.info("[evolution] #{method.to_s.upcase} #{path} -> #{resp ? resp.status : 'ERR'} (#{ms}ms)")
       end
 
-      # Mapeamento mínimo (Task 1). Task 2 substitui pelo mapeamento completo
-      # (corpo 5xx não-JSON da Cloudflare, 408/429, classify_timeout).
+      # Mapeia toda resposta não-2xx para exatamente uma classe Evolution::Errors.
+      # Contrato do envelope verificado (evolution-contract.md):
+      #   { "status": <int>, "error": <string>, "response": { "message": <string | string[]> } }
+      # `message` é String no 401 e Array no 404 — normalizar sempre com Array(...).join.
       def raise_for_status!(resp)
         return if resp.success?
 
-        raw = resp.body.is_a?(Hash) ? resp.body.dig("response", "message") : resp.body
+        body = resp.body
+
+        # Corpo 5xx não-JSON (página de erro HTML da Cloudflare, não conteúdo do
+        # Evolution) → Transient genérico. NUNCA ecoar o HTML na mensagem.
+        if resp.status >= 500 && !body.is_a?(Hash)
+          raise Evolution::Errors::Transient, "#{resp.status} upstream 5xx (non-JSON body)"
+        end
+
+        raw = body.is_a?(Hash) ? body.dig("response", "message") : body
         msg = Array(raw).join(" ")
         case resp.status
         when 400, 401, 403, 404, 422
-          raise Evolution::Errors::Permanent, "#{resp.status} #{msg}"
+          raise Evolution::Errors::Permanent, "#{resp.status} #{msg}".strip
         when 408, 429, 500..599
-          raise Evolution::Errors::Transient, "#{resp.status} #{msg}"
+          raise Evolution::Errors::Transient, "#{resp.status} #{msg}".strip
         else
-          raise Evolution::Errors::Unknown, "#{resp.status} #{msg}"
+          raise Evolution::Errors::Unknown, "#{resp.status} #{msg}".strip
+        end
+      end
+
+      # Distingue timeout de conexão (connect-phase, nada foi enviado → Transient)
+      # de timeout de leitura (read-phase, a request pode ter sido processada →
+      # Unknown, nunca retry automático). Quando o Faraday não expõe a fase,
+      # o default seguro é Unknown.
+      def classify_timeout(error)
+        wrapped = error.respond_to?(:wrapped_exception) ? error.wrapped_exception : nil
+        case wrapped
+        when Net::OpenTimeout
+          Evolution::Errors::Transient
+        when Net::ReadTimeout
+          Evolution::Errors::Unknown
+        else
+          Evolution::Errors::Unknown
         end
       end
     end
