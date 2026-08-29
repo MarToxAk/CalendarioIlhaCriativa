@@ -32,7 +32,6 @@ gem "rack-cors", "~> 3.0"
 # Domain gems
 gem "simple_calendar", "~> 3.1"
 gem "pagy", "~> 9.3"
-gem "good_job", "~> 4.0"
 gem "active_storage_validations"
 
 # Cliente HTTP do Evolution::Client — EVO-02 (25-RESEARCH.md Pattern 2)
