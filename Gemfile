@@ -35,6 +35,9 @@ gem "pagy", "~> 9.3"
 gem "good_job", "~> 4.0"
 gem "active_storage_validations"
 
+# Cliente HTTP do Evolution::Client — EVO-02 (25-RESEARCH.md Pattern 2)
+gem "faraday", "~> 2.14"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 

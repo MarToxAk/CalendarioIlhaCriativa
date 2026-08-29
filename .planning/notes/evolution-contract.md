@@ -41,6 +41,12 @@ sessão de research — por isso o caminho de envio fica PENDENTE.
 - QR: `qrcode.base64` é data-URI PNG completo (`data:image/png;base64,...`); `qrcode.count` incrementa; `QRCODE_LIMIT` default 30.
 - Webhook: `POST /webhook/set/{instance}`; envelope `{ event, instance, data, destination, date_time, sender, server_url, apikey }`.
 
+### Delta da fase 25-01 — round-trip autenticado pelo cliente do app (2026-08-29)
+
+| Data | Item | Resultado | Impacto |
+|---|---|---|---|
+| 2026-08-29 | `Evolution::Client.fetch_instances` autenticado (`apikey` global) contra o host da agência | **NÃO EXECUTADO — credenciais indisponíveis.** `EVOLUTION_BASE_URL` / `EVOLUTION_GLOBAL_API_KEY` não resolveram em nenhuma fonte (ENV nem `credentials.evolution.*`) no momento da execução do plano 25-01. Caminho DEGRADADO do `<precondition>` acionado: os artefatos de código (`Gemfile +faraday`, `app/services/evolution.rb`, `app/services/evolution/errors.rb`, `app/services/evolution/client.rb`, `config/initializers/evolution.rb`) foram entregues e commitados; a verificação empírica do round-trip autenticado fica **DEFERIDA**. | SC2 / EVO-01 (fechamento do contrato de leitura autenticado + latência medida) **deferido** até a agência fornecer base URL + apikey global (D-06, `user_setup` do 25-01). Escalado ao desenvolvedor como lacuna de `user_setup` — não é falha de código nem de teste. Nenhum secret, token ou telefone foi escrito aqui. |
+
 ## PENDENTE — caminho de escrita (fechar em UAT, com credenciais + instância pareada)
 
 | Item | Por que não fechou agora | Onde fecha |
