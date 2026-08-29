@@ -37,6 +37,10 @@ gem "active_storage_validations"
 # Cliente HTTP do Evolution::Client — EVO-02 (25-RESEARCH.md Pattern 2)
 gem "faraday", "~> 2.14"
 
+# ActiveStorage S3/MinIO — INFRA-01 (25-RESEARCH.md Pattern 5; CONTEXT D-01/D-02/D-03)
+# require: false — ActiveStorage carrega o driver S3 sob demanda (lazy require)
+gem "aws-sdk-s3", "~> 1.229", require: false
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
