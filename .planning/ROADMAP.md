@@ -127,7 +127,12 @@ Full details: [.planning/milestones/v1.6-ROADMAP.md](.planning/milestones/v1.6-R
   4. Um job agendado para daqui a alguns minutos continua executando depois de reiniciar o servidor de desenvolvimento.
   5. O horário do app é o mesmo em development e em produção (TZ fixado e verificado no boot), e o bundle tem um único adapter de fila.
 
-**Plans**: TBD
+**Plans**: 4 plans (waves 1→2→3→4)
+- [ ] 25-01-PLAN.md — Evolution transport seam: `Evolution::Client` + `Errors` + initializer, `+faraday` / `-good_job`, `:apikey`/`:hash` log filter, authenticated read round-trip (EVO-01/02/03, INFRA-05)
+- [ ] 25-02-PLAN.md — Storage seam + reliable dev jobs + deterministic TZ: `+aws-sdk-s3`, `storage.yml` MinIO, `development.rb` (`:amazon` + `queue_adapter`), `queue_schema` load, `Procfile.dev` jobs, `timezone_check.rb` (INFRA-01/02/03)
+- [ ] 25-03-PLAN.md — Production deploy topology: D-10 deploy-tool checkpoint, `docker-compose.yml` jobs service + `TZ` + reverse-proxy TLS, `production.rb` SSL + hosts + `:amazon`, `.env.example` + credentials keys (INFRA-01/03)
+- [ ] 25-04-PLAN.md — Reachable media: idempotent blob migration rake task + outside-LAN download proof + app↔Evolution both-directions reachability (INFRA-01, EVO-01)
+**Scope note**: the "+ Deploy" of the milestone is anchored here (CONTEXT.md D-09) — the app is deployed to the public host this phase, beyond the original ROADMAP statement of "transporte + storage + jobs".
 **Research**: `--research-phase` — a verificação empírica do contrato Evolution contra `whatsapp.bomcustoilhabela.com.br` é *a* tarefa mais importante do milestone e é pesquisa, não implementação. Os 8 itens a confirmar estão em SUMMARY.md → "ASSUMIDO (precisa de verificação empírica no passo A)". Decidir aqui também: migração dos blobs locais já existentes para o S3.
 **Defeitos pré-existentes fechados aqui**: queue adapter ausente em `development.rb` (BLOQUEIA UAT de agendamento), `good_job` órfão no Gemfile, `default_timezone = :local` mitigado por `TZ` travado no deploy.
 
@@ -256,7 +261,7 @@ Full details: [.planning/milestones/v1.6-ROADMAP.md](.planning/milestones/v1.6-R
 | 22. Endpoints Admin | v1.6 | 4/4 | Complete ✅ | 2026-06-11 |
 | 23. Endpoints Cliente | v1.6 | 3/3 | Complete ✅ | 2026-06-12 |
 | 24. Endpoints IA + Rate Limiting | v1.6 | 4/4 | Complete ✅ | 2026-06-13 |
-| 25. Fundação — Transporte Evolution + Storage | v1.7 | 0/? | Not started | - |
+| 25. Fundação — Transporte Evolution + Storage | v1.7 | 0/4 | Planned | - |
 | 26. Instância de WhatsApp + Pareamento | v1.7 | 0/? | Not started | - |
 | 27. Grupos do Cliente | v1.7 | 0/? | Not started | - |
 | 28. Divulgação — Agendar sem Enviar | v1.7 | 0/? | Not started | - |
