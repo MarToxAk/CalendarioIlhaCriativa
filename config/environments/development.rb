@@ -32,6 +32,12 @@ Rails.application.configure do
   # INFRA-01 / CONTEXT D-03: bucket de dev ativo no MinIO para exercitar o caminho presignado localmente.
   config.active_storage.service = :amazon
 
+  # Persistência durável de jobs agendados em development — INFRA-02 (25-RESEARCH.md Pattern 1).
+  # Sem esta linha o ActiveJob cai no adapter :async e todo job agendado se perde ao reiniciar bin/dev.
+  # NÃO adicionar config.solid_queue.connects_to: dev tem base única; as tabelas solid_queue_* vivem
+  # na base primária de development (carregadas por bin/setup a partir de db/queue_schema.rb).
+  config.active_job.queue_adapter = :solid_queue
+
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
 

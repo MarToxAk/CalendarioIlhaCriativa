@@ -22,6 +22,22 @@ FileUtils.chdir APP_ROOT do
 
   puts "\n== Preparing database =="
   system! "bin/rails db:prepare"
+
+  # solid_queue em development (INFRA-02): as tabelas solid_queue_* precisam existir na base
+  # primária de dev (config.solid_queue.connects_to é production-only). Passo idempotente.
+  puts "\n== Carregando o schema da fila (solid_queue) na base de development =="
+  if system("bin/rails", "db:schema:load:queue", out: File::NULL, err: File::NULL)
+    puts "   schema da fila carregado via db:schema:load:queue"
+  else
+    system!("bin/rails", "runner", <<~'RUBY'.strip)
+      if ActiveRecord::Base.connection.table_exists?(:solid_queue_jobs)
+        puts "   tabelas solid_queue_* já presentes — nada a fazer"
+      else
+        load Rails.root.join("db/queue_schema.rb")
+        puts "   db/queue_schema.rb carregado na base primária de development"
+      end
+    RUBY
+  end
   system! "bin/rails db:reset" if ARGV.include?("--reset")
 
   puts "\n== Removing old logs and tempfiles =="
