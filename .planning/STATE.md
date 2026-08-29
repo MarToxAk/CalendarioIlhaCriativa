@@ -4,17 +4,17 @@ milestone: v1.7
 milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 25
 current_phase_name: Fundação — Transporte Evolution + Storage Alcançável
-status: planning
-stopped_at: Phase 25 context gathered
-last_updated: "2026-08-29T19:39:35.725Z"
+status: executing
+stopped_at: Completed 25-01-PLAN.md (EVO-01 live round-trip deferred — agency credentials)
+last_updated: "2026-08-29T20:01:35.884Z"
 last_activity: 2026-08-29
-last_activity_desc: Roadmap v1.7 criado (6 fases, 50 requisitos, cobertura 100%)
-state_head: 80f1c67f13d96f47a10d069772cc2bc87723d462
+last_activity_desc: Phase 25 execution started
+state_head: 65d6ed6ca6c69d427365b510a7d46e5b3ba5c3b9
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 4
-  completed_plans: 0
+  completed_plans: 1
   percent: 0
 ---
 
@@ -25,20 +25,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-29)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** v1.7 WhatsApp Auto-Post + Deploy — Fases 25–30 planejadas, aguardando /gsd-discuss-phase 25
+**Current focus:** Phase 25 — Fundação — Transporte Evolution + Storage Alcançável
 
 ## Current Position
 
-Phase: 25 (Fundação — Transporte Evolution + Storage Alcançável) — READY TO EXECUTE
-Plan: —
-Status: Roadmap aprovado, aguardando discuss/plan da fase 25
-Last activity: 2026-08-29 — Roadmap v1.7 criado (6 fases, 50 requisitos, cobertura 100%)
+Phase: 25 (Fundação — Transporte Evolution + Storage Alcançável) — EXECUTING
+Plan: 2 of 4
+Status: Plano 25-01 completo (EVO-02/EVO-03/INFRA-05); EVO-01 deferido (credenciais Evolution). Próximo: 25-02.
+Last activity: 2026-08-29 — Plano 25-01 executado (Evolution::Client + taxonomia + good_job removido)
 
 ## Progress Bar
 
 ```
-v1.7: [░░░░░░░░░░░░░░░░░░░░] 0% (0/6 phases)
-Phase 25: Fundação — Transporte Evolution + Storage Alcançável — Not started
+v1.7: [█░░░░░░░░░░░░░░░░░░░] 4% (0/6 phases · 1/4 planos da fase 25)
+Phase 25: Fundação — Transporte Evolution + Storage Alcançável — In progress (1/4 planos)
 Phase 26: Instância de WhatsApp por Cliente + Pareamento — Not started
 Phase 27: Grupos do Cliente — Sync, Cache e Seleção Escopada — Not started
 Phase 28: Divulgação — Agendar sem Enviar — Not started
@@ -189,6 +189,11 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 21 P05 | 20 minutes | 2 tasks | 4 files |
 | Phase 22-endpoints-admin P01 | 10 minutes | 2 tasks | 5 files |
 | Phase 22-endpoints-admin P03 | 2 minutes | 2 tasks | 4 files |
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 25 P01 | 11min | 3 tasks | 9 files |
 
 ## Decisions
 
@@ -203,6 +208,9 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 21-05]: Admin login API field is `email` (maps to User#email_address) — downstream phases 22/23 must send field `email`, not `email_address`
 - [Phase 21-05]: jwt_secret and api.ai_key provisioned via Rails encrypted credentials (not ENV) — production-safe, encrypted at rest
 - [Phase ?]: Phase 22-03: ArtesController usa params.permit flat (sem .require(:arte)) e apply_filters com Arte.statuses.key? + Date.strptime guards; validates :media_file ASVS L1 adicionado ao model
+- [Phase 25]: [Phase 25-01]: Evolution:: config vive em app/services/evolution.rb (namespace explícito) — module Evolution num initializer quebra o autoload do Zeitwerk para Evolution::Errors
+- [Phase 25]: [Phase 25-01]: EVO-01 (round-trip autenticado real contra o host da agência) DEFERIDO — EVOLUTION_BASE_URL/EVOLUTION_GLOBAL_API_KEY indisponíveis; artefatos de código entregues, fechamento aguarda credenciais (user_setup, D-06)
+- [Phase 25]: [Phase 25-01]: fugit permanece no lockfile — dep transitiva de solid_queue (~> 1.11), não exclusiva do good_job
 
 ## Quick Tasks Completed
 
@@ -212,6 +220,10 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-29T18:09:23.448Z
-**Stopped at:** Phase 25 context gathered
-**Resume file:** .planning/phases/25-funda-o-transporte-evolution-storage-alcan-vel/25-CONTEXT.md
+**Last session:** 2026-08-29T20:01:30.260Z
+**Stopped at:** Completed 25-01-PLAN.md (EVO-01 live round-trip deferred — agency credentials)
+**Resume file:** None
+
+### Blockers
+
+- EVO-01 / SC2: round-trip autenticado do Evolution::Client contra whatsapp.bomcustoilhabela.com.br não executado — falta EVOLUTION_BASE_URL + EVOLUTION_GLOBAL_API_KEY (user_setup 25-01, CONTEXT.md D-06). Código entregue; verificação empírica deferida.

@@ -18,15 +18,15 @@
 - [ ] **INFRA-02**: Jobs agendados sobrevivem a reinício do servidor em development (queue adapter explícito + schema de fila carregado), viabilizando UAT de agendamento
 - [ ] **INFRA-03**: O fuso horário é determinístico entre development e produção (`TZ` fixado no deploy, com verificação no boot)
 - [ ] **INFRA-04**: Segredos do Evolution (`apikey`, `hash`, `token`, QR) nunca aparecem em log — `filter_parameters` corrigido, e nenhum segredo trafega como argumento de job
-- [ ] **INFRA-05**: `good_job` removido do Gemfile, restando um único adapter de fila no bundle
+- [x] **INFRA-05**: `good_job` removido do Gemfile, restando um único adapter de fila no bundle
 - [ ] **INFRA-06**: Disparos de WhatsApp rodam em fila dedicada, sem atrasar os broadcasts de ActionCable do v1.5
 - [ ] **INFRA-07**: `failed_executions` do solid_queue tem política de retenção, evitando acúmulo de argumentos de job em texto claro
 
 ### Transporte Evolution API
 
 - [ ] **EVO-01**: O contrato do Evolution é verificado empiricamente contra o host real da agência antes de qualquer código depender dele (versão, shape dos DTOs, casing dos eventos de webhook, JID de grupo em `sendMedia`)
-- [ ] **EVO-02**: Toda comunicação HTTP com o Evolution passa por um único service PORO, com timeouts explícitos e header `apikey`
-- [ ] **EVO-03**: Erros do Evolution são classificados em transitório / permanente / incerto / não-conectado, e cada classe tem tratamento distinto
+- [x] **EVO-02**: Toda comunicação HTTP com o Evolution passa por um único service PORO, com timeouts explícitos e header `apikey`
+- [x] **EVO-03**: Erros do Evolution são classificados em transitório / permanente / incerto / não-conectado, e cada classe tem tratamento distinto
 - [ ] **EVO-04**: O token de cada instância é persistido criptografado no banco (`encrypts`), com as chaves de `active_record_encryption` configuradas antes da primeira gravação
 
 ### Instância e Pareamento
@@ -145,12 +145,12 @@ Preenchido na criação do roadmap (2026-08-29). Fonte: `.planning/ROADMAP.md`.
 | INFRA-02 | Phase 25 | Pending |
 | INFRA-03 | Phase 25 | Pending |
 | INFRA-04 | Phase 26 | Pending |
-| INFRA-05 | Phase 25 | Pending |
+| INFRA-05 | Phase 25 | Complete |
 | INFRA-06 | Phase 29 | Pending |
 | INFRA-07 | Phase 30 | Pending |
 | EVO-01 | Phase 25 | Pending |
-| EVO-02 | Phase 25 | Pending |
-| EVO-03 | Phase 25 | Pending |
+| EVO-02 | Phase 25 | Complete |
+| EVO-03 | Phase 25 | Complete |
 | EVO-04 | Phase 26 | Pending |
 | PAIR-01 | Phase 26 | Pending |
 | PAIR-02 | Phase 26 | Pending |
@@ -204,6 +204,7 @@ Preenchido na criação do roadmap (2026-08-29). Fonte: `.planning/ROADMAP.md`.
 | 30 | Acompanhamento ao Vivo + Hardening | ACOMP-01..03, SEG-04, INFRA-07 | 5 |
 
 **Coverage:**
+
 - v1.7 requirements: 50 total
 - Mapped to phases: 50 ✅
 - Unmapped: 0
