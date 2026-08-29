@@ -5,8 +5,8 @@ milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 25
 current_phase_name: Fundação — Transporte Evolution + Storage Alcançável
 status: executing
-stopped_at: Completed 25-01-PLAN.md (EVO-01 live round-trip deferred — agency credentials)
-last_updated: "2026-08-29T20:01:35.884Z"
+stopped_at: 25-02-PLAN.md paused at Task 2 <human-check> (SC4 restart proof) — Tasks 1-2 code committed; Task 3 pending
+last_updated: "2026-08-29T20:13:00.000Z"
 last_activity: 2026-08-29
 last_activity_desc: Phase 25 execution started
 state_head: 65d6ed6ca6c69d427365b510a7d46e5b3ba5c3b9
@@ -220,10 +220,12 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-29T20:01:30.260Z
-**Stopped at:** Completed 25-01-PLAN.md (EVO-01 live round-trip deferred — agency credentials)
-**Resume file:** None
+**Last session:** 2026-08-29T20:13:00.000Z
+**Stopped at:** 25-02-PLAN.md — Task 2 <human-check> gate (SC4 restart-survival proof). Tasks 1-2 code committed (6ce3a06, 6fac8fd). Task 3 (timezone_check.rb) not yet executed.
+**Resume file:** .planning/phases/25-funda-o-transporte-evolution-storage-alcan-vel/25-02-PLAN.md
 
 ### Blockers
 
 - EVO-01 / SC2: round-trip autenticado do Evolution::Client contra whatsapp.bomcustoilhabela.com.br não executado — falta EVOLUTION_BASE_URL + EVOLUTION_GLOBAL_API_KEY (user_setup 25-01, CONTEXT.md D-06). Código entregue; verificação empírica deferida.
+- INFRA-01 / SC1 (25-02 Task 1): round-trip presignado real contra o MinIO não executado — MinIO não provisionado no host e S3_ENDPOINT / aws.* indisponíveis (RESEARCH A6, user_setup). Config entregue e commitada (6ce3a06); `Aws::Errors::MissingCredentialsError` no probe. Fechamento aguarda provisionamento do MinIO (bucket calendario-livia-development privado + credenciais + S3_ENDPOINT no .env).
+- INFRA-02 / SC4 (25-02 Task 2): prova de sobrevivência a restart é gate humano — parar/reiniciar `bin/jobs` e confirmar que `tmp/phase25_job_marker.txt` é escrito após o restart. Linha durável já persistida em solid_queue_scheduled_executions (id 1, scheduled_at 2026-08-29T17:11:00-03:00). Timeline observada a colar no 25-02-SUMMARY.md.
