@@ -24,9 +24,17 @@ O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de con
 
 API JSON REST versionada (`/api/v1/`) completa — 20 endpoints para app mobile e agente IA; três modos de auth; rate limiting Rack::Attack. Ver archive em `.planning/milestones/v1.6-ROADMAP.md`.
 
-## Next Milestone
+## Current Milestone: v1.7 WhatsApp Auto-Post + Deploy
 
-A definir com `/gsd-new-milestone`. Candidatos: Swagger/OpenAPI docs (v1.7), deploy em produção com S3 (INFRA-01), ou notificações por e-mail (NOTF-01, NOTF-02).
+**Goal:** O admin dispara artes aprovadas para grupos de WhatsApp selecionados, no dia e hora que escolher, com delay aleatório entre grupos — cada cliente com seu próprio número via Evolution API.
+
+**Target features:**
+- Integração com Evolution API (service PORO, credenciais em ENV/credentials)
+- Instância de WhatsApp por cliente — o app cria a instância e exibe QR Code para parear, ou registra uma instância já existente; status de conexão visível
+- Listagem dos grupos da instância do cliente e seleção de quais recebem o post
+- Entidade `Divulgacao`: cliente + arte aprovada + grupos + data/hora, com histórico de envio por grupo
+- Envio agendado em background com delay aleatório entre grupos (faixa fixa em ENV)
+- Deploy em produção com Active Storage S3 (INFRA-01) — mídia precisa de URL alcançável pelo host público do Evolution
 
 ## Requirements
 
@@ -113,13 +121,23 @@ A definir com `/gsd-new-milestone`. Candidatos: Swagger/OpenAPI docs (v1.7), dep
 - ✓ GET /api/v1/ai/clients/:id/summary — contadores de status corretos via Arte.statuses — APIAI-03 — v1.6 Phase 24
 - ✓ Rack::Attack dual-layer (by key 60/min + by IP 30/min fallback) — INFAPI-04 — v1.6 Phase 24
 
+### Active (v1.7 — em definição)
+
+- [ ] Integração com Evolution API para envio de mensagens em grupos de WhatsApp (EVO-*)
+- [ ] Cada cliente tem sua própria instância/número de WhatsApp — criada pelo app com QR Code ou registrada se já existir (EVO-*)
+- [ ] Admin lista os grupos da instância do cliente e seleciona quais recebem o post (GRUPO-*)
+- [ ] Admin cria uma Divulgação: cliente + arte aprovada + grupos + data e hora (DIVU-*)
+- [ ] Envio agendado em background com delay aleatório entre grupos, faixa configurada em ENV (DIVU-*)
+- [ ] Histórico de envio por grupo (enviado / falhou / pendente) (DIVU-*)
+- [ ] Deploy em produção com Active Storage S3 (INFRA-01)
+
 ### Backlog (v1.5+)
 
 - [ ] Notificações por e-mail ao admin quando cliente aprova ou pede alteração (NOTF-01)
 - [ ] Notificações por e-mail ao cliente quando arte é revisada (NOTF-02)
 - [ ] Exportar relatório de aprovações de um cliente em PDF ou CSV (ADM2-01)
 - [ ] Duplicar uma arte para outro cliente ou data (ADM2-02)
-- [ ] Deploy em produção com Active Storage S3 (INFRA-01)
+- [ ] Documentação Swagger/OpenAPI da API v1 (DOCS-01)
 
 ### Out of Scope
 
@@ -178,6 +196,14 @@ A definir com `/gsd-new-milestone`. Candidatos: Swagger/OpenAPI docs (v1.7), dep
 | API: JWT único 24h sem refresh token | Alinha com o DNA enxuto do projeto; revogação por expiração | ✓ Phase 21 |
 | API: `Api::V1::BaseController < ActionController::API` | Isola CSRF/cookies/Session do auth web; alg HS256 fixo (defesa alg:none) | ✓ Phase 21 |
 | API: campo de login admin é `email` (→ User#email_address) | Contrato da API; fases 22/23 enviam `{ email, password }` | ✓ Phase 21 |
+| API: `secure_compare` em todos os auth checks | Resistência a timing attacks em comparações de segredo | ✓ Phase 21 |
+| API: throttle dual-layer (by key + by IP) | Cobre requisições sem auth que retornam 401 indefinidamente | ✓ Phase 24 |
+| WhatsApp: uma instância Evolution por cliente | Cada cliente divulga pelo próprio número | — Pendente (v1.7) |
+| WhatsApp: app cria a instância + QR Code, mas aceita instância já existente | Cobre tanto cliente novo quanto número já pareado no manager | — Pendente (v1.7) |
+| WhatsApp: entidade `Divulgacao` separada da `Arte` | Mantém `scheduled_on` como :date (decisão de v1.0 contra timezone); data/hora do post vive na Divulgação | — Pendente (v1.7) |
+| WhatsApp: admin — não o cliente — escolhe grupos e horário | Portal do cliente continua exclusivo para aprovação | — Pendente (v1.7) |
+| WhatsApp: delay aleatório com faixa fixa em ENV | Evita ban por flood sem exigir UI de configuração | — Pendente (v1.7) |
+| WhatsApp: credenciais Evolution em `.env` (dev/test) + credentials (prod) | `dotenv-rails` só está em development/test; `.env*` já ignorado pelo git | — Pendente (v1.7) |
 
 ---
 
@@ -238,15 +264,10 @@ This document evolves at phase transitions and milestone boundaries.
 **Requirements:** 10/10 (CABLE-01, CABLE-02, RTUP-01..08).
 **Deferred:** validações visuais de UAT/verification das fases 17/18 (ver STATE.md → Deferred Items).
 
-## Ativo: v1.6 API JSON (iniciado 2026-06-10)
+## Shipped: v1.6 API JSON (2026-06-13)
 
-API REST versionada (`/api/v1/`) para app mobile (admin + cliente) e agente IA, com três modos de auth (JWT admin, token do portal, API key). Fases 21–24. Requisitos em `.planning/REQUIREMENTS.md`, roadmap em `.planning/ROADMAP.md`, nota de design em `.planning/notes/api-auth-strategy.md`.
-
----
-
-| API: `secure_compare` em todos os auth checks | Resistência a timing attacks em comparações de segredo | ✓ Phase 21 |
-| API: throttle dual-layer (by key + by IP) | Cobre requisições sem auth que retornam 401 indefinidamente | ✓ Phase 24 |
+API REST versionada (`/api/v1/`) para app mobile (admin + cliente) e agente IA, com três modos de auth (JWT admin, token do portal, API key). Fases 21–24. Archive em `.planning/milestones/v1.6-ROADMAP.md`, nota de design em `.planning/notes/api-auth-strategy.md`.
 
 ---
 
-*Last updated: 2026-06-13 after v1.6 — API JSON (20 requisitos validados; 6 milestones shipped; próximo: v1.7 a definir).*
+*Last updated: 2026-08-29 after starting v1.7 — WhatsApp Auto-Post + Deploy (7 milestones: 6 shipped, v1.7 em definição).*

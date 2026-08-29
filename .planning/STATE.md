@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.6
-milestone_name: API JSON
-status: archived
-last_updated: 2026-06-13T00:00:00Z
-last_activity: 2026-06-13 -- v1.6 archived, ready for next milestone
+milestone: v1.7
+milestone_name: WhatsApp Auto-Post + Deploy
+status: planning
+last_updated: "2026-08-29T14:41:57.318Z"
+last_activity: 2026-08-29
 progress:
-  total_phases: 24
-  completed_phases: 24
-  total_plans: 56
-  completed_plans: 56
-  percent: 100
-stopped_at: v1.6 complete and archived
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 
 ## Current Position
 
-Phase: 24
-Plan: Not started
-Status: Milestone complete
-Last activity: 2026-06-13
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-08-29 — Milestone v1.7 started
 
 ## Progress Bar
 
