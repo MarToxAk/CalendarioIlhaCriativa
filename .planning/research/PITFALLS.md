@@ -1,574 +1,653 @@
-# Pitfalls Research — ActionCable Integration
+# Pitfalls Research — WhatsApp Auto-Post via Evolution API (v1.7)
 
-**Project:** Calendário de Aprovação de Artes  
-**Researched:** 2026-06-05  
-**Scope:** Adding ActionCable + Turbo Streams real-time to Rails 8.1.3 existing app  
-**Confidence:** HIGH (official Rails guides + source code verified)
+**Domain:** Automação de postagem em grupos de WhatsApp a partir de um app Rails 8 existente, usando Evolution API (bridge não-oficial baseada em Baileys)
+**Researched:** 2026-08-29
+**Confidence:** MEDIUM geral — MEDIUM para ToS/política e para solid_queue; LOW→MEDIUM para números concretos de rate limit (ver "Qualidade da evidência")
 
----
-
-## PostgreSQL Adapter Pitfalls
-
-### Pitfall 1: cable.yml already uses solid_cable in production — adapter choice has real consequences
-
-The existing `config/cable.yml` uses `solid_cable` in production (polling-based, separate `cable`
-DB). The milestone constraint says "PostgreSQL adapter (no Redis)." These are distinct choices:
-
-- `solid_cable` — polling at 0.1s intervals, uses a dedicated `cable` DB already declared in
-  `database.yml`, zero extra connection model complexity, but introduces polling latency.
-- `postgresql` — uses LISTEN/NOTIFY on the primary DB, true push-based, no separate DB needed,
-  but requires understanding the connection model (see Pitfall 2).
-
-**Current cable.yml state:**
-- `development: adapter: async` — correct, do not change (same-process only; cable comment in
-  file explains this correctly)
-- `test: adapter: test` — correct, must not change
-- `production: adapter: solid_cable` — already wired to a `cable` DB entry in database.yml
-
-If switching to `postgresql` adapter for production, remove the entire solid_cable block and
-write:
-```yaml
-production:
-  adapter: postgresql
-```
-It picks up the primary DB config from `database.yml` automatically. Extra YAML keys cause
-silent fallback to async.
+> **Nota de numeração de fases.** O roadmap v1.7 ainda não existe. As fases citadas abaixo são **slugs sugeridos**, não números fixos. O roadmapper deve mapear cada slug para o número real. A ordem sugerida está em [Pitfall-to-Phase Mapping](#pitfall-to-phase-mapping).
+>
+> | Slug | Escopo |
+> |------|--------|
+> | `INFRA-S3` | Active Storage S3 + deploy público (INFRA-01) |
+> | `EVO-CLIENT` | Service PORO Evolution + credenciais + modelo `WhatsappInstance` |
+> | `EVO-PAREAMENTO` | Criação de instância, QR Code, estado de conexão, webhook |
+> | `EVO-GRUPOS` | Listagem/cache/seleção de grupos |
+> | `DIVU-MODEL` | Entidade `Divulgacao` + agendamento (data/hora) + UI admin |
+> | `DIVU-ENVIO` | Job de envio, delay, throttling, histórico por grupo |
+> | `HARDENING` | Logs, filtros, observabilidade, code review, UAT |
 
 ---
 
-### Pitfall 2: PostgreSQL adapter creates LISTEN connections outside the AR pool
+## Qualidade da evidência (leia antes de usar os números)
 
-The PostgreSQL adapter uses two strategies internally:
-- **Broadcasts:** `connection_pool.with_connection` — normal AR pool checkout, returns cleanly.
-- **Subscriptions (LISTEN/NOTIFY):** `connection_pool.new_connection` — deliberately bypasses
-  pool to avoid pinned connections. Each ActionCable worker thread that handles a subscription
-  opens a **dedicated, persistent PostgreSQL connection** that does NOT count against `pool:` in
-  `database.yml` but DOES consume a PostgreSQL server slot.
+Esta é uma área onde a internet está cheia de números confiantes sem metodologia. Sendo direto sobre o que é o quê:
 
-With Puma at 3 threads and 30 concurrent WebSocket clients, expect 3–5 persistent extra
-connections beyond the normal pool. For a server with `max_connections = 100` (PostgreSQL
-default), this is not a crisis at this scale, but must be known.
+| Afirmação | Qualidade |
+|-----------|-----------|
+| Automação via cliente não-oficial viola o ToS do WhatsApp | **Fato verificável.** Texto literal em `whatsapp.com/legal` (citado abaixo). |
+| Evolution API **não** tem rate limiter nem fila embutidos | **Fato verificável.** Confirmado na issue [#2538](https://github.com/evolution-foundation/evolution-api/issues/2538); mantenedores não ofereceram números seguros. |
+| Estados de conexão, statusReason, endpoints, params de `sendMedia` | **Documentado** (docs oficiais Evolution v2). |
+| Comportamento de `solid_queue` (args no banco, at-least-once, sem discard de duplicatas) | **Documentado** no README oficial e nas issues [#176](https://github.com/rails/solid_queue/issues/176). |
+| "~10–20 mensagens/minuto por instância antes do anti-spam" | **Anedótico / opinião de fornecedor.** Nenhuma fonte cita medição. |
+| "delay de 15–45s entre mensagens, pausa de 10–15min a cada 50" | **Anedótico / opinião de fornecedor** (WasenderApi). Outras fontes dizem 1–5s. A dispersão de 1s→45s entre fontes é a prova de que ninguém sabe o limite real. |
+| Cronograma de warm-up (semana 1 manual, semana 2 ~10–20 msg/dia, +20%) | **Anedótico**, mas é o único ponto em que **todas** as fontes concordam qualitativamente. |
+| "1 em cada 5 contas com API não-oficial é banida em um ano" | **Marketing de fornecedor sem metodologia.** Não use para planejar. |
+| Bans em massa relatados nas issues Baileys [#1869](https://github.com/WhiskeySockets/Baileys/issues/1869) / [#2075](https://github.com/WhiskeySockets/Baileys/issues/2075) | **Anedótico.** Issue #1869 ficou *stale* sem explicação técnica de mantenedor. Sinal útil: contas com 3+ anos sem problema foram banidas de repente — a fiscalização **muda com o tempo**, então "funcionou mês passado" não é garantia. |
 
-**Prevention:** Leave pool size at `RAILS_MAX_THREADS` (already in database.yml). Monitor
-`SELECT count(*) FROM pg_stat_activity` in production.
-
----
-
-### Pitfall 3: Pool exhaustion from broadcast + HTTP request contention
-
-Broadcasts inside model callbacks use `with_connection` (pool checkout). If all 5 pool
-connections are busy (concurrent HTTP requests mid-query) and a broadcast fires, it blocks until
-a connection is free. Under load this manifests as ActionCable worker timeouts in logs.
-
-**Prevention:** The existing `pool: 5` with Puma at 3 threads has 2 headroom connections — just
-adequate for light use. If moving to production with higher concurrency, set
-`RAILS_MAX_THREADS=5` and ensure pool matches.
+**Meta nunca publicou os limiares de detecção.** Qualquer número neste documento é heurística defensiva, não contrato.
 
 ---
 
-### Pitfall 4: PostgreSQL NOTIFY has an 8 KB hard payload limit
+## Seção 0: A decisão de ToS e ban (o usuário decide; o papel aqui é informar)
 
-Rails hashes channel names over 63 bytes (SHA1) automatically — that is handled. But the
-**broadcast payload itself** (rendered HTML Turbo Stream) must fit in 8,000 bytes. A broadcast
-containing a full calendar row with multiple art chips, Tailwind classes, and inline SVG will
-exceed this limit. The failure mode: the broadcast is silently dropped or raises
-`PG::InvalidParameterValue` inside the background job.
+### O que o ToS diz, literalmente
 
-**Prevention:** Broadcast small, focused partials. A status badge update should broadcast only
-the badge HTML, not the entire calendar cell. If a partial regularly exceeds ~4 KB rendered,
-split it or broadcast a page refresh signal instead.
+**WhatsApp Messaging Guidelines** proíbe explicitamente:
 
----
+> "use unofficial clients, bulk messaging, auto-messaging, auto-dialing, or automation to harm WhatsApp or our users"
 
-### Pitfall 5: Development `async` adapter — console broadcasts do not reach the browser
+**WhatsApp Terms of Service:**
 
-The `async` adapter (current dev config) works only within the same OS process. Running
-`ActionCable.server.broadcast(...)` from `bin/rails console` in a terminal does nothing in the
-browser — it is a different process. The cable.yml comment in this project already warns about
-this correctly.
+> "create accounts for our Services through unauthorized or automated means"
+>
+> "reverse engineer, alter, modify, create derivative works from, decompile, or extract code from our Services"
+>
+> "We may modify, suspend, or terminate your access to or use of our Services anytime for any reason, such as if you violate the letter or spirit of our Terms..."
+>
+> "If you violate our Terms or policies, we may take action with respect to your account, including disabling or suspending your account and, if we do, you agree not to create another account without our permission."
 
-**Prevention:** Use the web console (`console` in a view), or temporarily switch development to
-`postgresql` adapter while testing broadcasts. Never use `solid_cable` or `postgresql` in the
-test environment.
+Baileys funciona **se passando por um dispositivo companion** (o mesmo mecanismo do WhatsApp Web). Isso é exatamente o que o parágrafo de engenharia reversa cobre. **Não há leitura do ToS em que Evolution/Baileys esteja permitido.**
 
----
+### O risco concreto para este projeto
 
-## Authentication Pitfalls (client without session)
+O que está em jogo **não é a conta do usuário** — é a **conta de WhatsApp de cada cliente da agência**, já que cada cliente pareia o próprio número:
 
-### Pitfall 1: CRITICAL — existing connection.rb rejects all client users
+| Consequência | Detalhe |
+|--------------|---------|
+| Ban do número do cliente | Enforcement documentado: "temporarily or permanently suspending an account". Bans por API não-oficial tendem a ser permanentes e **sem apelação prática** (anedótico, mas consistente entre fontes). |
+| Perda da presença do cliente no WhatsApp | O número banido é o número comercial do cliente. Ele perde histórico, grupos e contatos — não só a automação. |
+| Restrição em grupos | "preventing further activity in groups and/or communities" — pode ficar mudo nos grupos sem perder a conta. |
+| Responsabilidade contratual da agência | Se a agência opera o número do cliente e ele é banido, o dano é do cliente e a conversa é comercial, não técnica. |
+| Quebra silenciosa por atualização do WhatsApp | Baileys é engenharia reversa. O WhatsApp muda o protocolo sem aviso; o parear/enviar pode parar de funcionar em qualquer deploy do lado deles. |
 
-The current `app/channels/application_cable/connection.rb` authenticates only via:
-```ruby
-Session.find_by(id: cookies.signed[:session_id])
-```
+### O que a alternativa oficial oferece — e por que ela não resolve este caso
 
-Client users have no `Session` record. They authenticate via `session[:client_id]` +
-`session[:client_token_version]` set by `ClientController#require_client_auth`. Every client
-who opens their calendar page will have their WebSocket upgrade rejected with "An unauthorized
-connection attempt was rejected." Turbo Streams real-time will silently not work for clients.
+**WhatsApp Business Cloud API** (Meta) é o caminho sancionado: sem risco de ban por ToS, com SLA, templates aprovados, webhooks estáveis.
 
-**Required fix — extend connection.rb to dual-path authentication:**
+Mas para **este** requisito específico — "postar uma arte nos grupos de WhatsApp que o cliente já tem" — a Cloud API **não atende**:
 
-```ruby
-module ApplicationCable
-  class Connection < ActionCable::Connection::Base
-    identified_by :current_user, :current_client
+| Restrição da Groups API (Cloud API, lançada out/2025) | Impacto aqui |
+|---|---|
+| Exige **Official Business Account (OBA)** | Clientes de agência pequena não têm OBA. |
+| Grupos limitados a **8 participantes** | Grupos de divulgação reais têm 50–1000. Inviável. |
+| Apenas **1 negócio Cloud API por grupo** | — |
+| A API **cria** grupos novos; não entra em grupos de consumidor já existentes | O caso de uso é exatamente postar em grupos que já existem. |
+| Indisponível para números do app WhatsApp Business | A maioria dos clientes usa exatamente isso. |
+| Preço por mensagem | Custo recorrente por grupo × por post. |
 
-    def connect
-      set_current_user || set_current_client || reject_unauthorized_connection
-    end
+**Conclusão factual, sem juízo de valor:** o caminho oficial existe e é seguro, mas **não cobre "postar em grupos de WhatsApp preexistentes de terceiros"**. Uma agência pequena que quer esse recurso não tem uma alternativa oficial equivalente — a escolha real é entre *fazer via Evolution assumindo o risco de ban* ou *não ter o recurso*. Essa é a decisão do usuário; o papel deste documento é garantir que ela seja tomada com o preço na mesa.
 
-    private
+### Mitigações de produto (independentes de código)
 
-    def set_current_user
-      if session = Session.find_by(id: cookies.signed[:session_id])
-        self.current_user = session.user
-      end
-    end
+Se o caminho não-oficial for escolhido, essas medidas reduzem o dano **quando** — não *se* — um número for banido:
 
-    def set_current_client
-      client_id      = request.session[:client_id]
-      token_version  = request.session[:client_token_version]
-      return unless client_id && token_version
-      client = Client.find_by(id: client_id)
-      return unless client&.active? && client.token_version == token_version
-      self.current_client = client
-    end
-  end
-end
-```
+1. **Número dedicado por cliente, nunca o número pessoal/principal do cliente.** Chip separado. Se banir, o cliente perde um canal de divulgação, não o WhatsApp do negócio.
+2. **Consentimento explícito e por escrito do cliente**, mencionando o risco de ban. Vira cláusula de contrato, não surpresa.
+3. **Aviso na UI de pareamento**, no momento de escanear o QR: uma linha dizendo que o número pode ser banido pelo WhatsApp.
+4. Um cliente banido **não pode contaminar os outros** — instâncias são isoladas por número. Isso é a favor do design escolhido (uma instância por cliente).
 
-`identified_by` accepts multiple identifiers. The connection is accepted when any one is non-nil.
+**Fase:** `EVO-PAREAMENTO` (aviso na UI) + decisão de produto antes do roadmap.
 
 ---
 
-### Pitfall 2: ActionCable connection.rb does NOT expose bare `session` — use `request.session`
+## Critical Pitfalls
 
-In controllers, `session` is a DSL method. In `ApplicationCable::Connection`, the object is an
-`ActionCable::Connection::Base` — there is no `session` method by default. The HTTP session IS
-accessible but only via `request.session[:key]`. Using bare `session` raises `NoMethodError` or
-returns nil silently.
+### Pitfall 1: Rajada de envios (burst) dispara o anti-spam e derruba o número
 
-**Prevention:** Always use `request.session[:client_id]` in connection.rb, never `session[:client_id]`.
+**What goes wrong:**
+Uma Divulgação com 12 grupos vira 12 chamadas `sendMedia` no mesmo segundo, porque o job faz `groups.each { send }` sem pacing, ou porque 3 threads do solid_queue processam 3 Divulgações simultâneas. O número entra em restrição ou ban em minutos.
 
----
+**Why it happens:**
+A causa técnica mais citada de ban é **concorrência não gerenciada e tráfego em rajada**. E o Evolution API **não protege**: a issue [#2538](https://github.com/evolution-foundation/evolution-api/issues/2538) confirma que não existe rate limiter, fila ou retry embutido — sends vão direto para a instância. O parâmetro `delay` do `sendMedia` **é uma simulação de "digitando..." antes de um único envio, não um rate limiter** entre envios. Quem assume que `delay` protege contra ban está enganado.
 
-### Pitfall 3: Passing access_token in the WebSocket URL is a security vulnerability
+**How to avoid:**
+- Delay aleatório **entre** grupos, aplicado no lado Rails, não no `delay` do Evolution. Faixa em ENV conforme já decidido no PROJECT.md. Sugestão de default conservador: `WHATSAPP_DELAY_MIN=45`, `WHATSAPP_DELAY_MAX=120` (segundos). Justificativa: 10–30 clientes com poucos grupos cada não têm pressa; o custo de um delay generoso é zero e o custo de um ban é o cliente.
+- **Serialização por instância**, não só delay. Dois jobs da mesma instância nunca podem enviar em paralelo. Use `ActiveJob` concurrency control do solid_queue com `key: "whatsapp-#{instance_id}"` e `to_concurrency_limit: 1`.
+- **Teto por janela** por instância (ex.: máx. 30 envios/hora, contador em tabela ou `Rails.cache`), com a Divulgação transbordando para a hora seguinte em vez de estourar.
+- Randomizar também a **ordem** dos grupos entre execuções.
 
-A tempting shortcut:
-```javascript
-createConsumer(`/cable?token=${clientToken}`)
-```
+**Warning signs:**
+- Logs mostram dois `sendMedia` da mesma instância com timestamps < faixa mínima de delay.
+- `connectionState` volta `close` com `statusReason` 401/403 logo depois de uma Divulgação grande.
+- Cliente relata "meu WhatsApp pediu para confirmar o número".
+- Histórico por grupo com uma sequência de sucessos seguida de falhas em bloco.
 
-The `access_token` is the client's only credential — it never expires and gives full calendar
-access. WebSocket upgrade URLs appear in: server access logs (plaintext), Nginx/Apache logs,
-browser network history, and proxy logs. This permanently compromises the client's calendar if
-any log is leaked.
-
-**Prevention:** Do not pass tokens in URLs. Use `request.session` in connection.rb. The client's
-session is already established by `ClientController` login — it contains all needed state.
+**Phase to address:** `DIVU-ENVIO` (obrigatório antes de qualquer envio real).
 
 ---
 
-### Pitfall 4: Channel subscription must scope the stream to the specific client
+### Pitfall 2: Mensagem byte-a-byte idêntica em N grupos
 
-Without scoping, all clients share one stream and receive each other's real-time updates:
+**What goes wrong:**
+A mesma legenda e a mesma mídia disparadas para 12 grupos em sequência formam o padrão exato que sistemas anti-spam procuram. Uma fonte descreve o sinal como "500 mensagens idênticas em 5 segundos" — o formato do caso de uso é uma versão diluída disso.
 
-```ruby
-# Wrong — every subscriber receives every broadcast
-def subscribed
-  stream_from "arts_updates"
-end
-```
+**Why it happens:**
+O produto é literalmente "mande esta arte para estes grupos". A identidade do conteúdo é o requisito, não um bug. Isso torna o pitfall estrutural, não acidental.
 
-```ruby
-# Right — each client only receives their own updates
-def subscribed
-  stream_from "client_#{current_client.id}_updates"
-end
+**How to avoid:**
+- Aceitar que este é um risco residual **não eliminável** e dimensioná-lo: menos grupos por Divulgação, delay maior.
+- Variação leve e barata da legenda, se o usuário quiser: sufixo aleatório invisível-ish (variação de emoji final, quebra de linha, saudação por horário). **Não implementar "spinning" agressivo** — muda o texto que o cliente aprovou, o que quebra o contrato do produto (o cliente aprovou *aquela* arte).
+- Se implementar variação, ela precisa ser **visível ao admin na tela de Divulgação** antes do envio; caso contrário vira conteúdo não aprovado indo ao ar.
+- **Não usar `mentionsEveryOne`** — marcar todos em grupos grandes é um dos comportamentos mais denunciáveis pelos participantes, e denúncia de usuário é sinal de ban.
 
-# Or using Turbo helper (generates same scoped name automatically)
-def subscribed
-  stream_for current_client
-end
-```
+**Warning signs:**
+- Divulgações com mais de ~10 grupos viram rotina.
+- Nenhuma variação e delay no mínimo da faixa.
+- Participantes saindo dos grupos após os posts (proxy de denúncia).
 
-A client from account A receiving account B's approval updates is a data privacy breach.
+**Phase to address:** `DIVU-MODEL` (decidir se há variação e expô-la na UI) + `DIVU-ENVIO`.
+
+**Evidência:** anedótica. Nenhuma fonte mede o efeito da variação de conteúdo sobre a taxa de ban.
 
 ---
 
-### Pitfall 5: `reject_unauthorized_connection` generates logged errors — expected but noisy
+### Pitfall 3: Número novo pareado hoje, disparando hoje (sem warm-up)
 
-Every WebSocket attempt from an unauthenticated context (pre-login page, bot, wrong origin) logs
-an error. In production this creates log noise but is correct behavior. With 30 clients, each
-calendar page load before login fires one rejected connection.
+**What goes wrong:**
+Cliente novo entra no sistema, compra um chip, pareia o QR e o admin agenda uma Divulgação para 8 grupos no mesmo dia. Este é o cenário que as fontes descrevem como ban quase certo em minutos — "conectar um SIM novo e imediatamente disparar broadcast".
 
-**Prevention:** This is expected. Filter at the log aggregator if noisy. Do not suppress the
-rejection itself — it is the security mechanism.
+**Why it happens:**
+O fluxo do produto convida a isso: parear → listar grupos → criar Divulgação é uma sequência natural de 5 minutos na UI. Nada no caminho feliz sugere esperar.
 
----
+**How to avoid:**
+- Registrar `paired_at` (ou `first_connected_at`) na instância.
+- **Gate de maturidade no app**, não só documentação: bloquear ou avisar em vermelho ao criar Divulgação quando `paired_at < 14.days.ago`, e limitar o nº de grupos por Divulgação nas primeiras semanas (ex.: 2 grupos na semana 1, 5 na semana 2, livre depois). Um `WhatsappInstance#max_groups_per_divulgacao` derivado da idade resolve.
+- Texto explícito no onboarding: usar o número **manualmente** por ~1 semana (conversar, entrar em grupos, receber mensagens) antes de automatizar.
+- Preferir **número que o cliente já usa há meses** a chip novo, quando possível — mas ver Pitfall 0 (o risco recai sobre um número com histórico).
 
-## Turbo Frames vs Turbo Streams Coexistence
+**Warning signs:**
+- `paired_at` e a primeira Divulgação no mesmo dia.
+- Instância com razão enviadas/recebidas extremamente assimétrica (só envia, nunca recebe).
 
-### Pitfall 1: `turbo_stream.replace` targeting a `<turbo-frame>` destroys the frame element
+**Phase to address:** `EVO-PAREAMENTO` (campo `paired_at` + aviso) e `DIVU-MODEL` (gate na criação).
 
-This project has three active Turbo Frames:
-- `dashboard-content` (admin/dashboard/index.html.erb)
-- `calendar-content` (admin/calendar/index.html.erb)
-- `approvals-content` (admin/approvals/index.html.erb)
-
-If a broadcast uses `turbo_stream.replace("approvals-content", ...)`, the `<turbo-frame>` element
-itself is replaced with non-frame HTML. Subsequent filter link clicks (which target the frame by
-its ID) then trigger full page navigations instead of frame-scoped requests. The page looks fine
-visually but Turbo Frame behavior is permanently broken for that page session.
-
-**Prevention:** When targeting an element that IS a `<turbo-frame>`, use `turbo_stream.update`
-(replaces inner content, preserves the frame element and its event bindings). Use `replace` only
-for elements that are NOT turbo-frame wrappers.
-
-```ruby
-# Safe — updates content inside the frame, frame element survives
-turbo_stream.update("approvals-content", partial: "admin/approvals/list")
-
-# Dangerous — kills the frame wrapper itself
-turbo_stream.replace("approvals-content", partial: "admin/approvals/list")
-```
+**Evidência:** anedótica, mas é o único ponto de consenso entre todas as fontes consultadas.
 
 ---
 
-### Pitfall 2: Broadcasts and Turbo Frame navigations are independent — do not confuse them
+### Pitfall 4: O app assume que a instância pareada continua pareada
 
-A Turbo Frame link click sends an HTTP request with `Turbo-Frame:` header and expects an HTML
-response with a matching frame. ActionCable is a persistent WebSocket — completely separate
-infrastructure that does not see or respond to frame navigation.
+**What goes wrong:**
+A sessão Baileys cai: o cliente desconectou "Dispositivos conectados" no celular, o celular ficou offline demais, o container Evolution reiniciou sem volume persistente, ou o WhatsApp invalidou a sessão. A Divulgação agendada para as 18h dispara às 18h, o Evolution retorna erro (ou pior, aceita e não entrega), e o histórico marca "enviado" para grupos que nunca receberam nada. O admin descobre dias depois.
 
-Wrong mental model: "I'll push a broadcast to update the frame when a filter is applied."
-Right mental model: Filter clicks go through HTTP as they do now (unchanged). Broadcasts push
-real-time updates that happen independently of user navigation.
+**Why it happens:**
+O modelo mental de "instância criada = canal permanente" é falso. Evolution expõe três estados — `open`, `close`, `connecting` — com `statusReason` numérico. Crucialmente, **nem toda desconexão se auto-recupera**:
 
-**Prevention:** Keep the two systems orthogonal. Filters and pagination stay pure Turbo Frames
-over HTTP. Real-time status updates go through cable broadcasts targeting specific record IDs
-inside the frame — not the frame itself.
+| `statusReason` | Causa | Auto-reconecta? |
+|---|---|---|
+| 401, 403, 402, 406 | logout, banido, pagamento, sessão inválida | **NÃO** — exige novo QR |
+| 408, 428, 500 | timeout, conexão perdida, erro de servidor | Sim, com backoff exponencial |
 
----
+Um app que só faz retry cego nunca sai do 401 — ele precisa **pedir um QR novo ao admin**.
 
-### Pitfall 3: DOM target IDs inside a Turbo Frame become stale when the frame navigates
+**How to avoid:**
+- **Checar `GET /instance/connectionState/:instance` imediatamente antes de cada envio.** Se `state != "open"`, **não envie**: marque o item do histórico como `pendente_reconexao` (não `falhou`, não `enviado`) e notifique o admin. Nunca marque como enviado sem confirmação do Evolution.
+- Persistir na tabela `whatsapp_instances`: `connection_state`, `status_reason`, `last_seen_at`, `wuid` (o número real conectado).
+- **Webhook `connection.update`** apontando para um endpoint Rails: atualiza o estado em tempo real e permite o badge/toast do ActionCable já existente (v1.5) avisar o admin na hora em que cai.
+- Distinguir **recuperável** (agendar retry) de **não recuperável** (exigir re-pareamento). `statusReason` 401/403 → estado `requires_pairing` na UI, com botão "Gerar novo QR".
+- Guardar `wuid` no pareamento e **comparar antes do envio**: se o número conectado mudou, algo foi re-pareado com outro chip — abortar (ver Pitfall 10).
+- Health check periódico (recurring job) varrendo instâncias `open` para detectar desconexões silenciosas entre Divulgações.
+- QR expira em ~45s com regeneração; a UI precisa **atualizar o QR sozinha** (Turbo Stream + evento `qrcode.updated`), senão o admin escaneia um código morto.
 
-When the `approvals-content` frame loads new content (filter click), all old DOM IDs inside it
-are destroyed. If a broadcast fires targeting an ID that was inside the old frame content,
-it is silently discarded. If a broadcast fires targeting an ID inside the new frame content
-before the frame finishes loading, it is also discarded.
+**Warning signs:**
+- Histórico com "enviado" mas o cliente jura que nada chegou.
+- Nenhuma coluna de estado de conexão no schema — sinal de que o app assume "pareado para sempre".
+- Instância em `connecting` por mais de ~30s.
+- Volume do container Evolution não persistido → toda reinicialização perde todas as sessões de todos os clientes.
 
-**Prevention:** This is acceptable for this use case. The next frame render shows the current
-database state. Design broadcasts to be idempotent: a missed broadcast means the next page
-interaction shows the correct state. Do not architect around catching every broadcast.
-
----
-
-## DOM ID / Broadcast Target Pitfalls
-
-### Pitfall 1: Missing broadcast targets fail completely silently
-
-When a Turbo Stream arrives and the target ID is not in the DOM, Turbo receives the message,
-finds no element, and does nothing. No JavaScript error. No server error. The server logs show
-the broadcast as successful. This is the leading cause of "real-time isn't working" bugs.
-
-**Debugging procedure:**
-1. Open browser DevTools → Network tab → filter by WS
-2. Click on the `/cable` connection
-3. Watch Messages tab — incoming turbo-stream frames appear here
-4. If messages arrive but DOM does not update: target ID mismatch
-5. If no messages arrive: channel subscription or broadcast scoping is wrong
+**Phase to address:** `EVO-PAREAMENTO` (estado + webhook + QR auto-refresh); guard de pré-envio em `DIVU-ENVIO`.
 
 ---
 
-### Pitfall 2: Calendar cell IDs — day-number-only IDs collide across months
+### Pitfall 5: A URL da mídia não é buscável pelo host do Evolution
 
-The calendar grid renders 28–31 day cells per month. A naive `id="day-5"` collides across months
-if the DOM ever has two calendar months visible, and more critically, when months are compared in
-admin calendar (which shows all clients). Month navigation replaces the frame content, so
-collisions only matter within one rendered page — but if two calendar grids are ever on the same
-page (e.g., a mini-preview), collisions cause the wrong cell to update.
+**What goes wrong:**
+O job monta o payload com `media: arte.media_file.url` e o Evolution responde erro ou envia um arquivo quebrado. Este é o motivo declarado da migração para S3 nesta milestone (INFRA-01), e ele tem **cinco modos de falha distintos** — resolver só o do S3 deixa quatro abertos.
 
-**Prevention:**
-- Day cells: `id="cal_<%= date.iso8601 %>"` e.g., `id="cal_2026-06-05"`
-- Art chips inside a cell: `id="<%= dom_id(arte) %>"` (e.g., `id="arte_42"`) — Rails `dom_id`
-  guarantees globally unique IDs for persisted records
-- Status badge inside a chip: `id="status_<%= dom_id(arte) %>"` e.g., `id="status_arte_42"`
+**Why it happens:**
+Quando `media` é uma URL, **quem faz o download é o host do Evolution**, não o Rails. Tudo que é verdade dentro da rede do Rails é irrelevante; o que importa é o que o container Evolution consegue alcançar.
 
----
+| Modo de falha | Detalhe neste projeto |
+|---|---|
+| **URL de LAN / localhost** | O app roda em `192.168.3.203`. Qualquer URL derivada de `default_url_options` local é inalcançável de um Evolution público. Se o Evolution rodar no mesmo LAN, funciona em dev e quebra em prod — o pior tipo de bug. |
+| **Signed URL expirada** | O default do Active Storage é `service_urls_expire_in = 5.minutes`. Uma Divulgação agendada gera a URL no enqueue e envia horas depois → 403 do S3. **Nunca gere a URL no momento do agendamento; gere dentro do job, no momento do envio.** |
+| **`external_url` do Drive/Dropbox** | O sistema já aceita links externos (Drive/Dropbox) como fonte de mídia de uma Arte. Um link de compartilhamento do Google Drive retorna **uma página HTML de visualização**, não bytes de imagem. O Evolution vai baixar HTML e enviar lixo, ou falhar. **Artes com `external_url` de Drive/Dropbox precisam ser bloqueadas para Divulgação** ou convertidas para link direto — não existe conversão confiável para todos os provedores. Recomendação: exigir `media_file` anexado (Active Storage) para uma Arte ser divulgável. |
+| **Arquivo grande demais** | O `Arte` model valida `size < 50.megabytes`, mas o WhatsApp entrega ~**16 MB** para imagem/vídeo/áudio como mídia. Existe uma janela de 16–50 MB que passa na validação do Rails e falha/degrada no WhatsApp. Adicionar validação específica de divulgação em 16 MB. |
+| **Codec / mimetype divergente** | `mediatype` (`image`/`video`/`document`) e `mimetype` precisam bater com os bytes reais. `.mov` (QuickTime) — aceito pelo model — frequentemente não renderiza em todos os clientes WhatsApp; H.264/AAC em `.mp4` é o único combo consistentemente seguro. Issues como [#2056](https://github.com/EvolutionAPI/evolution-api/issues/2056) ("imagem falha ao carregar no app mobile") são desse gênero. |
 
-### Pitfall 3: `dom_id` on unsaved (new) records is not unique
+**How to avoid:**
+- **S3 com URL de vida longa gerada no job.** `arte.media_file.url(expires_in: 30.minutes)` chamado dentro do `perform`, nunca no enqueue.
+- Alternativa mais robusta e recomendada para arquivos < ~10 MB: **enviar base64 em vez de URL**. Elimina de uma vez expiração, alcançabilidade e DNS. Custo: payload maior e uso de memória no worker. Para 10–30 clientes, isso é irrelevante e vale a robustez.
+- **Preflight no job**: `HEAD` na URL antes de mandar ao Evolution, verificando status 200, `content-type` esperado e `content-length` ≤ 16 MB. Falhar cedo com mensagem acionável ("arquivo tem 23 MB, limite do WhatsApp é 16 MB") em vez de erro genérico do Evolution.
+- Validar em `Divulgacao` (não só em `Arte`): mídia anexada via Active Storage, ≤ 16 MB, mimetype na lista curta (`image/jpeg`, `image/png`, `video/mp4`).
+- Testar a alcançabilidade **de dentro do container Evolution** (`docker exec ... curl -I <url>`), não da máquina do dev.
 
-`dom_id(Arte.new)` returns `"new_arte"`. Broadcasting to `"new_arte"` when there are two pending
-creation broadcasts means both target the same non-existent element. Only persisted records have
-meaningful IDs.
+**Warning signs:**
+- A URL de mídia gerada contém `192.168.`, `localhost` ou a porta 3000.
+- A URL é gerada fora do `perform` do job.
+- Envio funciona em teste manual (imediato) e falha em agendado (horas depois) → sintoma clássico de URL assinada expirando.
+- Grupo recebe um arquivo que não abre / preview quebrado.
 
-**Prevention:** Only broadcast in `after_create_commit` and `after_update_commit` — by that
-point the record has an integer `id` and `dom_id` is globally unique.
-
----
-
-### Pitfall 4: Partial path convention mismatch raises `MissingTemplate` in broadcast jobs
-
-`Turbo::Broadcastable` uses `to_partial_path` to locate the partial. For an `Arte` model it
-expects `app/views/artes/_arte.html.erb`. This project's arte partials live under
-`app/views/admin/artes/`. The broadcast job will raise `ActionView::MissingTemplate` silently
-(in job logs, invisible to the user).
-
-**Prevention:** Always pass `partial:` explicitly in any broadcast call in this codebase:
-```ruby
-broadcast_replace_later_to(
-  client,
-  target:  dom_id(self),
-  partial: "admin/artes/arte",
-  locals:  { arte: self }
-)
-```
-Do not rely on the convention-based path discovery when partials are namespaced.
+**Phase to address:** `INFRA-S3` (host público, S3, `expires_in`); validação e preflight em `DIVU-ENVIO`; bloqueio de `external_url` em `DIVU-MODEL`.
 
 ---
 
-## Testing Pitfalls (Minitest)
+### Pitfall 6: Segredo por cliente vazando via argumentos de job, logs e reporters
 
-### Pitfall 1: `cable.yml` test env is already correct — do not touch it
+**What goes wrong:**
+A apikey da instância Evolution do cliente é passada como argumento do job. O solid_queue **grava os argumentos serializados em JSON na tabela `solid_queue_jobs`, em texto claro**. A chave passa a existir em: um dump do banco, `solid_queue_failed_executions` (que sobrevive à falha e não é limpo pelo `clear_finished_in_batches` já configurado no `recurring.yml`), na UI do Mission Control Jobs, e no payload de qualquer exception reporter.
 
-`test: adapter: test` is the right configuration. The test adapter is built into Rails since
-Rails 6 — no extra gem is needed. It intercepts broadcasts in memory with no async behavior,
-making tests deterministic. Do not change to `async` (non-deterministic) or `postgresql`
-(requires real DB connection in tests).
+**Why it happens:**
+Três mal-entendidos combinados:
+1. Passar strings como argumento de job parece inofensivo.
+2. **`config.filter_parameters` do Rails NÃO filtra argumentos de ActiveJob.** Ele filtra parâmetros de request. São caminhos completamente diferentes.
+3. O filtro atual do projeto (`config/initializers/filter_parameter_logging.rb`) é `[:passw, :email, :secret, :token, :_key, :crypt, :salt, :certificate, :otp, :ssn, :cvv, :cvc]`. O matching é por **substring**: `:_key` casa com `instance_key`, mas **não casa com `apikey`** — que é exatamente o nome do header e do campo do Evolution API. `apikey` e `hash` (o nome do campo do token de instância retornado pelo Evolution) **passam batido hoje**.
+
+**How to avoid:**
+- **Regra absoluta: nenhum segredo como argumento de job.** Passe `divulgacao_id` (ou o GlobalID do record) e carregue a instância + credencial **dentro** do `perform`. Isto também é o que a documentação do solid_queue recomenda por outros motivos (manter args pequenos).
+- Isso vale igualmente para a **URL assinada da mídia** — ela é uma credencial temporária. Gerá-la dentro do job resolve segurança e expiração de uma vez (Pitfall 5).
+- Adicionar ao `filter_parameters`: `:apikey, :api_key, :instance_token, :hash, :qrcode, :base64, :pairing_code`.
+- **Criptografia no banco** para a chave por cliente: `encrypts :api_key` (Active Record Encryption) na `WhatsappInstance`. Sem isso, um dump do Postgres entrega todas as instâncias WhatsApp de todos os clientes.
+- **Nunca logar o corpo de request/response do Evolution cru.** O request carrega o header `apikey`; a resposta do `/instance/create` carrega o `hash` (token) e o QR base64 — que é literalmente uma credencial de pareamento visual. Logar só método, path, status e duração.
+- O `qrcode`/`pairingCode` não deve ser persistido: é efêmero, renderize direto na resposta.
+- **Chave global vs. por instância:** o `AUTHENTICATION_API_KEY` global do Evolution dá acesso a **todas** as instâncias. Ele é necessário para *criar* instâncias, mas o envio deve usar o **token por instância** (`hash`). Se o app usar a chave global para tudo, um bug de escopo vira acesso total (ver Pitfall 10). Guardar a global em credentials (prod) / `.env` (dev), e a por-instância criptografada na linha do cliente.
+
+**Warning signs:**
+- `grep -r "apikey" app/jobs` retorna algo em uma assinatura de `perform`.
+- `SELECT arguments FROM solid_queue_jobs` mostra qualquer coisa que pareça uma chave ou uma URL assinada.
+- `SELECT api_key FROM whatsapp_instances` retorna texto legível.
+- Log de produção contém `apikey=` ou uma string base64 gigante.
+
+**Phase to address:** `EVO-CLIENT` (encrypts + filter_parameters) e `DIVU-ENVIO` (assinatura do job); auditado em `HARDENING`.
 
 ---
 
-### Pitfall 2: `assert_broadcast_on` takes the stream name string, not the model
+### Pitfall 7: `sleep` longo dentro do job trava os workers
+
+**What goes wrong:**
+A implementação óbvia do delay aleatório é `groups.each { send; sleep rand(45..120) }`. Com 10 grupos isso segura uma thread por até 20 minutos. O `config/queue.yml` deste projeto tem **`threads: 3, processes: 1, queues: "*"`** — ou seja, **três** threads para o app inteiro. Duas Divulgações simultâneas consomem 2/3 da capacidade, e a terceira trava tudo: os broadcasts do ActionCable (v1.5), qualquer job futuro e a limpeza recorrente ficam na fila atrás de `sleep`.
+
+**Why it happens:**
+`sleep` no job é o jeito mais curto de escrever "delay entre grupos", e em dev com 2 grupos parece inofensivo.
+
+**How to avoid:**
+- **Um job por grupo, encadeado por `wait`.** `EnviarDivulgacaoItemJob.set(wait: delay).perform_later(item_id)` — o job envia para **um** grupo, calcula o próximo delay e enfileira o item seguinte. Zero sleep, worker livre entre envios, e cada item é retentável isoladamente.
+- **Fila dedicada** para envio de WhatsApp, com o worker configurado separadamente, para que um pico de divulgações não afogue a fila `default` usada pelos broadcasts. Ajustar `config/queue.yml` para ter dois blocos de `workers` (ex.: `queues: "whatsapp"` e `queues: "default,*"`).
+- Se por algum motivo houver `sleep`, tetá-lo em poucos segundos — nunca em minutos.
+
+**Warning signs:**
+- `sleep` presente em qualquer job.
+- Toasts do ActionCable atrasando durante uma Divulgação.
+- `solid_queue_ready_executions` crescendo com jobs antigos enquanto poucos jobs "rodam".
+- `queues: "*"` sem fila dedicada, com envio de WhatsApp em produção.
+
+**Phase to address:** `DIVU-ENVIO` (design do job) + `INFRA-S3`/deploy (config de workers).
+
+---
+
+### Pitfall 8: Retry duplica envios — a mesma arte postada duas vezes no mesmo grupo
+
+**What goes wrong:**
+O `sendMedia` chega ao WhatsApp, a mensagem é entregue, mas a resposta HTTP se perde (timeout, deploy no meio, worker morto). O ActiveJob faz retry, o job reenvia, e o grupo recebe a arte duas vezes. Em um grupo de divulgação isso não é um bug cosmético — é o comportamento que faz participantes denunciarem o número.
+
+**Why it happens:**
+- Solid Queue tem entrega **at-least-once**: "um deploy pode interromper a execução; um retry pode rodar o mesmo job de novo". Isso é documentado, não um defeito.
+- O `ApplicationJob` do projeto tem `retry_on` e `discard_on` **comentados** — o default vai valer para o job novo sem ninguém decidir conscientemente.
+- Os controles de concorrência do solid_queue **bloqueiam** duplicatas (elas esperam e depois rodam), mas **não existe forma de descartá-las** ([issue #176](https://github.com/rails/solid_queue/issues/176)). Confiar em "concurrency control evita duplicata" é um erro de leitura: ele *adia*, não *cancela*.
+
+**How to avoid:**
+- **Idempotência no banco, com o estado por grupo como fonte da verdade.** Modelar `DivulgacaoItem(divulgacao_id, group_jid, status, evolution_message_id, sent_at)` com **índice único em `(divulgacao_id, group_jid)`**.
+- O job faz, em transação: `SELECT ... FOR UPDATE` no item → se `status != pendente`, **retorna sem enviar** → marca `enviando` → envia → grava `enviado` + `evolution_message_id`. Retry após entrega bem-sucedida encontra `enviado` e não faz nada.
+- O estado intermediário `enviando` é essencial: um crash entre "enviei" e "gravei" deixa o item em `enviando`, que **não deve ser retentado automaticamente** — deve ir para revisão manual do admin ("pode ter sido enviado"). Retry cego a partir de `enviando` é exatamente a duplicata que se quer evitar.
+- `retry_on` **explícito e estreito**: retentar só erros de rede/5xx do Evolution, com backoff. **`discard_on`** para 4xx de payload (arquivo inválido, grupo inexistente) — retentar não conserta.
+- `discard_on ActiveJob::DeserializationError` para Divulgações apagadas.
+- Botão de "reenviar item" na UI deve exigir confirmação e registrar quem reenviou.
+
+**Warning signs:**
+- Ausência de índice único em `(divulgacao_id, group_jid)`.
+- Job de envio sem `retry_on` explícito.
+- O job faz `update(status: :enviado)` antes ou depois da chamada HTTP sem transação/lock.
+- Cliente relata post duplicado (sinal tardio — o dano já ocorreu).
+
+**Phase to address:** `DIVU-ENVIO`; schema em `DIVU-MODEL`.
+
+---
+
+### Pitfall 9: Timezone — o post sai na hora errada (e este app tem uma armadilha específica)
+
+**What goes wrong:**
+O admin escolhe "18:00" e o post sai às 21:00, ou no dia seguinte. Para uma divulgação com hora comercial, isso destrói o valor do recurso.
+
+**Why it happens — e por que é pior aqui:**
+`config/application.rb` deste projeto tem:
 
 ```ruby
-# Wrong — this is not the stream name ActionCable uses internally
-assert_broadcast_on(Arte, { ... })
-
-# Right for a Turbo stream scoped to a model (matches stream_for(arte))
-assert_broadcast_on(
-  Turbo::StreamsChannel.broadcasting_for(arte),
-  { ... }
-)
-
-# Right for a named stream
-assert_broadcast_on("admin_updates", { ... })
+config.time_zone = "Brasilia"
+config.active_record.default_timezone = :local   # ← linha 25
 ```
 
-Getting the stream name wrong causes the assertion to always fail or — if checking
-`assert_no_broadcasts` — to give a false pass.
+`default_timezone = :local` faz o Active Record **ler e gravar timestamps no fuso local do sistema operacional**, em vez de UTC. Consequências concretas:
 
-**Debug tip:** Call `Turbo::StreamsChannel.broadcasting_for(record)` in a test console to see
-the exact string ActionCable uses for that model, then copy it into the assertion.
+- O `solid_queue_scheduled_executions.scheduled_at` é gravado pelo mesmo Active Record — o agendamento do job herda essa semântica.
+- Se o servidor de produção tiver `TZ` diferente da máquina de dev (muito comum: containers rodam UTC), **os mesmos dados significam horas diferentes**. Isso muda silenciosamente entre dev e prod.
+- O horário de verão brasileiro está suspenso desde 2019, o que mascara o problema — mas uma mudança de `TZ` do host o revela de uma vez.
+- A decisão histórica do projeto de usar `scheduled_on :date` (não datetime) em `Arte` foi **tomada justamente para fugir disso**. A `Divulgacao` reintroduz um datetime, ou seja, reintroduz o problema que a v1.0 evitou.
+
+**How to avoid:**
+- **Decidir explicitamente** antes de escrever a migration: ou manter `:local` e fixar `TZ=America/Sao_Paulo` no ambiente de produção (documentado no deploy, verificado no boot), ou migrar para `default_timezone = :utc` (o default do Rails) — mas isso exige revisar os dados existentes e está fora do escopo de v1.7. **Recomendação: manter `:local` e travar `TZ` no deploy**, mais barato e menos arriscado.
+- Armazenar `scheduled_at` como `datetime` e **sempre** construir a partir de `Time.zone.parse` / `Time.use_zone`, nunca `Time.parse` ou `DateTime.parse` (que ignoram o fuso do Rails).
+- **Exibir o fuso na UI** ao lado do campo de hora ("18:00 — horário de Brasília"). Ambiguidade na UI vira ticket.
+- Teste que fixa `Time.zone` e um `TZ` de sistema divergente e verifica que o `scheduled_at` persistido corresponde à hora pretendida.
+- Validar `scheduled_at > Time.current` na criação (não aceitar agendamento no passado, que dispara imediatamente).
+- Checagem de boot em produção que aborta se `Time.zone.name` ou `ENV["TZ"]` não forem o esperado.
+
+**Warning signs:**
+- `Time.parse` ou `DateTime.parse` em qualquer lugar do código de Divulgação.
+- `Divulgacao.scheduled_at` sendo comparado com `Time.now` em vez de `Time.current`.
+- `date` e `time` como dois campos separados combinados por concatenação de string.
+- Diferença de 3h entre o esperado e o real (assinatura de UTC↔Brasília).
+
+**Phase to address:** `DIVU-MODEL` (schema + parsing + UI); verificação de `TZ` em `INFRA-S3`/deploy.
 
 ---
 
-### Pitfall 3: Block form required for `assert_broadcast_on` with model callbacks
+### Pitfall 10: Vazamento cross-client — a arte do cliente A no grupo do cliente B
 
-```ruby
-# Wrong — asserts on broadcasts that happened BEFORE the block, not after
-arte.update!(status: :approved)
-assert_broadcast_on("admin_updates", { ... })   # always fails
+**What goes wrong:**
+Três variantes, em ordem de gravidade:
 
-# Right — intercepts broadcasts triggered during block execution
-assert_broadcast_on("admin_updates", { ... }) do
-  arte.update!(status: :approved)
-end
-```
+1. **Envio cruzado:** a Divulgação do cliente A usa a instância/grupos do cliente B. A arte de um cliente aparece nos grupos de outro. Para uma agência, isso é um incidente de confidencialidade com dois clientes ao mesmo tempo — e é **irreversível**: a mensagem já foi entregue a dezenas de pessoas. Não há "desfazer".
+2. **Exposição da lista de grupos:** o admin (ou a API) enumera grupos de outro cliente. A lista de grupos de WhatsApp de um cliente é informação comercial sensível.
+3. **Sequestro de instância:** o `instance_name` do Evolution colide ou é adivinhável, e um cliente acaba operando a instância de outro.
 
----
+**Why it happens:**
+O invariante do projeto — "toda query escopada por `@client`" — foi aplicado consistentemente em `Arte` e `ApprovalResponse` porque essas entidades têm `belongs_to :client` e os controllers usam `@client.artes.find(...)`. As entidades novas de v1.7 têm **duas chaves de escopo que precisam concordar**: a Divulgação pertence a um cliente, **e** a Arte pertence a um cliente, **e** a instância pertence a um cliente, **e** os grupos pertencem à instância. Se qualquer um desses vínculos for validado por confiança em vez de por query escopada, abre a brecha.
 
-### Pitfall 4: `broadcast_later` enqueues a job — must flush Active Job queue in tests
+O ponto exato de risco: os identificadores do Evolution (`instance_name`, `group_jid` `...@g.us`) são **strings vindas de fora do banco**, frequentemente vindas de um `params[:group_ids]` de formulário. Um `Divulgacao.create(group_jids: params[:group_jids])` sem validar que cada JID pertence à instância *daquele* cliente é o bug.
 
-Any `_later` broadcast variant (the recommended pattern for model callbacks) enqueues an
-`Turbo::Streams::BroadcastJob`. With the default `test` Active Job adapter, jobs are queued but
-not executed. `assert_broadcast_on` will not see the broadcast because the job never ran.
+**How to avoid:**
+- **Grupos como registros, não como strings soltas.** `WhatsappGroup belongs_to :whatsapp_instance`, `WhatsappInstance belongs_to :client`. A seleção do formulário resolve por `@client.whatsapp_instance.whatsapp_groups.where(id: params[:group_ids])` — cross-client vira `RecordNotFound` automaticamente, exatamente o padrão já usado em `set_arte` (`@client.artes.find`).
+- **Nunca aceitar `group_jid` cru do formulário.** Aceitar `whatsapp_group_id` (PK interna) e derivar o JID do registro escopado.
+- **Validação no model `Divulgacao`:** `validate` que `arte.client_id == client_id` **e** que todo `whatsapp_group.whatsapp_instance.client_id == client_id`. Redundante com o controller de propósito — defesa em profundidade, e é o único ponto que protege a API v1 e o console.
+- **Reafirmar o escopo dentro do job**, não só no controller. O job recebe `divulgacao_id`; a primeira coisa que ele faz é `divulgacao.client` e derivar instância e grupos **daquele** cliente. Nunca aceitar `instance_name` como argumento do job.
+- **`instance_name` único e não adivinhável:** `"cli-#{client.id}-#{SecureRandom.hex(6)}"`, com índice único, e **nunca** o nome do cliente (colisão entre clientes homônimos e enumerável no manager do Evolution).
+- **Chave por instância, não a global, para enviar.** Se cada envio usa o token da própria instância, um erro de escopo falha com 401 em vez de postar no cliente errado. Isso transforma um vazamento silencioso em um erro ruidoso — é a mitigação mais valiosa da lista.
+- **Verificação de `wuid` antes do envio:** comparar o número conectado com o esperado. Se divergir, abortar. Pega o caso de re-pareamento com o chip errado, que nenhuma validação de banco detecta.
+- **Cliente inativo** (`client.active == false`) não pode ter Divulgação disparada — o job precisa checar, porque a Divulgação pode ter sido agendada antes da desativação.
+- Testes de sistema explícitos: tentar criar Divulgação do cliente A com `arte_id` de B e com `whatsapp_group_id` de B; ambos devem falhar.
 
-**Fix options:**
+**Warning signs:**
+- `params[:group_jids]` ou `params[:instance_name]` chegando a um model ou job.
+- Qualquer query de grupo que comece em `WhatsappGroup.where(...)` em vez de `@client...`.
+- Job de envio recebendo `instance_name`/apikey como argumento.
+- Ausência de validação `arte.client_id == client_id` na `Divulgacao`.
+- Uso da `AUTHENTICATION_API_KEY` global no caminho de envio.
 
-Option A — flush queue in the test block:
-```ruby
-assert_broadcast_on("admin_updates", { ... }) do
-  perform_enqueued_jobs do
-    arte.update!(status: :approved)
-  end
-end
-```
-
-Option B — use inline adapter for the whole test file:
-```ruby
-setup { ActiveJob::Base.queue_adapter = :inline }
-teardown { ActiveJob::Base.queue_adapter = :test }
-```
-
-Option C — test the job directly without testing the callback trigger.
+**Phase to address:** `EVO-GRUPOS` (modelagem escopada) e `DIVU-MODEL` (validações cruzadas); testes em `HARDENING`.
 
 ---
 
-### Pitfall 5: Channel tests require `ActionCable::Channel::TestCase`
+### Pitfall 11: Jobs agendados para o futuro sobrevivem ao deploy e quebram
 
-```ruby
-# Wrong — no subscription lifecycle, no transmit helpers
-class NotificationsChannelTest < ActiveSupport::TestCase; end
+**What goes wrong:**
+Uma Divulgação é agendada para daqui a 5 dias. A linha fica em `solid_queue_scheduled_executions` com a classe e os argumentos serializados. Nesses 5 dias há três deploys. Se a classe do job foi renomeada, removida, ou se a assinatura de `perform` mudou, o job **falha na desserialização** na hora H. O admin não é avisado — a Divulgação simplesmente não acontece.
 
-# Right
-class NotificationsChannelTest < ActionCable::Channel::TestCase; end
-```
+**Why it happens:**
+Jobs agendados são um contrato de compatibilidade entre o código de hoje e o de daqui a semanas, e ninguém pensa neles como contrato. Além disso: se o admin **editar ou cancelar** a Divulgação, o job agendado continua existindo e vai disparar mesmo assim, porque nada o cancela.
 
-`ActionCable::Channel::TestCase` provides `subscribe`, `unsubscribe`, and `assert_broadcasts`.
-Using the wrong superclass gives no helpful errors — methods simply do not exist or the channel
-is never instantiated.
+**How to avoid:**
+- **A fonte da verdade é a tabela `divulgacoes`, não a fila.** O job agendado é só um gatilho: ao acordar, ele recarrega a Divulgação e checa `status == :agendada` e `scheduled_at` atual. Se foi cancelada → sai sem fazer nada. Se a hora mudou → reenfileira para a hora nova e sai. Isso resolve edição e cancelamento sem precisar cancelar jobs.
+- **Alternativa mais robusta e recomendada para este porte:** não agendar com `wait_until` de dias. Usar um **recurring job de varredura** (o projeto já tem `config/recurring.yml` configurado) rodando a cada minuto, que pega `Divulgacao.agendada.where("scheduled_at <= ?", Time.current)` e dispara. Vantagens: imune a rename de classe, imune a deploy, edição/cancelamento funcionam de graça, e a fila nunca acumula milhares de linhas futuras. Custo: latência de até 1 minuto — irrelevante aqui.
+- Manter **assinatura mínima e estável**: `perform(divulgacao_item_id)`. Um inteiro nunca quebra na desserialização.
+- Se usar `config/recurring.yml`: a **chave da task é um identificador de banco**, não um rótulo. Renomear perde o rastreamento de execuções.
+- **Alerta de "deveria ter enviado e não enviou":** varredura que sinaliza Divulgações com `scheduled_at` no passado ainda em `agendada`. Sem isso, a falha é 100% silenciosa.
 
----
+**Warning signs:**
+- `set(wait_until: divulgacao.scheduled_at).perform_later` com horizonte de dias.
+- Editar a data/hora de uma Divulgação não altera nada na fila.
+- Cancelar uma Divulgação não impede o envio.
+- Nenhuma tela ou alerta mostrando Divulgações atrasadas.
 
-## Performance & N+1 Pitfalls
-
-### Pitfall 1: Synchronous broadcast inside a DB transaction holds the connection open
-
-`after_save` and `after_create` run inside the transaction. Broadcasting synchronously there
-holds the DB connection occupied during template rendering, increasing lock contention under
-concurrent writes. `after_commit` callbacks run outside the transaction but synchronous rendering
-still blocks the worker thread.
-
-**Prevention:** Use `_later` variants in all model callbacks:
-```ruby
-after_create_commit :broadcast_append_later_to_admin
-```
-Not:
-```ruby
-after_create_commit :broadcast_append_to_admin   # synchronous render, blocks thread
-```
-Exception: `broadcast_remove_to` needs no `_later` because it sends only the dom_id — no template render.
+**Phase to address:** `DIVU-ENVIO` (arquitetura de disparo); alerta em `HARDENING`.
 
 ---
 
-### Pitfall 2: Broadcast partials cannot access `current_user`, `current_client`, or helpers
+### Pitfall 12: O webhook do Evolution é uma superfície pública nova e sem autenticação
 
-Background jobs that render broadcast partials have no request context. These are all
-unavailable:
-- `current_user` → `NameError`
-- `current_client` → `NameError`  
-- `session` → `NameError`
-- `flash` → `NameError`
-- Route helpers requiring a host (e.g., `url_for`) → may raise without `default_url_options`
+**What goes wrong:**
+Para receber `connection.update` e `qrcode.updated`, o app expõe `POST /webhooks/evolution`. Se esse endpoint não for autenticado, qualquer um na internet pode postar `{"event":"connection.update","instance":"cli-3-abc","data":{"state":"close"}}` e derrubar o estado das instâncias no app — ou, pior, se o handler criar/atualizar registros por `instance_name`, manipular dados de qualquer cliente.
 
-**When this bites in this project:** Any partial that conditionally renders admin vs client
-content by checking `current_user.present?` will raise inside a broadcast job.
+**Why it happens:**
+Webhooks são "só um callback" e frequentemente escapam da revisão de segurança. Além disso, um `ActionController::API`/controller normal exige `skip_forgery_protection`, e é fácil parar aí e esquecer de colocar *alguma* autenticação no lugar do CSRF que se removeu.
 
-**Prevention:** Design broadcast partials to be context-free. Pass everything needed as `locals:`:
-```ruby
-broadcast_replace_later_to(
-  "admin_updates",
-  target:  dom_id(self),
-  partial: "admin/artes/status_badge",
-  locals:  { arte: self, status: self.status }
-)
-```
-Broadcast separate partials to admin and client streams when viewer-specific rendering is needed.
+**How to avoid:**
+- Segredo compartilhado no path ou header, comparado com `ActiveSupport::SecurityUtils.secure_compare` — o padrão que o projeto já usa nos três modos de auth da API v1.6.
+- Resolver a instância **sempre** por `WhatsappInstance.find_by!(instance_name: ...)` e agir só sobre aquele registro; nunca criar registros a partir do webhook.
+- Adicionar **throttle Rack::Attack** para o path do webhook — o `rack_attack.rb` atual cobre login, portal e `/api/v1/ai/`, mas não teria regra para uma rota nova.
+- Tratar o webhook como **não confiável**: ele é um *hint* para atualizar a UI. Antes de qualquer envio, o app **reconsulta** `connectionState` (Pitfall 4). Estado de webhook nunca autoriza um envio.
+- Responder 200 rápido e processar em job — o Evolution pode retentar e travar em handler lento.
+
+**Warning signs:**
+- Rota de webhook sem `before_action` de autenticação.
+- Webhook fazendo `find_or_create_by`.
+- Nenhuma regra no `rack_attack.rb` para o novo path.
+
+**Phase to address:** `EVO-PAREAMENTO`; revisado em `HARDENING`.
 
 ---
 
-### Pitfall 3: N+1 in broadcast partials when accessing associations
+## Technical Debt Patterns
 
-A broadcast partial for `ApprovalResponse` that renders `response.arte.client.name` triggers
-2 queries per broadcast job if the arte and client were not loaded. With 30 concurrent approvals,
-that is 60 extra queries.
-
-**Prevention:** Use `includes` when the job reloads the record, or pass pre-resolved values as locals:
-```ruby
-after_create_commit do
-  arte = Arte.includes(:client).find(self.arte_id)
-  broadcast_append_later_to(
-    "admin_approvals",
-    partial: "admin/approvals/row",
-    locals: { approval: self, arte: arte, client: arte.client }
-  )
-end
-```
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|-----------------|
+| `sleep` no job para o delay entre grupos | 1 linha em vez de encadeamento de jobs | Trava 1 das 3 threads do worker por até 20 min; atrasa ActionCable e todo o resto | **Nunca** com esta config de `queue.yml`. Só com fila dedicada e sleep de poucos segundos |
+| Passar `apikey`/URL assinada como argumento de job | Job autocontido, sem lookup | Segredo em texto claro em `solid_queue_jobs` e `failed_executions`, em dumps e no reporter | **Nunca** |
+| `group_jid` como string no formulário | Dispensa modelar grupos | Perde o escopo por `@client`; abre envio cruzado irreversível | **Nunca** |
+| Guardar a chave Evolution sem `encrypts` | Uma migration a menos | Dump do Postgres = todas as instâncias WhatsApp de todos os clientes | Só em dev/test |
+| Usar a `AUTHENTICATION_API_KEY` global para enviar | Um segredo só, sem gerenciar tokens por instância | Erro de escopo posta no cliente errado silenciosamente em vez de dar 401 | Só para `/instance/create`, nunca para envio |
+| Marcar item como "enviado" antes de confirmar a resposta | Código mais simples | Histórico mente; admin não sabe o que faltou entregar | **Nunca** |
+| `wait_until` de dias em vez de varredura | Menos código | Quebra em rename de classe; edição/cancelamento não têm efeito | Aceitável se o job recarregar e revalidar a Divulgação ao acordar |
+| Sem gate de warm-up para instância nova | Onboarding sem fricção | Ban do número do cliente na primeira semana | Aceitável só com aviso vermelho explícito na UI |
+| Sem retry para falha de rede do Evolution | Sem risco de duplicata | Divulgação perdida por um blip de rede | Aceitável no MVP **se** houver reenvio manual por item na UI |
+| Permitir Arte com `external_url` (Drive) em Divulgação | Reaproveita artes existentes | Evolution baixa HTML e envia lixo ao grupo do cliente | **Nunca** sem resolver para link direto verificado |
 
 ---
 
-### Pitfall 4: `after_update_commit` fires on EVERY update, not just status changes
+## Integration Gotchas
 
-```ruby
-# Fires on EVERY column write — deadline, notes, media_url, etc.
-after_update_commit :broadcast_status_update
-```
-
-This floods the cable on unrelated admin edits and may leak data if scoping is wrong.
-
-**Prevention:** Gate broadcasts on the specific change:
-```ruby
-after_update_commit do
-  broadcast_replace_later_to(...) if saved_change_to_status?
-end
-```
-`saved_change_to_attribute?(:column)` is the correct Active Record method. `changed?` does not
-work in `after_commit` callbacks — the change tracking has already reset.
-
----
-
-### Pitfall 5: Memory growth from open WebSocket connections
-
-Each connected client holds an `ApplicationCable::Connection` object and subscription state in
-the Ruby heap. With 30 clients all subscribed, this is 30 persistent objects plus subscription
-lists. If channels do not clean up on disconnect, memory grows.
-
-**Prevention:** Always implement `unsubscribed`:
-```ruby
-def unsubscribed
-  stop_all_streams
-end
-```
-`stop_all_streams` is called automatically for `stream_from`/`stream_for` channels, but explicit
-cleanup is required for any timers or instance variables set in `subscribed`.
+| Integration | Common Mistake | Correct Approach |
+|-------------|----------------|------------------|
+| Evolution `sendMedia` | Achar que o param `delay` protege contra ban | `delay` é simulação de "digitando" antes de **um** envio. O pacing entre grupos é responsabilidade do Rails |
+| Evolution `sendMedia` | Passar URL de `192.168.3.203` ou `localhost` | A URL é buscada **pelo host do Evolution**. Testar com `curl` de dentro do container Evolution |
+| Evolution `sendMedia` | URL assinada gerada no enqueue | Gerar dentro do `perform`, com `expires_in` folgado; ou mandar base64 |
+| Evolution `sendMedia` | `mediatype`/`mimetype` fora de sincronia com os bytes | Derivar ambos do blob do Active Storage; restringir a `image/jpeg`, `image/png`, `video/mp4` |
+| Evolution `sendMedia` | Aceitar até 50 MB (limite do model `Arte`) | Validar 16 MB na `Divulgacao` — é o teto do WhatsApp para mídia |
+| Evolution `/instance/create` | Persistir o QR/pairing code | QR é efêmero (~45s) e é credencial de pareamento. Renderizar, nunca gravar nem logar |
+| Evolution `/instance/create` | `instance_name` = nome do cliente | `cli-<id>-<hex>` com índice único. Nomes colidem e são enumeráveis no manager |
+| Evolution auth | Chave global para tudo | Global só para criar/deletar instância; envio com o token da instância (`hash`) |
+| Evolution `connectionState` | Retry cego em qualquer desconexão | 401/403/402/406 **não** auto-reconectam — exigem novo QR. 408/428/500 sim |
+| Webhook Evolution → Rails | Endpoint aberto, só com `skip_forgery_protection` | Segredo compartilhado + `secure_compare` + throttle Rack::Attack |
+| Webhook Evolution → Rails | Confiar no estado do webhook para autorizar envio | Webhook é hint de UI; reconsultar `connectionState` antes de cada envio |
+| Deploy do Evolution | Container sem volume persistente | Sessões Baileys vivem em disco/DB. Reiniciar sem volume desloga **todos** os clientes de uma vez |
+| Active Storage → S3 | Manter `service_urls_expire_in` no default de 5 min | Gerar no job com `expires_in:` explícito, ou usar base64 |
+| Grupos WhatsApp | Cachear a lista de grupos e nunca revalidar | O número pode ser removido de um grupo. Revalidar na criação da Divulgação e falhar cedo com mensagem clara |
 
 ---
 
-## Prevention Strategies (Per Pitfall)
+## Performance Traps
 
-| Pitfall | Category | Severity | Prevention |
-|---------|----------|----------|------------|
-| solid_cable vs postgresql adapter choice | Config | HIGH | Decide adapter before writing channel code; test env must stay `test` |
-| LISTEN connections bypass AR pool | Config | LOW | Monitor PG `pg_stat_activity`; adequate for 30 users |
-| PG NOTIFY 8 KB payload limit | Config | MEDIUM | Keep broadcast payloads small; partial, not full page sections |
-| Pool exhaustion under broadcast+HTTP concurrency | Config | LOW | Existing pool=5, Puma=3 threads has headroom for this scale |
-| Dev `async` adapter — console broadcasts invisible | Config | INFO | Use web console or temporarily switch dev to `postgresql` |
-| connection.rb rejects client users | Auth | CRITICAL | Dual-path auth: Session-based admin + request.session-based client |
-| `session` vs `request.session` in connection.rb | Auth | HIGH | Always use `request.session` in connection.rb |
-| access_token in WebSocket URL | Auth | HIGH | Never — use session state established by ClientController |
-| Stream not scoped to client | Auth/Privacy | HIGH | Use `stream_for(current_client)` or `"client_#{id}_updates"` |
-| `replace` destroys turbo-frame element | Frames/Streams | HIGH | Use `update` when targeting a `<turbo-frame>` wrapper |
-| Broadcasts and frame navigations are independent | Frames | MEDIUM | Keep HTTP frame navigation and cable broadcasts orthogonal |
-| Stale IDs after frame navigation | Frames | LOW | Idempotent broadcasts — next frame load shows current state |
-| Missing broadcast target is completely silent | Streams | HIGH | Verify IDs with DevTools WS → Messages tab |
-| Day-number-only calendar IDs collide | DOM IDs | MEDIUM | Use `id="cal_2026-06-05"` format; use `dom_id(arte)` for chips |
-| `dom_id` on unsaved records not unique | DOM IDs | MEDIUM | Broadcast only in `after_commit` (persisted records only) |
-| Partial path mismatch (namespaced views) | Broadcast | HIGH | Always specify `partial:` explicitly — do not rely on convention |
-| Wrong test cable adapter | Testing | HIGH | Already correct; never change `test: adapter: test` |
-| Wrong stream name in assertions | Testing | MEDIUM | Use `Turbo::StreamsChannel.broadcasting_for(model)` for exact name |
-| `assert_broadcast_on` without block | Testing | HIGH | Always use block form to capture broadcasts triggered by action |
-| `broadcast_later` jobs not executed in tests | Testing | HIGH | Wrap with `perform_enqueued_jobs { }` or use inline adapter |
-| Wrong test case superclass for channels | Testing | MEDIUM | Use `ActionCable::Channel::TestCase`, not `ActiveSupport::TestCase` |
-| Synchronous broadcast inside transaction | Performance | HIGH | Always use `_later` variants in model callbacks |
-| `current_user` in broadcast partial | Performance | HIGH | Pass everything as `locals:`; design context-free partials |
-| N+1 in broadcast partials | Performance | MEDIUM | Use `includes` in job; pass pre-resolved associations as locals |
-| Broadcasts on every `after_update_commit` | Performance | MEDIUM | Gate with `saved_change_to_status?` — use `saved_change_to_attribute?` |
-| Memory from open connections | Performance | LOW | Always implement `unsubscribed { stop_all_streams }` |
+Escala real: 10–30 clientes. A maioria dos gargalos aqui não é de CPU — é de **capacidade de worker** e de **limite social do WhatsApp**.
+
+| Trap | Symptoms | Prevention | When It Breaks |
+|------|----------|------------|----------------|
+| `sleep` ocupando thread | Toasts do ActionCable atrasam; fila cresce com 3 jobs "rodando" | Um job por grupo com `wait` | **Já com 3 Divulgações simultâneas** (3 threads, 1 processo) |
+| Fila `*` compartilhada | Envio de WhatsApp afoga broadcasts e limpeza | Fila `whatsapp` dedicada com worker próprio | Qualquer Divulgação concorrente com atividade do painel |
+| Serialização por instância ausente | 2 Divulgações do mesmo cliente enviam em paralelo → burst → ban | Concurrency control com `key: "whatsapp-#{instance_id}"`, limite 1 | 2 Divulgações do mesmo cliente na mesma janela |
+| Todas as Divulgações no mesmo horário redondo | 15 clientes agendam 09:00; 15 instâncias disparam juntas | Jitter no início (±5 min) além do delay entre grupos | ~10 clientes com hábito de horário comercial |
+| Listar grupos no request | Página de Divulgação lenta/timeout; chamada ao Evolution a cada render | Cachear grupos em tabela; refresh explícito por botão + job | Cliente com muitos grupos, ou Evolution lento |
+| Base64 de vídeo em memória | RSS do worker sobe; OOM | Base64 só até ~10 MB; acima disso, URL S3 | Vídeo > 10 MB com 3 threads simultâneas |
+| `solid_queue_failed_executions` nunca limpo | Tabela cresce; segredos antigos persistem | O `recurring.yml` limpa **finished**, não **failed** — adicionar limpeza/retenção de failed | Meses de operação |
+| Teto de envios por instância ausente | Volume cresce sem ninguém perceber até o ban | Contador por janela, com transbordo para a hora seguinte | Indeterminado — é o limite não publicado do WhatsApp |
+
+---
+
+## Security Mistakes
+
+| Mistake | Risk | Prevention |
+|---------|------|------------|
+| Segredo como argumento de job | Chave em texto claro em `solid_queue_jobs`, em `failed_executions`, em dumps e no exception reporter | Só IDs como argumento; carregar credencial dentro do `perform` |
+| `filter_parameters` sem `apikey` | O filtro atual (`:_key`) **não** casa com `apikey` nem com `hash` — vazam no log | Adicionar `:apikey, :api_key, :instance_token, :hash, :qrcode, :base64, :pairing_code` |
+| Chave por cliente em texto claro no banco | Dump do Postgres entrega o controle do WhatsApp de todos os clientes | `encrypts :api_key` (Active Record Encryption) |
+| Logar request/response cru do Evolution | Header `apikey` no request; `hash` e QR base64 na resposta | Logar só método, path, status, duração |
+| `group_jid` vindo de `params` | Envio cruzado **irreversível** — arte de A no grupo de B | Aceitar só PK interna, resolver via `@client.whatsapp_instance.whatsapp_groups` |
+| Sem validação `arte.client_id == client_id` na `Divulgacao` | Console, API v1 e bugs de controller passam direto | Validação no model, redundante ao controller, por design |
+| Chave global usada no envio | Erro de escopo posta no cliente errado silenciosamente | Token por instância no envio; escopo errado vira 401 ruidoso |
+| Webhook Evolution sem auth | Terceiro manipula estado de instâncias; possível DoS lógico | Segredo + `secure_compare` + throttle Rack::Attack |
+| `instance_name` previsível | Enumeração/colisão entre clientes no manager do Evolution | `cli-<id>-<hex>` com índice único |
+| QR Code persistido ou logado | Quem tiver o QR pareia o WhatsApp do cliente no próprio dispositivo | Efêmero, renderizado direto, nunca gravado |
+| Sem checar `wuid` antes do envio | Re-pareamento com chip errado publica no número errado | Guardar `wuid` no pareamento e comparar antes de cada envio |
+| Cliente inativo com Divulgação agendada | Post sai para cliente que já encerrou contrato | Job checa `client.active?` antes de enviar |
+| Sem throttle nas rotas admin de WhatsApp | Loop acidental de "atualizar grupos" bate no Evolution e no WhatsApp | Estender `rack_attack.rb` para os novos paths |
+
+---
+
+## UX Pitfalls
+
+| Pitfall | User Impact | Better Approach |
+|---------|-------------|-----------------|
+| Histórico só com "enviado / falhou" | Admin não distingue "falhou, tente de novo" de "pode ter enviado, não reenvie" | Estados: `pendente`, `enviando`, `enviado`, `falhou`, `pendente_reconexao`, `incerto` |
+| Erro cru do Evolution na tela | "Request failed with status 400" não diz o que fazer | Traduzir: "O vídeo tem 23 MB; o WhatsApp aceita até 16 MB" |
+| Nada avisa que a instância caiu | Divulgação de sexta às 18h não sai e ninguém sabe até segunda | Estado de conexão visível no painel + toast ActionCable (infra da v1.5 já existe) no `connection.update` |
+| QR estático que expira em 45s | Admin escaneia e "não funciona"; tenta de novo; desiste | Auto-refresh do QR via Turbo Stream com o evento `qrcode.updated` + contador visível |
+| Hora sem fuso indicado | Admin não sabe se "18:00" é o horário dele | "18:00 — horário de Brasília" ao lado do campo |
+| Sem preview do que vai ser postado | Admin descobre a legenda errada depois de entregue — **sem desfazer** | Preview de mídia + legenda + lista de grupos, com confirmação, antes de agendar |
+| Sem estimativa de duração | Admin agenda 09:00 e não entende por que o último grupo recebeu 10:20 | "12 grupos × 45–120s ≈ 9–24 min. Último envio previsto entre 09:09 e 09:24" |
+| Sem cancelar / editar depois de agendado | Arte errada agendada = ligar para o cliente | Cancelar e editar até o primeiro envio; depois, cancelar o restante dos grupos |
+| Nenhuma menção ao risco de ban no pareamento | Cliente é banido e não sabia do risco | Uma linha no fluxo do QR: o número pode ser banido pelo WhatsApp |
+| Divulgação atrasada some silenciosamente | Falha 100% invisível | Faixa de alerta no dashboard: "N divulgações atrasadas" |
+
+---
+
+## "Looks Done But Isn't" Checklist
+
+- [ ] **Envio de mídia:** costuma faltar o teste com **URL pública real, do host do Evolution** — verificar com `docker exec <evolution> curl -I <url>`, não do laptop.
+- [ ] **Envio de mídia:** costuma faltar o caso **agendado** (URL assinada expira entre enqueue e envio) — verificar agendando para +1h, não testando imediato.
+- [ ] **Envio de mídia:** costuma faltar o caso **Arte com `external_url` do Drive** — verificar que a Divulgação é bloqueada, não que "passa".
+- [ ] **Envio de mídia:** costuma faltar o **vídeo entre 16 e 50 MB** — passa na validação do `Arte`, falha no WhatsApp.
+- [ ] **Delay aleatório:** costuma faltar a **serialização por instância** — verificar com 2 Divulgações do mesmo cliente ao mesmo tempo e conferir timestamps.
+- [ ] **Delay aleatório:** costuma faltar checar que **não é `sleep`** — verificar que as threads do worker ficam livres entre os envios.
+- [ ] **Estado de conexão:** costuma faltar a **checagem imediatamente antes do envio** — verificar desconectando pelo celular (Dispositivos conectados) e disparando.
+- [ ] **Estado de conexão:** costuma faltar distinguir **401 (exige QR) de 428 (reconecta)** — verificar que a UI pede novo QR no 401.
+- [ ] **Idempotência:** costuma faltar o **índice único `(divulgacao_id, group_jid)`** — verificar no `schema.rb`, não na intenção.
+- [ ] **Idempotência:** costuma faltar o teste de **retry após entrega bem-sucedida** — verificar que rodar o job duas vezes envia uma vez só.
+- [ ] **Segredos:** costuma faltar inspecionar a tabela — verificar `SELECT arguments FROM solid_queue_jobs` e `SELECT api_key FROM whatsapp_instances`.
+- [ ] **Segredos:** costuma faltar `apikey` no `filter_parameters` — verificar com `grep -i apikey log/production.log`.
+- [ ] **Cross-client:** costuma faltar o **teste negativo** — verificar que criar Divulgação de A com `whatsapp_group_id` de B levanta `RecordNotFound`.
+- [ ] **Cross-client:** costuma faltar a **validação no model** (só o controller) — verificar criando pelo console.
+- [ ] **Agendamento:** costuma faltar **editar/cancelar depois de agendado** — verificar que o job acorda e respeita o novo estado.
+- [ ] **Agendamento:** costuma faltar o **alerta de atrasado** — verificar com `scheduled_at` no passado e status `agendada`.
+- [ ] **Timezone:** costuma faltar o teste com **`TZ` do sistema diferente** do fuso do Rails — o `default_timezone = :local` deste projeto torna isso obrigatório.
+- [ ] **Webhook:** costuma faltar a **autenticação** — verificar com `curl` sem segredo; deve dar 401, não 200.
+- [ ] **Deploy Evolution:** costuma faltar o **volume persistente** — verificar reiniciando o container e conferindo que as instâncias continuam `open`.
+
+---
+
+## Recovery Strategies
+
+| Pitfall | Recovery Cost | Recovery Steps |
+|---------|---------------|----------------|
+| Arte postada no grupo do cliente errado | **HIGH — irreversível** | Deletar a mensagem no WhatsApp (janela limitada, e "mensagem apagada" fica visível). Comunicar os dois clientes. Corrigir o escopo. É por isso que a prevenção do Pitfall 10 é prioritária sobre quase tudo |
+| Número do cliente banido | **HIGH — geralmente irreversível** | Apelação raramente funciona para API não-oficial. Chip novo, warm-up do zero, refazer todos os grupos. Marcar a instância como `banned` e bloquear novas Divulgações |
+| Post duplicado no grupo | MEDIUM | Deletar a duplicata. Adicionar o índice único e o lock. Auditar o histórico atrás de outras duplicatas |
+| Sessão caiu e a Divulgação não saiu | LOW | Novo QR, reenviar os itens `pendente_reconexao`. O dano é atraso, não conteúdo errado — desde que o histórico não tenha mentido "enviado" |
+| Chave Evolution vazada em log ou dump | MEDIUM | Rotacionar `AUTHENTICATION_API_KEY` e recriar tokens de instância. Purgar `solid_queue_failed_executions` e os logs afetados. Adicionar `encrypts` e o filtro |
+| Divulgação agendada disparou na hora errada (timezone) | LOW–MEDIUM | Post fora de hora já entregue. Corrigir o parsing, fixar `TZ`, reagendar. Comunicar o cliente |
+| Job agendado quebrado por rename de classe | LOW | Migrar para varredura por tabela (recomendação do Pitfall 11) e reprocessar as Divulgações atrasadas |
+| Mídia entregue quebrada no grupo | LOW | Deletar, corrigir o arquivo, reenviar. Adicionar o preflight `HEAD` |
+| Container Evolution reiniciado sem volume | MEDIUM | Todos os clientes precisam re-parear. Adicionar volume persistente. É um incidente coletivo — vale um runbook |
+
+---
+
+## Pitfall-to-Phase Mapping
+
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| 1. Burst / velocidade | `DIVU-ENVIO` | Teste com 2 Divulgações da mesma instância: timestamps sempre ≥ delay mínimo; concurrency key ativa |
+| 2. Conteúdo idêntico | `DIVU-MODEL` + `DIVU-ENVIO` | Decisão registrada sobre variação; `mentionsEveryOne` ausente do payload |
+| 3. Número novo sem warm-up | `EVO-PAREAMENTO` + `DIVU-MODEL` | `paired_at` no schema; UI bloqueia/avisa com instância < 14 dias |
+| 4. Sessão caída | `EVO-PAREAMENTO` + `DIVU-ENVIO` | Desconectar pelo celular e disparar → item vira `pendente_reconexao`, nunca `enviado`; 401 pede novo QR |
+| 5. URL de mídia | `INFRA-S3` + `DIVU-ENVIO` | `curl -I` de dentro do container Evolution; agendado para +1h entrega; Drive/Dropbox bloqueado; 20 MB rejeitado |
+| 6. Segredos em job/log | `EVO-CLIENT` + `DIVU-ENVIO` | `solid_queue_jobs.arguments` só com inteiros; `api_key` ilegível no banco; `grep -i apikey log/` vazio |
+| 7. `sleep` travando worker | `DIVU-ENVIO` + deploy | Zero `sleep` em `app/jobs`; fila `whatsapp` dedicada em `queue.yml` |
+| 8. Retry duplicando | `DIVU-MODEL` + `DIVU-ENVIO` | Índice único `(divulgacao_id, group_jid)` no `schema.rb`; job rodado 2× envia 1× |
+| 9. Timezone | `DIVU-MODEL` + deploy | Teste com `TZ` divergente; `Time.zone.parse` em todo lugar; `TZ` verificado no boot |
+| 10. Cross-client | `EVO-GRUPOS` + `DIVU-MODEL` | Teste negativo A×B levanta `RecordNotFound`; validação no model; envio usa token de instância |
+| 11. Jobs futuros / edição | `DIVU-ENVIO` | Editar hora reflete no disparo; cancelar impede o envio; alerta de atrasado no dashboard |
+| 12. Webhook aberto | `EVO-PAREAMENTO` | `curl` sem segredo → 401; throttle no `rack_attack.rb` |
+| 0. ToS / ban | Decisão de produto antes do roadmap | Consentimento do cliente registrado; aviso na UI de pareamento |
+
+### Ordem sugerida e por quê
+
+1. **`INFRA-S3`** primeiro — sem host público e S3, nada de mídia funciona, e o Pitfall 5 é o que mais gera retrabalho se descoberto tarde.
+2. **`EVO-CLIENT`** — o modelo de segredos (encrypts + filter_parameters) precisa existir **antes** da primeira chave ser gravada, senão há migração de dados sensíveis depois.
+3. **`EVO-PAREAMENTO`** — estado de conexão é pré-requisito de qualquer envio confiável (Pitfall 4).
+4. **`EVO-GRUPOS`** — a modelagem escopada de grupos é o que fecha o Pitfall 10; precisa vir **antes** da `Divulgacao` que os referencia.
+5. **`DIVU-MODEL`** — schema com índice único, validações cruzadas e timezone.
+6. **`DIVU-ENVIO`** — concentra os pitfalls 1, 7, 8, 11; é a fase de maior densidade de risco e merece code review dedicado.
+7. **`HARDENING`** — auditoria de segredos, testes negativos cross-client, alertas.
+
+**Flags de pesquisa mais profunda:** `DIVU-ENVIO` é a única fase que provavelmente precisa de research adicional em tempo de planejamento — especificamente sobre a API de concurrency controls do solid_queue na versão instalada e sobre o formato exato de erro do `sendMedia` para mapear retry vs. discard.
 
 ---
 
 ## Sources
 
-- [Action Cable Overview — Ruby on Rails Guides](https://guides.rubyonrails.org/action_cable_overview.html) — HIGH confidence
-- [PostgreSQL Adapter source — Rails 8 stable](https://msp-greg.github.io/rails_stable/ActionCable/SubscriptionAdapter/PostgreSQL.html) — HIGH confidence (source code)
-- [ActionCable::TestHelper — Edge Rails API](https://edgeapi.rubyonrails.org/classes/ActionCable/TestHelper.html) — HIGH confidence
-- [ActionCable can deplete AR connection pool — rails/rails#23778](https://github.com/rails/rails/issues/23778) — HIGH confidence (upstream issue)
-- [Turbo::Broadcastable docs — rubydoc.info main](https://rubydoc.info/github/hotwired/turbo-rails/Turbo/Broadcastable) — HIGH confidence (gem docs)
-- [Turbo Streams on Rails — David Colby](https://www.colby.so/posts/turbo-streams-on-rails) — MEDIUM confidence (practitioner)
-- [Solving Turbo Frame Replacement Issues — DEV Community](https://dev.to/flstudio4/solving-turbo-frame-replacement-issues-in-rails-g9a) — MEDIUM confidence
-- [Difference between replace and update — Hotwire Discussion](https://discuss.hotwired.dev/t/difference-between-replace-and-update-turbo-streams/3148) — MEDIUM confidence
-- [Connection Management — Stanza](https://www.stanza.dev/courses/rails-action-cable/scaling-action-cable/rails-action-cable-connection-management) — MEDIUM confidence
-- [ActionCable memory leak — rails/rails#26119](https://github.com/rails/rails/issues/26119) — HIGH confidence (upstream issue)
-- [Decoding Turbo-Stream Errors](https://junkangworld.com/blog/decoding-turbo-stream-errors-my-ultimate-2025-fix-guide) — MEDIUM confidence
+**Primárias / oficiais** (texto citado literalmente onde relevante):
+- [WhatsApp Messaging Guidelines](https://www.whatsapp.com/legal/messaging-guidelines) — proibição de "unofficial clients, bulk messaging, auto-messaging... or automation"; enforcement
+- [WhatsApp Terms of Service](https://www.whatsapp.com/legal/terms-of-service) — meios automatizados, engenharia reversa, direito de terminação
+- [Meta — WhatsApp Groups API (Cloud API)](https://developers.facebook.com/documentation/business-messaging/whatsapp/groups) — requisitos OBA, limite de 8 participantes, 1 negócio por grupo
+- [Meta — Group messaging](https://developers.facebook.com/documentation/business-messaging/whatsapp/groups/groups-messaging/)
+- [Evolution API — Connection Management](https://mintlify.wiki/EvolutionAPI/evolution-api/whatsapp/connections) — estados, `statusReason`, auto-reconexão, webhook `connection.update`
+- [Evolution API — Send Media](https://doc.evolution-api.com/v2/api-reference/message-controller/send-media) — parâmetros, `delay`, formatos de `media`
+- [Evolution API — `.env.example`](https://github.com/EvolutionAPI/evolution-api/blob/main/.env.example) — `AUTHENTICATION_API_KEY`
+- [rails/solid_queue README](https://github.com/rails/solid_queue/blob/main/README.md) — persistência de argumentos, ausência de retry próprio, dispatchers/scheduled_executions
+- [rails/solid_queue issue #176 — Discard duplicate jobs](https://github.com/rails/solid_queue/issues/176) — concurrency control bloqueia, não descarta
+- [rails/rails issue #32236 — Active Storage presigned URL expira](https://github.com/rails/rails/issues/32236) e [Rails 7 expiring URLs](https://blog.saeloun.com/2021/09/14/rails-7-adds-expiring-urls-to-active-storage/) — default de 5 minutos
+
+**Issues de campo** (relatos, não conclusões de mantenedor):
+- [evolution-api #2538 — Bulk messaging: rate limiting, queuing, ban risk](https://github.com/evolution-foundation/evolution-api/issues/2538) — **confirma ausência de rate limiter/fila/retry embutidos**
+- [evolution-api #2228 — Ban risk ao checar múltiplos números](https://github.com/evolution-foundation/evolution-api/issues/2228)
+- [evolution-api #2056 — sendMedia: imagem falha ao carregar no app mobile](https://github.com/EvolutionAPI/evolution-api/issues/2056)
+- [Baileys #1869 — High number of bans on WhatsApp](https://github.com/WhiskeySockets/Baileys/issues/1869) — **anedótico; issue ficou stale sem resposta técnica**
+- [Baileys #2075 — Repeated Number Bans](https://github.com/WhiskeySockets/Baileys/issues/2075) — **anedótico**
+
+**Opinião de fornecedor / comunidade — todos os números aqui são heurísticos, não medidos:**
+- [WasenderApi — Anti-ban strategy](https://wasenderapi.com/blog/stop-getting-banned-the-ultimate-whatsapp-anti-ban-strategy-for-unofficial-apis-in-2025) — warm-up semanal, 15–45s entre mensagens, pausa a cada 50
+- [WasenderApi — Evolution API ban risks](https://wasenderapi.com/blog/evolution-api-ban-risks-how-to-architect-a-safe-high-volume-whatsapp-gateway) — concorrência 1–5 workers/sessão, token/leaky bucket
+- [Unipile — WhatsApp Group API 2026](https://www.unipile.com/whatsapp-group-api/) — limitações da Groups API oficial
+- [Solid Queue lifecycle — Honeybadger](https://www.honeybadger.io/blog/solid-queue-lifecycle/) — scheduled → ready executions
+- [Alex Peattie — Simple unique jobs on Solid Queue](https://alexpeattie.com/blog/simple-unique-jobs-solid-queue/)
+
+**Inspeção direta do codebase** (fatos verificados neste repositório, confiança HIGH):
+- `config/application.rb:24-25` — `time_zone = "Brasilia"` + `active_record.default_timezone = :local`
+- `config/queue.yml` — `threads: 3`, `processes: 1`, `queues: "*"` (fila única)
+- `config/recurring.yml` — limpa apenas `finished`, não `failed`
+- `config/initializers/filter_parameter_logging.rb` — filtro `:_key` **não** cobre `apikey` nem `hash`
+- `app/models/arte.rb` — validação de tamanho em `50.megabytes` (vs. ~16 MB do WhatsApp); aceita `video/quicktime`
+- `app/jobs/application_job.rb` — `retry_on` / `discard_on` comentados
+- `config/initializers/rack_attack.rb` — sem cobertura para rotas novas de WhatsApp/webhook
+- `app/controllers/admin/artes_controller.rb:74` — padrão `@client.artes.find(...)` a ser replicado nas entidades novas
+
+---
+*Pitfalls research for: WhatsApp group automation via Evolution API on Rails 8 + solid_queue*
+*Researched: 2026-08-29*
