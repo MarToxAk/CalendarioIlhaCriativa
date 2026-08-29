@@ -121,6 +121,7 @@ Full details: [.planning/milestones/v1.6-ROADMAP.md](.planning/milestones/v1.6-R
 **Depends on**: Nada (primeira fase do milestone; roda sobre a base do v1.6)
 **Requirements**: INFRA-01, INFRA-02, INFRA-03, INFRA-05, EVO-01, EVO-02, EVO-03
 **Success Criteria** (o que precisa ser VERDADE):
+
   1. Uma arte com upload é servida por uma URL de S3 que o host público do Evolution baixa com sucesso — verificado por download real originado de fora de `192.168.3.203`.
   2. Uma chamada de leitura ao Evolution feita pelo client do app (header `apikey`, timeouts explícitos) retorna 200 contra o host da agência, e a versão/shape reais do host estão registrados por escrito antes de qualquer código depender deles.
   3. Falha de rede, timeout, credencial inválida e instância não conectada chegam ao chamador classificadas em transitório / permanente / incerto / não-conectado — nenhuma exceção crua de HTTP escapa do client.
@@ -128,10 +129,22 @@ Full details: [.planning/milestones/v1.6-ROADMAP.md](.planning/milestones/v1.6-R
   5. O horário do app é o mesmo em development e em produção (TZ fixado e verificado no boot), e o bundle tem um único adapter de fila.
 
 **Plans**: 4 plans (waves 1→2→3→4)
+**Wave 1**
+
 - [ ] 25-01-PLAN.md — Evolution transport seam: `Evolution::Client` + `Errors` + initializer, `+faraday` / `-good_job`, `:apikey`/`:hash` log filter, authenticated read round-trip (EVO-01/02/03, INFRA-05)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 25-02-PLAN.md — Storage seam + reliable dev jobs + deterministic TZ: `+aws-sdk-s3`, `storage.yml` MinIO, `development.rb` (`:amazon` + `queue_adapter`), `queue_schema` load, `Procfile.dev` jobs, `timezone_check.rb` (INFRA-01/02/03)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 25-03-PLAN.md — Production deploy topology: D-10 deploy-tool checkpoint, `docker-compose.yml` jobs service + `TZ` + reverse-proxy TLS, `production.rb` SSL + hosts + `:amazon`, `.env.example` + credentials keys (INFRA-01/03)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
 - [ ] 25-04-PLAN.md — Reachable media: idempotent blob migration rake task + outside-LAN download proof + app↔Evolution both-directions reachability (INFRA-01, EVO-01)
+
 **Scope note**: the "+ Deploy" of the milestone is anchored here (CONTEXT.md D-09) — the app is deployed to the public host this phase, beyond the original ROADMAP statement of "transporte + storage + jobs".
 **Research**: `--research-phase` — a verificação empírica do contrato Evolution contra `whatsapp.bomcustoilhabela.com.br` é *a* tarefa mais importante do milestone e é pesquisa, não implementação. Os 8 itens a confirmar estão em SUMMARY.md → "ASSUMIDO (precisa de verificação empírica no passo A)". Decidir aqui também: migração dos blobs locais já existentes para o S3.
 **Defeitos pré-existentes fechados aqui**: queue adapter ausente em `development.rb` (BLOQUEIA UAT de agendamento), `good_job` órfão no Gemfile, `default_timezone = :local` mitigado por `TZ` travado no deploy.
@@ -144,6 +157,7 @@ Full details: [.planning/milestones/v1.6-ROADMAP.md](.planning/milestones/v1.6-R
 **Depends on**: Phase 25
 **Requirements**: EVO-04, INFRA-04, PAIR-01, PAIR-02, PAIR-03, PAIR-04, PAIR-05, PAIR-06, PAIR-07, PAIR-08
 **Success Criteria** (o que precisa ser VERDADE):
+
   1. Admin cria a instância de um cliente que ainda não tem uma e vê o QR Code na tela; o código continua escaneável enquanto rotaciona (~25s) até o pareamento concluir.
   2. Quando o nome da instância já existe no Evolution, o admin adota a instância existente em vez de receber erro — e o webhook é reapontado para este app no ato da adoção.
   3. Admin vê, por cliente, o estado da conexão (conectada / desconectada / aguardando pareamento) e consegue forçar a verificação por um botão, sem depender do webhook chegar.
@@ -163,6 +177,7 @@ Full details: [.planning/milestones/v1.6-ROADMAP.md](.planning/milestones/v1.6-R
 **Depends on**: Phase 26
 **Requirements**: GRUPO-01, GRUPO-02, GRUPO-03, GRUPO-04, GRUPO-05
 **Success Criteria** (o que precisa ser VERDADE):
+
   1. Admin dispara a sincronização de um cliente e vê, ao final, a lista dos grupos daquele número — inclusive os que voltam sem nome, com fallback legível.
   2. Abrir a tela de grupos não chama o Evolution: a lista vem do cache local e mostra quando foi sincronizada pela última vez.
   3. Grupos em que só administradores podem enviar aparecem sinalizados na seleção, antes de o admin escolher.
@@ -180,6 +195,7 @@ Full details: [.planning/milestones/v1.6-ROADMAP.md](.planning/milestones/v1.6-R
 **Depends on**: Phase 27
 **Requirements**: DIVU-01, DIVU-02, DIVU-03, DIVU-04, DIVU-05, DIVU-06, DIVU-07, DIVU-09, SEG-01, SEG-02
 **Success Criteria** (o que precisa ser VERDADE):
+
   1. Admin cria uma Divulgação escolhendo cliente, arte, grupos e data/hora — e só artes aprovadas daquele cliente aparecem para seleção.
   2. Arte cujo arquivo é link externo (Drive/Dropbox), ou cujo arquivo passa do teto que o WhatsApp aceita, é recusada na criação com mensagem dizendo o que fazer — sem alterar a validação da Arte.
   3. Antes de confirmar, o admin vê o preview do que será postado (mídia e legenda) e a estimativa de duração do disparo para aquele número de grupos.
@@ -199,6 +215,7 @@ Full details: [.planning/milestones/v1.6-ROADMAP.md](.planning/milestones/v1.6-R
 **Depends on**: Phase 25, Phase 28
 **Requirements**: ENVIO-01, ENVIO-02, ENVIO-03, ENVIO-04, ENVIO-05, ENVIO-06, ENVIO-07, ENVIO-08, ENVIO-09, ENVIO-10, DIVU-08, SEG-03, INFRA-06
 **Success Criteria** (o que precisa ser VERDADE):
+
   1. Na hora agendada os grupos recebem a arte um a um, com intervalo aleatório vindo de variável de ambiente, e o app continua processando outros jobs (inclusive os broadcasts do v1.5) durante toda a espera.
   2. Nenhum grupo recebe a mesma Divulgação duas vezes — nem com re-tentativa de job, worker morto ou deploy no meio do disparo; timeout de leitura vira resultado `incerto` para revisão humana e nunca é re-tentado sozinho.
   3. Se a aprovação da arte foi retirada depois do agendamento, ou se a instância não está conectada no instante do envio, o grupo não recebe nada e o item registra o motivo — nunca `enviado`.
@@ -218,6 +235,7 @@ Full details: [.planning/milestones/v1.6-ROADMAP.md](.planning/milestones/v1.6-R
 **Depends on**: Phase 29
 **Requirements**: ACOMP-01, ACOMP-02, ACOMP-03, SEG-04, INFRA-07
 **Success Criteria** (o que precisa ser VERDADE):
+
   1. Com a página de uma Divulgação aberta, o admin vê o status de cada grupo mudar ao vivo, sem recarregar.
   2. Admin reenvia para um grupo específico que falhou, com confirmação explícita, e o resultado aparece no mesmo lugar.
   3. Admin abre um cliente e vê o histórico de Divulgações com o resultado por grupo, com o nome que o grupo tinha no momento do envio.
