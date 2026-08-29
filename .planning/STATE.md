@@ -5,10 +5,10 @@ milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 25
 current_phase_name: Fundação — Transporte Evolution + Storage Alcançável
 status: executing
-stopped_at: "25-02-PLAN.md completo (INFRA-02 fechado, SC4 provado por restart real; INFRA-01/SC1 deferido — MinIO). Próximo: 25-03 (deploy topology)."
-last_updated: "2026-08-29T20:44:10.840Z"
+stopped_at: "25-03-PLAN.md pausado no Task 1 (checkpoint:decision, gate=blocking) — ferramenta de deploy Docker Compose vs Kamal precisa de confirmação humana. Nenhuma task commitada (Task 1 é a primeira; Tasks 2 e 3 dependem da decisão / de input ausente). autonomous:false — não auto-aprovado."
+last_updated: "2026-08-29T20:49:00.000Z"
 last_activity: 2026-08-29
-last_activity_desc: Plano 25-02 executado (storage MinIO config + solid_queue em dev + timezone_check no boot)
+last_activity_desc: Plano 25-03 iniciado e pausado no checkpoint:decision do Task 1 (deploy tool D-10)
 state_head: 7f319a1f93fb50bf7b7f9c0693e1dba1dcf373c6
 progress:
   total_phases: 6
@@ -225,9 +225,9 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-29T20:43:00.000Z
-**Stopped at:** 25-02-PLAN.md completo — 3 tasks commitadas (6ce3a06, 6fac8fd, 7f319a1). Gate SC4 (restart-survival) satisfeito pelo orquestrador; timeline verbatim no 25-02-SUMMARY.md. INFRA-02 marcado completo em REQUIREMENTS.md.
-**Resume file:** None
+**Last session:** 2026-08-29T20:49:00.000Z
+**Stopped at:** 25-03-PLAN.md — PAUSADO no Task 1 (checkpoint:decision, gate=blocking). Decisão pendente: extender docker-compose.yml (hand-rolled, casa com D-10) OU adotar o esqueleto Kamal (config/deploy.yml). Tasks 2 e 3 são escritas contra a ferramenta escolhida. Zero tasks commitadas neste plano. Retomar com um agente novo após a seleção "docker-compose" ou "kamal".
+**Resume file:** .planning/phases/25-funda-o-transporte-evolution-storage-alcan-vel/25-03-PLAN.md
 
 ### Blockers
 
