@@ -6,11 +6,14 @@
 #
 # :apikey / :hash — a chave global do Evolution viaja no header `apikey` e o token
 # por instância é um `hash`; Evolution::Client (fase 25) já loga requests, então
-# esses precisam ser filtrados agora. `:_key` não casa parcialmente `apikey` e
-# `:token` não casa `hash`. O conjunto completo de filtros de segredo do Evolution
-# (:api_key, :instance_token, :qrcode, :base64, :pairing_code) entra na INFRA-04
-# (fase 26), antes do primeiro token por instância ser gravado.
+# esses precisam ser filtrados. `:_key` não casa parcialmente `apikey` e
+# `:token` não casa `hash`, por isso a lista precisa dos símbolos extras, não de
+# regex. INFRA-04 (fase 26) fecha aqui: :api_key, :instance_token, :qrcode,
+# :base64, :pairing_code, :pairingCode cobrem create_instance/connect/webhook
+# (QR base64, pairing code, apikey de instância) antes do primeiro token de
+# whatsapp_instances ser gravado.
 Rails.application.config.filter_parameters += [
   :passw, :email, :secret, :token, :_key, :crypt, :salt, :certificate, :otp, :ssn, :cvv, :cvc,
-  :apikey, :hash
+  :apikey, :hash,
+  :api_key, :instance_token, :qrcode, :base64, :pairing_code, :pairingCode
 ]

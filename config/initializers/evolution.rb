@@ -18,4 +18,12 @@ Rails.application.config.after_initialize do
     raise Evolution::Errors::ConfigurationError,
           "EVOLUTION_BASE_URL deve começar com https:// (Cloudflare termina o TLS na frente do host) — ver evolution-contract.md"
   end
+
+  # Fase 26 (PAIR-06): o webhook autenticado é boot-fatal em produção porque o
+  # milestone v1.7 inteiro depende dele (pareamento + estado de conexão).
+  Evolution.webhook_hmac_key
+  unless Evolution.webhook_base_url.start_with?("https://")
+    raise Evolution::Errors::ConfigurationError,
+          "EVOLUTION_WEBHOOK_BASE_URL deve começar com https:// — ver 26-RESEARCH.md"
+  end
 end

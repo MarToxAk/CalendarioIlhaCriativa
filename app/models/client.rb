@@ -3,6 +3,7 @@ class Client < ApplicationRecord
   has_secure_password
 
   has_many :artes, dependent: :destroy
+  has_one :whatsapp_instance, dependent: :destroy
 
   validates :name, presence: true
   validates :access_token, presence: true, uniqueness: true

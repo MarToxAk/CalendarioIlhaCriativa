@@ -24,6 +24,19 @@ class Evolution::ClientTest < ActiveSupport::TestCase
     stubbed_connection(status, body, headers).get("/x")
   end
 
+  # POST variant of stubbed_connection — usada pelos testes de create_instance
+  # (26-01). Mesmo stack de middleware do Client, adapter :test.
+  def stubbed_post_connection(status, body, headers = { "Content-Type" => "application/json" }, path: "/instance/create")
+    stubs = Faraday::Adapter::Test::Stubs.new do |s|
+      s.post(path) { [ status, headers, body ] }
+    end
+    Faraday.new do |f|
+      f.request :json
+      f.response :json, content_type: /\bjson$/
+      f.adapter :test, stubs
+    end
+  end
+
   def assert_raises_for(klass, status, body, headers = { "Content-Type" => "application/json" })
     error = assert_raises(klass) do
       Evolution::Client.send(:raise_for_status!, response_for(status, body, headers))
@@ -130,6 +143,57 @@ class Evolution::ClientTest < ActiveSupport::TestCase
     refute_includes log, "apikey"
   ensure
     Rails.logger = original
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
+
+  # --- create_instance (PAIR-01, 26-01) -----------------------------------
+  test "create_instance returns the response body on a 2xx with a Hash" do
+    body = { "instance" => { "instanceId" => "abc-123" }, "hash" => "raw-instance-token", "qrcode" => { "base64" => "data:image/png;base64,xyz" } }
+    Evolution::Client.instance_variable_set(:@connection, stubbed_post_connection(201, body.to_json))
+
+    resp = Evolution::Client.create_instance(
+      instance_name: "livia_client_1",
+      webhook_url: "https://example.com/webhooks/evolution",
+      webhook_headers: { "X-Webhook-Secret" => "hmac-value" },
+      api_key: "test-api-key"
+    )
+
+    assert_equal "abc-123", resp.dig("instance", "instanceId")
+    assert_equal "raw-instance-token", resp["hash"]
+    assert_equal "data:image/png;base64,xyz", resp.dig("qrcode", "base64")
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
+
+  test "create_instance raises Unknown when the 2xx body is not a Hash" do
+    Evolution::Client.instance_variable_set(:@connection, stubbed_post_connection(200, "[]"))
+
+    assert_raises(Evolution::Errors::Unknown) do
+      Evolution::Client.create_instance(
+        instance_name: "livia_client_1",
+        webhook_url: "https://example.com/webhooks/evolution",
+        webhook_headers: {},
+        api_key: "test-api-key"
+      )
+    end
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
+
+  test "create_instance raises Permanent matching /already in use/i on a 403 name collision" do
+    body = { "status" => 403, "error" => "Forbidden", "response" => { "message" => 'This name "livia_client_1" is already in use.' } }.to_json
+    Evolution::Client.instance_variable_set(:@connection, stubbed_post_connection(403, body))
+
+    error = assert_raises(Evolution::Errors::Permanent) do
+      Evolution::Client.create_instance(
+        instance_name: "livia_client_1",
+        webhook_url: "https://example.com/webhooks/evolution",
+        webhook_headers: {},
+        api_key: "test-api-key"
+      )
+    end
+    assert_match(/already in use/i, error.message)
+  ensure
     Evolution::Client.instance_variable_set(:@connection, nil)
   end
 end

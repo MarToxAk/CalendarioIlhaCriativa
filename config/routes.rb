@@ -10,6 +10,12 @@ Rails.application.routes.draw do
       member do
         post :rotate_token
       end
+      resource :whatsapp_instance, only: [ :create, :destroy ], controller: "whatsapp_instances" do
+        get  :refresh_qr
+        post :verify
+        post :adopt
+        post :reconnect
+      end
     end
     resources :artes do
       member do
@@ -59,6 +65,11 @@ Rails.application.routes.draw do
       end
     end
   end
+
+  # Webhook autenticado do Evolution (fase 26) — sem CSRF/sessão; o controller
+  # chega no plano 26-03. A rota entra aqui, ANTES do health check, para o
+  # surface inteiro da fase já existir (interface-first, uma vez só).
+  post "/webhooks/evolution", to: "webhooks/evolution#create"
 
   # Health check
   get "up" => "rails/health#show", as: :rails_health_check

@@ -32,6 +32,28 @@ module Evolution
     value
   end
 
+  # Resolve a chave HMAC do webhook de ENV["EVOLUTION_WEBHOOK_HMAC_KEY"] ou
+  # credentials.evolution.webhook_hmac_key (fase 26, PAIR-06 — assinatura do webhook).
+  def self.webhook_hmac_key
+    value = ENV.fetch("EVOLUTION_WEBHOOK_HMAC_KEY") { Rails.application.credentials.dig(:evolution, :webhook_hmac_key) }
+    if value.blank?
+      raise Evolution::Errors::ConfigurationError,
+            "EVOLUTION_WEBHOOK_HMAC_KEY não configurado (ENV ou credentials.evolution.webhook_hmac_key) — ver 26-RESEARCH.md"
+    end
+    value
+  end
+
+  # Resolve a base URL pública do webhook de ENV["EVOLUTION_WEBHOOK_BASE_URL"] ou
+  # credentials.evolution.webhook_base_url (fase 26 — host público que recebe /webhooks/evolution).
+  def self.webhook_base_url
+    value = ENV.fetch("EVOLUTION_WEBHOOK_BASE_URL") { Rails.application.credentials.dig(:evolution, :webhook_base_url) }
+    if value.blank?
+      raise Evolution::Errors::ConfigurationError,
+            "EVOLUTION_WEBHOOK_BASE_URL não configurado (ENV ou credentials.evolution.webhook_base_url) — ver 26-RESEARCH.md"
+    end
+    value
+  end
+
   OPEN_TIMEOUT       = Integer(ENV.fetch("EVOLUTION_OPEN_TIMEOUT", "5"))
   WRITE_TIMEOUT      = Integer(ENV.fetch("EVOLUTION_WRITE_TIMEOUT", "10"))
   READ_TIMEOUT       = Integer(ENV.fetch("EVOLUTION_READ_TIMEOUT", "30"))

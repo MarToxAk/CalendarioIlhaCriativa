@@ -32,6 +32,32 @@ module Evolution
         end
       end
 
+      # POST /instance/create — instanceName vai no CORPO, sem path param (única
+      # exceção de rota da fase). Retorna o Hash do corpo num 2xx. 403 "already in
+      # use" sobe como Evolution::Errors::Permanent (raise_for_status! já mapeia
+      # 403 -> Permanent) — o chamador (InstanceProvisioner) rescue + casa
+      # /already in use/i (adoção chega no plano 26-02; aqui só propaga).
+      def create_instance(instance_name:, webhook_url:, webhook_headers:, events: %w[QRCODE_UPDATED CONNECTION_UPDATE], number: nil, api_key: Evolution.global_api_key)
+        body = {
+          instanceName: instance_name,
+          integration: "WHATSAPP-BAILEYS",
+          qrcode: true,
+          webhook: {
+            enabled: true,
+            url: webhook_url,
+            byEvents: false,
+            base64: true,
+            events: events,
+            headers: webhook_headers
+          }
+        }
+        body[:number] = number if number.present?
+        resp = request(:post, "/instance/create", api_key: api_key, body: body)
+        raise Evolution::Errors::Unknown, "resposta 2xx com corpo não-JSON do host Evolution" unless resp.body.is_a?(Hash)
+
+        resp.body
+      end
+
       # GET /instance/fetchInstances — leitura rápida. Retorna o corpo (Array).
       def fetch_instances(api_key: Evolution.global_api_key)
         body = request(:get, "/instance/fetchInstances",
