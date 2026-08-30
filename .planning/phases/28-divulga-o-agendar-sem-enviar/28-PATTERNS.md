@@ -126,10 +126,19 @@ def only_one_media_source
 end
 ```
 → Private methods, guard-clause early return, `errors.add(:base, "pt-BR sentence")`.
-The five `Divulgacao` validations (`arte_deve_estar_aprovada`, `arte_tem_arquivo_anexado`,
+The `Divulgacao` validations (`arte_deve_estar_aprovada`, **`arte_nao_usa_link_externo`**,
 `arquivo_dentro_do_teto_whatsapp`, `arte_e_grupos_do_mesmo_cliente`, `ao_menos_um_grupo`,
 `scheduled_for_no_futuro`) + `validates :scheduled_for, presence: true` — full bodies +
 pt-BR copy in RESEARCH §Pattern 5 and 28-UI-SPEC Copywriting Contract.
+
+**DIVU-03 (`arte_nao_usa_link_externo`) — corrected per 28-CONTEXT.md resolution:** the
+validation rejects **only** `arte.external_url.present?`. It does NOT reject for
+`!arte.media_file.attached?` — a `caption_only` arte (no file, no link, has `caption`) is a
+valid Divulgação (phase 29 ENVIO-10 sends it via `sendText`). The arte picker is
+`@client.artes.approved` with no `caption_only` carve-out. `arquivo_dentro_do_teto_whatsapp`
+already `return`s when no file is attached. Any earlier "strict reading"
+(`arte_tem_arquivo_anexado`, reject if no file) in RESEARCH §Pattern 5 was superseded — use
+the external-url-only body.
 
 **Constant colocation:** `WHATSAPP_MEDIA_MAX_BYTES = 16.megabytes` and
 `SEND_DELAY_MIN = Integer(ENV.fetch("WHATSAPP_SEND_DELAY_MIN_SECONDS", "25"))` /

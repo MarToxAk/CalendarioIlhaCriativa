@@ -66,7 +66,7 @@
 |----|-------------|------------------|
 | DIVU-01 | Admin cria uma Divulgação escolhendo cliente, arte, grupos e data/hora de envio | Nested `Admin::DivulgacoesController#new/#create` sob `resources :clients` (§Pattern 1); form de página única com seletor de arte (`@client.artes.approved`), `_picker.html.erb` (§Pattern 6), `datetime_field :scheduled_for` (§Pattern 4). Precedente exato: `Admin::ArtesController` + `admin/artes/_form.html.erb`. |
 | DIVU-02 | Só artes aprovadas podem ser selecionadas para Divulgação | Picker de arte = `@client.artes.approved` (enum `status` já em `Arte` `[VERIFIED: app/models/arte.rb:28]`). Model revalida: `validate :arte_deve_estar_aprovada` (§Pattern 5, defense-in-depth). |
-| DIVU-03 | Artes com link externo (Drive/Dropbox) recusadas na criação, com mensagem orientando o upload | `validate :arte_tem_arquivo_anexado` — recusa se `arte.external_url.present?` OU `!arte.media_file.attached?` (§Pattern 5). NÃO toca as validações de `Arte` (`media_source_present` / `only_one_media_source` continuam aceitando `external_url` `[VERIFIED: app/models/arte.rb:95-104]`). ⚠️ Ver Open Question 1 (artes `caption_only`). |
+| DIVU-03 | Artes com link externo (Drive/Dropbox) recusadas na criação, com mensagem orientando o upload | `validate :arte_nao_usa_link_externo` — recusa SO se `arte.external_url.present?` (§Pattern 5). Artes `caption_only` (sem arquivo, sem link) SAO aceitas — fase 29 ENVIO-10 envia via sendText. NAO toca as validacoes de `Arte`. [Open Question 1 RESOLVIDA em 28-CONTEXT.md] |
 | DIVU-04 | Arquivos acima do teto do WhatsApp recusados na criação da Divulgação, sem alterar a validação da Arte | `Divulgacao::WHATSAPP_MEDIA_MAX_BYTES = 16.megabytes` (§Pattern 5, §State of the Art, Assumption A1). `validate :arquivo_dentro_do_teto_whatsapp` compara `arte.media_file.blob.byte_size`. `Arte` mantém `size: { less_than: 50.megabytes }` `[VERIFIED: app/models/arte.rb:40]`. |
 | DIVU-05 | Data/hora exibidas com fuso explícito; `Arte#scheduled_on` permanece data sem hora | Nova coluna `divulgacoes.scheduled_for :datetime`. `Arte.scheduled_on` fica `t.date … null: false` intocada `[VERIFIED: db/schema.rb:64]`. `datetime-local` → `Time.zone` round-trip via time-zone-aware attributes (§Pattern 4). Helper pt-BR com sufixo "(BRT)". |
 | DIVU-06 | Admin vê preview do que será postado — mídia e legenda — antes de confirmar | Preview server-rendered sem JS: `image_tag rails_storage_proxy_path(blob)` / `<video controls playsinline preload="metadata">` — precedente verbatim em `app/views/client/artes/show.html.erb:27-36` `[VERIFIED]`. Legenda = `arte.caption` renderizada `whitespace-pre-wrap`, verbatim (§Pattern 7). |
@@ -194,7 +194,7 @@ Two mechanics carry the risk. **Cross-client isolation** is enforced in three re
         │        whatsapp_group: g, group_name: g.display_name, remote_jid: g.remote_jid) }   (DIVU-09 snapshot)
         │  @divulgacao.save
         │     ├─ validate :arte_deve_estar_aprovada           (DIVU-02)
-        │     ├─ validate :arte_tem_arquivo_anexado           (DIVU-03)
+        │     ├─ validate :arte_nao_usa_link_externo         (DIVU-03: so external_url)
         │     ├─ validate :arquivo_dentro_do_teto_whatsapp    (DIVU-04)
         │     ├─ validate :arte_e_grupos_do_mesmo_cliente     (SEG-02 backstop)
         │     └─ validate :ao_menos_um_grupo
@@ -373,7 +373,7 @@ class Divulgacao < ApplicationRecord
 
   validates :scheduled_for, presence: true
   validate  :arte_deve_estar_aprovada
-  validate  :arte_tem_arquivo_anexado
+  validate  :arte_nao_usa_link_externo          # DIVU-03: rejeita SO external_url; caption_only IN escopo
   validate  :arquivo_dentro_do_teto_whatsapp
   validate  :arte_e_grupos_do_mesmo_cliente
   validate  :ao_menos_um_grupo
@@ -390,10 +390,12 @@ class Divulgacao < ApplicationRecord
     errors.add(:base, "A arte selecionada não está aprovada. Só artes aprovadas podem ser agendadas para divulgação.")
   end
 
-  def arte_tem_arquivo_anexado
-    return if arte.nil?
-    return if arte.media_file.attached? && arte.external_url.blank?
-    errors.add(:base, "Esta arte usa um link externo. Faça o upload do arquivo na arte antes de agendar a divulgação.")
+  def arte_nao_usa_link_externo
+    # DIVU-03 (CONTEXT resolvido): recusa SO quando ha link externo. NAO recusa por
+    # ausencia de media_file — uma arte caption_only (sem arquivo, sem link, com caption)
+    # e uma Divulgacao valida (fase 29 ENVIO-10 envia via sendText).
+    return if arte.nil? || arte.external_url.blank?
+    errors.add(:base, "Esta arte usa um link externo. Faca o upload do arquivo na arte antes de agendar a divulgacao.")
   end
 
   def arquivo_dentro_do_teto_whatsapp
@@ -657,11 +659,11 @@ class Divulgacao < ApplicationRecord
 
   validates :scheduled_for, presence: true
   validate  :arte_deve_estar_aprovada
-  validate  :arte_tem_arquivo_anexado
+  validate  :arte_nao_usa_link_externo          # DIVU-03: rejeita SO external_url; caption_only IN escopo
   validate  :arquivo_dentro_do_teto_whatsapp
   validate  :arte_e_grupos_do_mesmo_cliente
   validate  :ao_menos_um_grupo
-  # optional (Open Question 3): validate :scheduled_for_no_futuro
+  validate  :scheduled_for_no_futuro            # RESOLVIDO: futuro-only (28-CONTEXT.md)
 
   def cancelar! = status_agendada? && update(status: :cancelada)
   # ... private validate methods (§Pattern 5)
@@ -888,14 +890,16 @@ export default class extends Controller {
 | A3 | Fallback delay defaults `30` / `90` seconds are acceptable "anti-ban" values for the estimate when ENV is unset. | §Pattern 8 | The fallback only affects the *estimate shown* when ENV is missing (dev, or mis-provisioned prod). CONTEXT's own example ("8–14 min / 20 groups") implies `~25` / `~45`. If the user wants the copy to match that example, use those. This is a user decision (Open Question 2). |
 | A4 | `config/initializers/inflections.rb` exists (Rails scaffold default) or can be created to add the `divulgacao`/`divulgacoes` irregular. | Pitfall 1, §Pattern 2 | Not read this session. If absent, create it — trivial. Alternative: `self.table_name = "divulgacoes"` on the model. Either way the planner must include this step or the first query 500s. |
 | A5 | `Admin::ClientsController#show` can be extended to load `@divulgacoes` for the entry-point section (or the section links out without preloading). | §Code Examples 5 | `admin/clients_controller.rb` not read this session. Low risk — worst case the entry point is a bare link to `admin_client_divulgacoes_path` and the list lives only on `#index`. |
-| A6 | Phase 28 rejects `caption_only` artes (they have no `media_file`, so `arte_tem_arquivo_anexado` fails). | DIVU-03, Open Question 1 | ENVIO-10 (phase 29) explicitly sends text-only artes as `sendText`. If `caption_only` divulgações are in scope for v1.7, the `arte_tem_arquivo_anexado` validation and the arte picker need an explicit `arte.caption_only?` carve-out. **Must be confirmed with the user** before locking the validation. |
+| A6 | RESOLVIDO — `caption_only` artes SAO aceitas. `arte_nao_usa_link_externo` recusa so `external_url`; `arquivo_dentro_do_teto_whatsapp` ja `return`s quando nao ha arquivo. Arte picker = `@client.artes.approved` (todas, sem carve-out). | DIVU-03, Open Question 1 | Resolvido em 28-CONTEXT.md "Perguntas em aberto da pesquisa — RESOLVIDAS"; fase 29 ENVIO-10 envia caption_only via sendText. |
 | A7 | The test DB is reachable via `POSTGRES_HOST=/var/run/postgresql TZ=America/Sao_Paulo bin/rails test` (unix socket, peer auth, no password), and `bin/rails test` genuinely runs — contradicting the older `MEMORY/test_db_permission.md` note whose root cause was the missing host var (per `27-01-SUMMARY.md`). | §Test Strategy | If the socket path differs on this machine, tests can't run in-session and fall back to inspection + `bin/rails runner` (phases 25/26 precedent). Not a build blocker. |
 
 **Anything not in this table is `[VERIFIED: …]` from a file read this session or `[CITED: …]` from the source referenced inline.**
 
 ---
 
-## Open Questions
+## Open Questions (TODAS RESOLVIDAS em 28-CONTEXT.md § "Perguntas em aberto da pesquisa — RESOLVIDAS")
+
+> As 5 perguntas abaixo foram resolvidas na fase de contexto. Resolucoes: (1) caption_only IN escopo — recusa so external_url; (2) delay fallback 25/45s; (3) scheduled_for futuro-only; (4) index = pagina propria + secao espelho no clients#show; (5) cancelamento = member action `patch :cancel`. Os planos implementam essas resolucoes. O texto original fica abaixo para rastreabilidade.
 
 1. **Are `caption_only` (text-only) artes in scope for a Divulgação in v1.7?**
    - What we know: CONTEXT locks DIVU-03 as "recusa se `!arte.media_file.attached?`" — which rejects every `caption_only` arte (`Arte enum :media_type { …, caption_only }`, no file). ENVIO-10 (phase 29) explicitly handles "arte só de texto vai como mensagem de texto" via `sendText`.
@@ -998,7 +1002,7 @@ export default class extends Controller {
 | Cross-client: arte of A + groups of B via A's nested URL (the "art of A reaches groups of B" precursor) | Elevation of Privilege / Information Disclosure | `@client.artes.find` + `@client.whatsapp_instance.whatsapp_groups.where(active:true).find` + model `arte_e_grupos_do_mesmo_cliente`; A×B negative test both directions |
 | Crafted `whatsapp_group_ids[]` with a foreign or inactive id | Tampering / EoP | `.where(active: true).find(ids)` raises on any missing id → whole create rejected; picker never emits a foreign id |
 | Raw `remote_jid` injected in params to reach a WhatsApp group directly | Tampering | Form only ever carries integer `group.id`; `remote_jid` is a server-side snapshot written from the resolved record, never read from params |
-| Over-limit / external-link media slipping to the (future) send path | Business Logic / Integrity | `arquivo_dentro_do_teto_whatsapp` + `arte_tem_arquivo_anexado` at create time (defense-in-depth ahead of phase 29's send-time checks) |
+| Over-limit / external-link media slipping to the (future) send path | Business Logic / Integrity | `arquivo_dentro_do_teto_whatsapp` + `arte_nao_usa_link_externo` at create time (defense-in-depth ahead of phase 29's send-time checks) |
 | Stored XSS via `arte.caption` in the preview | XSS (Tampering) | ERB `<%= %>` auto-escapes; `whitespace-pre-wrap` is CSS only; no `raw`/`html_safe`/`sanitize` bypass |
 | `RecordNotFound` leaking which client owns an id | Information Disclosure | Rescued to a generic message; 404 (not 403) on cross-client `#show` via `@client.divulgacoes.find` |
 | Mass-assignment of `status` / `client_id` | Tampering | Strong params permit only `:arte_id, :scheduled_for, whatsapp_group_ids: []`; `client` comes from the nested route, `status` from the enum default / `cancelar!` |
