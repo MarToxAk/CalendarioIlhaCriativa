@@ -75,6 +75,23 @@ class WhatsappInstanceTest < ActiveSupport::TestCase
     refute wi.recently_paired?
   end
 
+  # --- connection_state_label — rótulo pt-BR por estado (26-04, PAIR-05) ---
+  test "connection_state_label covers the 4 enum values" do
+    wi = @client.build_whatsapp_instance(instance_name: WhatsappInstance.evolution_name_for(@client))
+
+    wi.connection_state = :unpaired
+    assert_equal "Aguardando criação", wi.connection_state_label
+
+    wi.connection_state = :awaiting_qr
+    assert_equal "Aguardando pareamento", wi.connection_state_label
+
+    wi.connection_state = :connected
+    assert_equal "Conectada", wi.connection_state_label
+
+    wi.connection_state = :disconnected
+    assert_equal "Desconectada", wi.connection_state_label
+  end
+
   # --- encrypts :token — ciphertext != plaintext em repouso ----------------
   test "token is encrypted at rest (raw column value differs from the assigned plaintext)" do
     plaintext = "plaintext-secret-value"

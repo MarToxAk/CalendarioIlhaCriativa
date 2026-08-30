@@ -89,4 +89,65 @@ class AdminWhatsappInstancesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "adopted-token-abc", wi.token
     assert wi.paired_at.present?
   end
+
+  # --- #verify — verificação manual síncrona (PAIR-05, 26-04) --------------
+
+  test "verify com state open atualiza o banco e redireciona com notice de sucesso" do
+    wi = @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :awaiting_qr,
+      last_qr_base64: "data:image/png;base64,stale"
+    )
+
+    Evolution::Client.stub(:connection_state, ->(*) { "open" }) do
+      post verify_admin_client_whatsapp_instance_path(@client)
+    end
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "Estado atualizado: agora Conectada.", flash[:notice]
+
+    wi.reload
+    assert_equal "connected", wi.connection_state
+    assert wi.last_checked_at.present?
+    assert wi.paired_at.present?
+    assert_nil wi.last_qr_base64
+  end
+
+  test "verify com state close ATUALIZA o banco (nao so a mensagem) e mostra alert de desconectada" do
+    wi = @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :connected,
+      paired_at: 2.days.ago
+    )
+
+    Evolution::Client.stub(:connection_state, ->(*) { "close" }) do
+      post verify_admin_client_whatsapp_instance_path(@client)
+    end
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "A instância respondeu como desconectada. Use \"Parear novamente\" para reconectar o número.", flash[:alert]
+
+    wi.reload
+    assert_equal "disconnected", wi.connection_state
+    assert wi.last_checked_at.present?
+  end
+
+  test "verify com falha de transporte NAO avanca connection_state nem last_checked_at" do
+    wi = @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :awaiting_qr
+    )
+    before_checked_at = wi.last_checked_at
+
+    Evolution::Client.stub(:connection_state, ->(*) { raise Evolution::Errors::Transient, "timeout" }) do
+      post verify_admin_client_whatsapp_instance_path(@client)
+    end
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "Não foi possível falar com o WhatsApp agora. O estado acima pode estar desatualizado. Tente \"Forçar verificação\" de novo em instantes.", flash[:alert]
+
+    wi.reload
+    assert_equal "awaiting_qr", wi.connection_state
+    assert_equal before_checked_at, wi.last_checked_at
+  end
 end

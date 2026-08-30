@@ -37,4 +37,17 @@ class WhatsappInstance < ApplicationRecord
 
   def paired_days = paired_at && ((Time.current - paired_at) / 1.day).floor
   def recently_paired? = paired_days && paired_days < 7
+
+  # Rótulo pt-BR por estado (26-UI-SPEC "Connection-state -> color map"). Usado
+  # pelo controller (flash de #verify) e pela view (26-05). O sufixo "(adotada)"
+  # para connected + origin_adopted_existing? é responsabilidade da VIEW, não
+  # deste método — mantém o método puro/sem contexto de origem.
+  def connection_state_label
+    case connection_state
+    when "unpaired" then "Aguardando criação"
+    when "awaiting_qr" then "Aguardando pareamento"
+    when "connected" then "Conectada"
+    when "disconnected" then "Desconectada"
+    end
+  end
 end
