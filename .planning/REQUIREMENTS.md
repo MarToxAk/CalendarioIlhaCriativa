@@ -17,7 +17,7 @@
 - [x] **INFRA-01**: ActiveStorage serve arquivos via S3 em produção, com URL alcançável pelo host público do Evolution
 - [ ] **INFRA-02**: Jobs agendados sobrevivem a reinício do servidor em development (queue adapter explícito + schema de fila carregado), viabilizando UAT de agendamento
 - [x] **INFRA-03**: O fuso horário é determinístico entre development e produção (`TZ` fixado no deploy, com verificação no boot)
-- [ ] **INFRA-04**: Segredos do Evolution (`apikey`, `hash`, `token`, QR) nunca aparecem em log — `filter_parameters` corrigido, e nenhum segredo trafega como argumento de job
+- [x] **INFRA-04**: Segredos do Evolution (`apikey`, `hash`, `token`, QR) nunca aparecem em log — `filter_parameters` corrigido, e nenhum segredo trafega como argumento de job
 - [ ] **INFRA-05**: `good_job` removido do Gemfile, restando um único adapter de fila no bundle
 - [ ] **INFRA-06**: Disparos de WhatsApp rodam em fila dedicada, sem atrasar os broadcasts de ActionCable do v1.5
 - [ ] **INFRA-07**: `failed_executions` do solid_queue tem política de retenção, evitando acúmulo de argumentos de job em texto claro
@@ -27,11 +27,11 @@
 - [ ] **EVO-01**: O contrato do Evolution é verificado empiricamente contra o host real da agência antes de qualquer código depender dele (versão, shape dos DTOs, casing dos eventos de webhook, JID de grupo em `sendMedia`)
 - [x] **EVO-02**: Toda comunicação HTTP com o Evolution passa por um único service PORO, com timeouts explícitos e header `apikey`
 - [x] **EVO-03**: Erros do Evolution são classificados em transitório / permanente / incerto / não-conectado, e cada classe tem tratamento distinto
-- [ ] **EVO-04**: O token de cada instância é persistido criptografado no banco (`encrypts`), com as chaves de `active_record_encryption` configuradas antes da primeira gravação
+- [x] **EVO-04**: O token de cada instância é persistido criptografado no banco (`encrypts`), com as chaves de `active_record_encryption` configuradas antes da primeira gravação
 
 ### Instância e Pareamento
 
-- [ ] **PAIR-01**: Admin cria uma instância de WhatsApp para um cliente que ainda não tem uma
+- [x] **PAIR-01**: Admin cria uma instância de WhatsApp para um cliente que ainda não tem uma
 - [ ] **PAIR-02**: Admin registra uma instância que já existe no Evolution, em vez de falhar quando o nome está em uso
 - [ ] **PAIR-03**: Admin vê o QR Code na tela do app e o código se mantém escaneável enquanto ele rotaciona (~25s)
 - [ ] **PAIR-04**: Admin vê o estado de conexão da instância de cada cliente (conectada / desconectada / aguardando pareamento)
@@ -144,15 +144,15 @@ Preenchido na criação do roadmap (2026-08-29). Fonte: `.planning/ROADMAP.md`.
 | INFRA-01 | Phase 25 | Complete |
 | INFRA-02 | Phase 25 | Gaps Found |
 | INFRA-03 | Phase 25 | Complete |
-| INFRA-04 | Phase 26 | Pending |
+| INFRA-04 | Phase 26 | Complete |
 | INFRA-05 | Phase 25 | Gaps Found |
 | INFRA-06 | Phase 29 | Pending |
 | INFRA-07 | Phase 30 | Pending |
 | EVO-01 | Phase 25 | Gaps Found |
 | EVO-02 | Phase 25 | Complete |
 | EVO-03 | Phase 25 | Complete |
-| EVO-04 | Phase 26 | Pending |
-| PAIR-01 | Phase 26 | Pending |
+| EVO-04 | Phase 26 | Complete |
+| PAIR-01 | Phase 26 | Complete |
 | PAIR-02 | Phase 26 | Pending |
 | PAIR-03 | Phase 26 | Pending |
 | PAIR-04 | Phase 26 | Pending |

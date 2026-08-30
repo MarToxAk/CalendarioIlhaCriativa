@@ -4,12 +4,12 @@ milestone: v1.7
 milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 26
 current_phase_name: Instância de WhatsApp por Cliente + Pareamento
-status: verifying
-stopped_at: Phase 26 UI-SPEC approved
-last_updated: "2026-08-30T13:04:39.168Z"
+status: executing
+stopped_at: Completed 26-01-PLAN.md
+last_updated: "2026-08-30T13:18:01.029Z"
 last_activity: 2026-08-30
-last_activity_desc: Plano 25-05 (gap-closure) COMPLETO — guards SECRET_KEY_BASE_DUMMY (CR-01), CORS_ORIGINS no compose + .env.example (CR-02), WR-01/WR-07/WR-02/WR-03/IN-07/WR-06/IN-05 aplicados. Fase 25 com 5/5 planos.
-state_head: 3c0695a088dd1d65541a6d8fc1059251f55062b9
+last_activity_desc: Phase 26 execution started
+state_head: 03f4e3502f00ab1c267a804b8db2aeaf7927024d
 progress:
   total_phases: 6
   completed_phases: 0
@@ -25,14 +25,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-29)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 25 — Fundação — Transporte Evolution + Storage Alcançável
+**Current focus:** Phase 26 — Instância de WhatsApp por Cliente + Pareamento
 
 ## Current Position
 
-Phase: 26 (Instância de WhatsApp por Cliente + Pareamento) — READY TO EXECUTE
-Plan: 5 of 5
-Status: verificada 5/5 must-haves (human_needed) — aguardando /gsd-verify-work 25 (docker compose build + up no host)
-Last activity: 2026-08-30 — Plano 25-05 (gap-closure) FINALIZADO
+Phase: 26 (Instância de WhatsApp por Cliente + Pareamento) — EXECUTING
+Plan: 2 of 5
+Status: Ready to execute
+Last activity: 2026-08-30 — Phase 26 execution started
 
 ## Progress Bar
 
@@ -198,6 +198,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 25 P03 | 15min | 3 tasks | 5 files |
 | Phase 25 P04 | ~40min | 2 tasks | 3 files |
 | Phase 25 P05 | ~12 min | 8 tasks | 6 files |
+| Phase 26 P01 | ~45min | 2 tasks | 18 files |
 
 ## Decisions
 
@@ -233,6 +234,9 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 25]: [25-05]: guards de build usam ENV[SECRET_KEY_BASE_DUMMY] (setada so pelo Rails em assets:precompile) em timezone_check.rb + evolution.rb — verificado que boot de runtime real sem essa var e sem TZ correto AINDA aborta (CR-01)
 - [Phase 25]: [25-05]: WR-07 endurece so o caminho de erro (2xx nao-JSON -> Evolution::Errors::Unknown com msg estatica); connection_state segue retornando a string de estado crua no caminho feliz — COVERAGE.md nao muda
 - [Phase 25]: [25-05]: suite bin/rails test nao executavel (PG::InsufficientPrivilege — banco de teste de outro usuario do SO); WR-01/WR-07 verificados por inspecao + bin/rails runner com conexao Faraday stub
+- [Phase 26]: [Phase 26-01]: removida config/credentials/development.yml.enc órfã (não rastreada, vazia) que sombreava config/credentials.yml.enc em RAILS_ENV=development — Rails.application.credentials resolve por-env antes do arquivo único; sem essa remoção Evolution.base_url/global_api_key e as novas chaves de active_record_encryption ficariam invisíveis em dev
+- [Phase 26]: [Phase 26-01]: chaves active_record_encryption + evolution.webhook_hmac_key/webhook_base_url gravadas via Rails.application.credentials.write (API programática, sem EDITOR interativo) mesclando com o conteúdo existente — evolution.base_url/global_api_key/aws/jwt_secret/api preservados
+- [Phase 26]: [Phase 26-01]: InstanceProvisioner nesta task cobre SOMENTE o caminho de criação (create_instance -> persist_new) — adoção (403 already in use -> adopt) fica para 26-02, sem rescue prematuro
 
 ## Quick Tasks Completed
 
@@ -242,9 +246,9 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-30T11:50:08.078Z
-**Stopped at:** Phase 26 UI-SPEC approved
-**Resume file:** .planning/phases/26-inst-ncia-de-whatsapp-por-cliente-pareamento/26-UI-SPEC.md
+**Last session:** 2026-08-30T13:17:53.498Z
+**Stopped at:** Completed 26-01-PLAN.md
+**Resume file:** None
 
 ### Blockers
 

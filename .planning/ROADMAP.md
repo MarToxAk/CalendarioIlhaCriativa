@@ -168,12 +168,12 @@ Full details: [.planning/milestones/v1.6-ROADMAP.md](.planning/milestones/v1.6-R
   4. A tela de pareamento avisa do risco de banimento antes do escaneamento e, depois de pareado, informa há quanto tempo o número está ativo, recomendando cautela em números recentes — sem bloquear nada.
   5. O token da instância está criptografado no banco, não aparece em nenhum log nem como argumento de job, e um POST ao webhook sem o segredo correto é recusado antes de qualquer consulta ao banco.
 
-**Plans**: 5 plans
+**Plans**: 1/5 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 26-01-PLAN.md — Chaves de encryption + filter_parameters + migração/model + Evolution::Client#create_instance + InstanceProvisioner + admin#create ponta a ponta (EVO-04, INFRA-04, PAIR-01)
+- [x] 26-01-PLAN.md — Chaves de encryption + filter_parameters + migração/model + Evolution::Client#create_instance + InstanceProvisioner + admin#create ponta a ponta (EVO-04, INFRA-04, PAIR-01)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -303,7 +303,7 @@ Plans:
 | 23. Endpoints Cliente | v1.6 | 3/3 | Complete ✅ | 2026-06-12 |
 | 24. Endpoints IA + Rate Limiting | v1.6 | 4/4 | Complete ✅ | 2026-06-13 |
 | 25. Fundação — Transporte Evolution + Storage | v1.7 | 5/5 | In Progress|  |
-| 26. Instância de WhatsApp + Pareamento | v1.7 | 0/5 | Not started | - |
+| 26. Instância de WhatsApp + Pareamento | v1.7 | 1/5 | In Progress|  |
 | 27. Grupos do Cliente | v1.7 | 0/? | Not started | - |
 | 28. Divulgação — Agendar sem Enviar | v1.7 | 0/? | Not started | - |
 | 29. Motor de Envio | v1.7 | 0/? | Not started | - |
