@@ -60,6 +60,19 @@
             data: { turbo_submits_with: "Verificando…" },
             class: "inline-flex items-center h-9 px-3 border border-gray-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-gray-50 transition-colors" %>
 
+      <%# Sincronização de grupos (GRUPO-01, 27-02) — botão desabilitado NUNCA
+          enfileira (o guard server-side do #sync é a defesa real, este disabled
+          é só affordance). Secundário aqui: o CTA primário verde fica reservado
+          para a página de grupos (empty state 2 / header nunca sincronizado). %>
+      <%= button_to "Sincronizar grupos", sync_admin_client_whatsapp_groups_path(client),
+            method: :post,
+            data: { turbo_submits_with: "Sincronizando…" },
+            disabled: !whatsapp_instance.connected?,
+            class: "inline-flex items-center h-9 px-3 border border-gray-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" %>
+
+      <%= link_to "Ver grupos", admin_client_whatsapp_groups_path(client),
+            class: "text-[#0F7949] hover:underline text-sm" %>
+
       <% if whatsapp_instance.connected? || whatsapp_instance.disconnected? %>
         <div data-controller="modal">
           <button type="button"
