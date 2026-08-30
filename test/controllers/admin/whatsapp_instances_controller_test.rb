@@ -150,4 +150,88 @@ class AdminWhatsappInstancesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "awaiting_qr", wi.connection_state
     assert_equal before_checked_at, wi.last_checked_at
   end
+
+  # --- #refresh_qr — throttled, sempre JSON (PAIR-03, 26-04) ---------------
+
+  test "refresh_qr com QR ja em cache responde o JSON sem chamar connect" do
+    wi = @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :awaiting_qr,
+      last_qr_base64: "data:image/png;base64,cached"
+    )
+
+    Evolution::Client.stub(:connect, ->(*) { raise "nao deveria chamar" }) do
+      get refresh_qr_admin_client_whatsapp_instance_path(@client)
+    end
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "awaiting_qr", body["state"]
+    assert_equal wi.last_qr_base64, body["qr_base64"]
+  end
+
+  test "duas chamadas seguidas a refresh_qr dentro de 15s disparam connect no maximo 1 vez" do
+    wi = @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :awaiting_qr
+    )
+    Rails.cache.delete("wa_qr_pull_#{wi.id}")
+    calls = 0
+    fake_connect = ->(*) { calls += 1; { base64: "data:image/png;base64,fresh", code: nil, pairing_code: nil, count: 1 } }
+
+    Evolution::Client.stub(:connect, fake_connect) do
+      get refresh_qr_admin_client_whatsapp_instance_path(@client)
+      get refresh_qr_admin_client_whatsapp_instance_path(@client)
+    end
+
+    assert_equal 1, calls
+  ensure
+    Rails.cache.delete("wa_qr_pull_#{wi&.id}")
+  end
+
+  test "refresh_qr sem instancia responde unpaired sem erro 500" do
+    get refresh_qr_admin_client_whatsapp_instance_path(@client)
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "unpaired", body["state"]
+    assert_nil body["qr_base64"]
+  end
+
+  # --- #reconnect — "Parear novamente" (26-04) ------------------------------
+
+  test "reconnect atualiza connection_state para awaiting_qr e grava novo qr_base64" do
+    wi = @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :connected,
+      last_qr_base64: nil
+    )
+
+    fake_connect = ->(*) { { base64: "data:image/png;base64,new-qr", code: nil, pairing_code: nil, count: 1 } }
+    Evolution::Client.stub(:connect, fake_connect) do
+      post reconnect_admin_client_whatsapp_instance_path(@client)
+    end
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "Pareamento reiniciado. Escaneie o novo QR Code.", flash[:notice]
+
+    wi.reload
+    assert_equal "awaiting_qr", wi.connection_state
+    assert_equal "data:image/png;base64,new-qr", wi.last_qr_base64
+  end
+
+  test "reconnect com falha do Evolution redireciona com alert e nao muda o estado" do
+    wi = @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :connected
+    )
+
+    Evolution::Client.stub(:connect, ->(*) { raise Evolution::Errors::Transient, "timeout" }) do
+      post reconnect_admin_client_whatsapp_instance_path(@client)
+    end
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "Não foi possível atualizar o QR Code. Clique em \"Gerar novo QR\" para tentar outra vez.", flash[:alert]
+    assert_equal "connected", wi.reload.connection_state
+  end
 end

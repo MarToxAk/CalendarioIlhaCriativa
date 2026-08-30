@@ -55,6 +55,32 @@ class Admin::WhatsappInstancesController < Admin::BaseController
       alert: "Não foi possível falar com o WhatsApp agora. O estado acima pode estar desatualizado. Tente \"Forçar verificação\" de novo em instantes."
   end
 
+  # PAIR-03 — única ação JSON do controller (o Stimulus polling do 26-05
+  # consome isto). Nunca chama o Evolution mais de 1x a cada 15s por
+  # instância (T-26-15) — `pull_fresh_qr` só prossegue quando ainda não há
+  # QR salvo e o throttle de cache permite. Sempre responde com o que já
+  # está no banco, mesmo quando o Evolution falha (rescue silencioso em
+  # `pull_fresh_qr`).
+  def refresh_qr
+    inst = @client.whatsapp_instance
+    pull_fresh_qr(inst) if inst&.awaiting_qr? && inst.last_qr_base64.blank?
+    render json: { state: inst&.connection_state || "unpaired", qr_base64: (inst&.awaiting_qr? ? inst.last_qr_base64 : nil) }
+  end
+
+  # "Parear novamente" — força um QR novo mesmo numa instância connected/
+  # disconnected (encerra a sessão atual do WhatsApp; confirmação modal fica
+  # a cargo da view no 26-05).
+  def reconnect
+    inst = @client.whatsapp_instance
+    result = Evolution::Client.connect(inst.instance_name)
+    inst.update!(connection_state: :awaiting_qr, last_qr_base64: result[:base64], last_checked_at: Time.current)
+    redirect_to admin_client_path(@client), notice: "Pareamento reiniciado. Escaneie o novo QR Code."
+  rescue Evolution::Errors::ConfigurationError, Evolution::Errors::Permanent, Evolution::Errors::Transient, Evolution::Errors::Unknown => e
+    Rails.logger.warn("[whatsapp_instances] reconnect falhou client=#{@client.id}: #{e.class}")
+    redirect_to admin_client_path(@client),
+      alert: "Não foi possível atualizar o QR Code. Clique em \"Gerar novo QR\" para tentar outra vez."
+  end
+
   private
 
   # Escopo SEMPRE por client_id (resource nested singular) — nunca buscar a
@@ -62,5 +88,20 @@ class Admin::WhatsappInstancesController < Admin::BaseController
   # groundwork para SEG-* de fases futuras).
   def set_client
     @client = Client.find(params[:client_id])
+  end
+
+  # Só prossegue se conseguiu ESCREVER a chave de throttle — `unless_exist:
+  # true` faz `Rails.cache.write` retornar false sem sobrescrever se a chave
+  # já existe, ou seja, ninguém puxou um QR fresco nos últimos 15s para esta
+  # instância (T-26-15). Silencioso em qualquer falha do Evolution — o
+  # endpoint sempre responde com o que já está no banco; o polling do
+  # Stimulus tenta de novo no próximo ciclo.
+  def pull_fresh_qr(inst)
+    return unless Rails.cache.write("wa_qr_pull_#{inst.id}", true, unless_exist: true, expires_in: 15.seconds)
+
+    result = Evolution::Client.connect(inst.instance_name)
+    inst.update!(last_qr_base64: result[:base64]) if result[:base64].present?
+  rescue Evolution::Errors::Transient, Evolution::Errors::Unknown, Evolution::Errors::Permanent, Evolution::Errors::ConfigurationError
+    nil
   end
 end
