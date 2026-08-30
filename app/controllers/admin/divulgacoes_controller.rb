@@ -37,6 +37,14 @@ class Admin::DivulgacoesController < Admin::BaseController
       load_form_collections
       render :new, status: :unprocessable_entity
     end
+  rescue ActiveRecord::RecordNotFound
+    # SEG-01/SEG-02: um id forasteiro/inativo (ou um grupo desativado por um sync
+    # da fase 27 entre o load do form e o submit) cai aqui em vez de 404 — re-render
+    # com mensagem acionavel e generica (nao revela de quem e o id). Zero linhas gravadas.
+    @divulgacao ||= @client.divulgacoes.new
+    load_form_collections
+    flash.now[:alert] = "Seleção inválida: uma arte ou um grupo escolhido não pertence a este cliente ou foi desativado. Revise a seleção e tente de novo."
+    render :new, status: :unprocessable_entity
   end
 
   private

@@ -10,7 +10,13 @@
 <h1 class="text-2xl font-semibold text-slate-900 mb-6">Nova divulgação</h1>
 
 <div class="bg-white rounded-xl border border-gray-200 shadow-card p-8 max-w-2xl mt-4">
-  <%= form_with model: [ @client, @divulgacao ] do |f| %>
+  <%= form_with model: [ :admin, @client, @divulgacao ] do |f| %>
+    <% if flash.now[:alert].present? %>
+      <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+        <p><%= flash.now[:alert] %></p>
+      </div>
+    <% end %>
+
     <% if @divulgacao.errors[:base].any? %>
       <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
         <% @divulgacao.errors[:base].each do |msg| %>
