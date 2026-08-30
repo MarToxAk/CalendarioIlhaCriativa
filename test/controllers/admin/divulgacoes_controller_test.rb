@@ -186,4 +186,103 @@ class Admin::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     assert_equal original_name, dg.group_name
     assert_equal "g1@g.us", dg.remote_jid
   end
+
+  # --- Task 3: cada mensagem de validacao chega pela caixa errors[:base] ---
+
+  def future_param = 3.days.from_now.strftime("%Y-%m-%dT%H:%M")
+
+  test "arte pending -> re-render :new com 'A arte selecionada nao esta aprovada.' (DIVU-02)" do
+    arte_pending = @client.artes.new(
+      scheduled_on: Date.current, platform: :instagram, media_type: :image,
+      status: :pending, title: "Arte Pendente"
+    )
+    arte_pending.media_file.attach(fixture_file_upload("sample.jpg", "image/jpeg"))
+    arte_pending.save!
+
+    assert_no_difference "Divulgacao.count" do
+      post admin_client_divulgacoes_path(@client), params: {
+        divulgacao: { arte_id: arte_pending.id, whatsapp_group_ids: [ @g1.id ], scheduled_for: future_param }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "A arte selecionada não está aprovada. Só artes aprovadas podem ser agendadas para divulgação."
+  end
+
+  test "arte com external_url (sem arquivo) -> 'Esta arte usa um link externo.' (DIVU-03)" do
+    arte_link = @client.artes.create!(
+      scheduled_on: Date.current, platform: :instagram, media_type: :image,
+      status: :approved, title: "Arte com Link", external_url: "https://drive.google.com/file/x"
+    )
+
+    assert_no_difference "Divulgacao.count" do
+      post admin_client_divulgacoes_path(@client), params: {
+        divulgacao: { arte_id: arte_link.id, whatsapp_group_ids: [ @g1.id ], scheduled_for: future_param }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "Esta arte usa um link externo. Faça o upload do arquivo na arte antes de agendar a divulgação."
+  end
+
+  test "arquivo acima do teto de 16 MB -> mensagem com tamanho atual e limite (DIVU-04)" do
+    arte_grande = @client.artes.new(
+      scheduled_on: Date.current, platform: :instagram, media_type: :image,
+      status: :approved, title: "Arte Grande"
+    )
+    arte_grande.media_file.attach(fixture_file_upload("sample.jpg", "image/jpeg"))
+    arte_grande.save!
+    arte_grande.media_file.blob.update_column(:byte_size, 20.megabytes)
+
+    assert_no_difference "Divulgacao.count" do
+      post admin_client_divulgacoes_path(@client), params: {
+        divulgacao: { arte_id: arte_grande.id, whatsapp_group_ids: [ @g1.id ], scheduled_for: future_param }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "20 MB"
+    assert_includes response.body, "16 MB"
+    assert_includes response.body, "Comprima ou reenvie um arquivo menor na arte."
+  end
+
+  test "arte caption_only aprovada + grupo valido + futuro -> cria a divulgacao (DIVU-03, caption_only IN escopo)" do
+    arte_texto = @client.artes.new(
+      scheduled_on: Date.current, platform: :instagram, media_type: :caption_only,
+      status: :approved, title: "Arte Só Texto", caption: "Bom dia a todos!"
+    )
+    arte_texto.save!(validate: false) # media_source_present da Arte exige arquivo/link; caption_only e escopo da Divulgacao
+
+    assert_difference("Divulgacao.count", 1) do
+      post admin_client_divulgacoes_path(@client), params: {
+        divulgacao: { arte_id: arte_texto.id, whatsapp_group_ids: [ @g1.id ], scheduled_for: future_param }
+      }
+    end
+
+    assert_redirected_to admin_client_divulgacao_path(@client, Divulgacao.last)
+  end
+
+  test "scheduled_for no passado -> 'A data e hora do envio precisam estar no futuro.'" do
+    assert_no_difference "Divulgacao.count" do
+      post admin_client_divulgacoes_path(@client), params: {
+        divulgacao: { arte_id: @arte.id, whatsapp_group_ids: [ @g1.id ], scheduled_for: 1.hour.ago.strftime("%Y-%m-%dT%H:%M") }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "A data e hora do envio precisam estar no futuro."
+  end
+
+  test "SEG-02 backstop no nivel do model: arte do cliente B + divulgacao do cliente A e invalida" do
+    _client_b, _group_b, arte_b = build_client_b
+
+    d = @client.divulgacoes.new(
+      arte:          arte_b,
+      scheduled_for: 3.days.from_now,
+      divulgacao_grupos: [ DivulgacaoGrupo.new(whatsapp_group: @g1, group_name: @g1.display_name, remote_jid: @g1.remote_jid) ]
+    )
+
+    assert_not d.valid?
+    assert_includes d.errors[:base], "A arte e os grupos precisam ser do mesmo cliente."
+  end
 end
