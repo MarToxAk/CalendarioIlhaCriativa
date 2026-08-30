@@ -10,6 +10,18 @@ module Evolution
   class InstanceProvisioner
     Result = Struct.new(:instance, :adopted, :qr_base64, keyword_init: true)
 
+    # WR-04 — o Evolution só sinaliza colisão de nome pela CÓPIA humana da
+    # mensagem 403; o envelope de erro NÃO carrega código estruturado
+    # (verificado no fonte do Evolution na tag 2.3.7 — ver 26-RESEARCH.md).
+    # Restrição aceita e documentada: não inventar um campo que o upstream
+    # não fornece. Para reduzir mis-roteamento casamos DUAS coisas: o status
+    # 403 (prefixo posto por Evolution::Client#raise_for_status! -> "403 …")
+    # E a frase abaixo. Assim uma 401/404 cuja cópia por acaso contenha
+    # "already in use" NÃO é desviada para #adopt, e uma futura mudança de
+    # wording do 403 fica rastreável neste ponto único.
+    NAME_IN_USE_MESSAGE = /already in use/i
+    private_constant :NAME_IN_USE_MESSAGE
+
     # client_api: seam de DI para teste (stub de Evolution::Client sem rede).
     def initialize(client, client_api: Evolution::Client)
       @client = client
@@ -25,12 +37,19 @@ module Evolution
       resp = @api.create_instance(instance_name: name, webhook_url: webhook_url, webhook_headers: headers)
       persist_new(name, resp)
     rescue Evolution::Errors::Permanent => e
-      raise unless e.message =~ /already in use/i
+      raise unless name_collision?(e)
 
       adopt(name, headers)
     end
 
     private
+
+    # 403 + frase de colisão. Qualquer outra Permanent (401 credencial, 404
+    # rota, 403 não-colisão como "API key forbidden") re-propaga sem desvio.
+    def name_collision?(error)
+      msg = error.message.to_s
+      msg.start_with?("403 ") && msg.match?(NAME_IN_USE_MESSAGE)
+    end
 
     # PAIR-02. `existing` é resolvido por match EXATO de nome (nunca por índice
     # nem prefixo parcial — T-26-07, o manager é compartilhado com outras apps

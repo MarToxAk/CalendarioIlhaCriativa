@@ -90,6 +90,23 @@ class AdminWhatsappInstancesControllerTest < ActionDispatch::IntegrationTest
     assert wi.paired_at.present?
   end
 
+  # WR-04 — só 403 + "already in use" desvia para #adopt. Uma 403 de outra
+  # natureza (ex.: API key sem permissão) deve re-propagar como falha dura,
+  # nunca virar adoção silenciosa.
+  test "create com 403 que NAO e colisao de nome nao adota e redireciona com alert" do
+    assert_no_difference "WhatsappInstance.count" do
+      Evolution::Client.stub(:create_instance, ->(**) { raise Evolution::Errors::Permanent, "403 API key forbidden for this resource" }) do
+        Evolution::Client.stub(:fetch_instances, ->(**) { raise "fetch_instances nao deveria ser chamado" }) do
+          post admin_client_whatsapp_instance_path(@client)
+        end
+      end
+    end
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "Não foi possível criar a instância no WhatsApp. Verifique a configuração do Evolution e tente de novo.", flash[:alert]
+    assert_nil @client.reload.whatsapp_instance
+  end
+
   # --- #verify — verificação manual síncrona (PAIR-05, 26-04) --------------
 
   test "verify com state open atualiza o banco e redireciona com notice de sucesso" do
