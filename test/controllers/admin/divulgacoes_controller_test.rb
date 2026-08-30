@@ -285,4 +285,41 @@ class Admin::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     assert_not d.valid?
     assert_includes d.errors[:base], "A arte e os grupos precisam ser do mesmo cliente."
   end
+
+  # --- Task 1: #new renderiza a prévia real + placeholder (DIVU-06) ------
+
+  test "GET new renderiza a prévia com a mídia real pelo proxy path, a legenda verbatim e o placeholder" do
+    @arte.update!(caption: "Promoção imperdível!\nSó hoje até as 18h.")
+
+    arte_texto = @client.artes.new(
+      scheduled_on: Date.current, platform: :instagram, media_type: :caption_only,
+      status: :approved, title: "Arte Só Texto", caption: "Mensagem de texto pura."
+    )
+    arte_texto.save!(validate: false)
+
+    get new_admin_client_divulgacao_path(@client)
+
+    assert_response :success
+    # mídia real streamada pela rota proxy auth-gated (não url_for / rails_blob_path / presign)
+    assert_includes response.body, "/rails/active_storage/blobs/proxy"
+    assert_no_match %r{/rails/active_storage/blobs/redirect}, response.body
+    # legenda verbatim da arte com imagem
+    assert_includes response.body, "Promoção imperdível!"
+    # arte caption_only -> marcador de texto no lugar da mídia
+    assert_includes response.body, "(sem mídia — mensagem de texto)"
+    # placeholder e header da prévia
+    assert_includes response.body, "Selecione uma arte para ver a prévia."
+    assert_includes response.body, "Prévia — é exatamente isto que vai ao grupo"
+    assert_includes response.body, "Legenda (enviada sem alteração):"
+  end
+
+  test "GET new: uma legenda com <script> aparece escapada (auto-escape do ERB), nunca inerte no DOM" do
+    @arte.update!(caption: "<script>alert('xss')</script> confira já")
+
+    get new_admin_client_divulgacao_path(@client)
+
+    assert_response :success
+    assert_includes response.body, "&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;"
+    assert_no_match %r{<script>alert\('xss'\)</script>}, response.body
+  end
 end
