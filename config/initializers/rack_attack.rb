@@ -41,6 +41,12 @@ class Rack::Attack
     req.ip if req.path == "/webhooks/evolution" && req.post?
   end
 
+  # Anti sync-spam (Pitfall 8, 27-02) -- um número duplo-clicado ou um
+  # crawler não deve martelar o Evolution/WhatsApp com SyncGroupsJob.
+  throttle("admin/whatsapp_groups_sync_by_ip", limit: 6, period: 60) do |req|
+    req.ip if req.post? && req.path.match?(%r{\A/admin/clients/\d+/whatsapp_groups/sync\z})
+  end
+
   Rack::Attack.throttled_responder = lambda do |request|
     if request.path.start_with?("/api/")
       [429, { "Content-Type" => "application/json" },
