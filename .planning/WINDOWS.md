@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 2
+open_count: 4
 waived_count: 0
 fixed_count: 0
-total_count: 2
-last_updated: 2026-08-29T20:44:17.416Z
+total_count: 4
+last_updated: 2026-08-30T01:56:18.244Z
 ---
 
 # Broken Windows Ledger
@@ -17,6 +17,8 @@ last_updated: 2026-08-29T20:44:17.416Z
 |----|-------|------|------|------|-------------|--------|--------|-------------|-------------|
 | 1 | 25 | unrun-verify | config/storage.yml |  | INFRA-01/SC1: round-trip presignado real contra o MinIO dev não executado — MinIO não provisionado, sem S3_ENDPOINT/aws.* (user_setup); config entregue em 6ce3a06 | open |  | 2026-08-29T20:44:17.232Z |  |
 | 2 | 25 | deviation | config/initializers/timezone_check.rb |  | Rule 1: ramo de warn em dev também emite para $stderr (Kernel#warn) além de Rails.logger.warn — Rails.logger em dev via bin/rails runner só grava em log/development.log | open |  | 2026-08-29T20:44:17.416Z |  |
+| 3 | 25 | deviation | docker-compose.yml |  | 25-03 Rule 2: s3. reverse_proxy block left commented in deploy/Caddyfile — MinIO is external/TLS-terminated, not co-located; revisit if MinIO moves onto the app host | open |  | 2026-08-30T01:56:18.056Z |  |
+| 4 | 25 | unrun-verify | lib/tasks |  | 25-03: presigned round-trip against real MinIO from outside the LAN not executed — owed by 25-04 (needs MinIO reachable) | open |  | 2026-08-30T01:56:18.244Z |  |
 
 ````json
 [
@@ -42,6 +44,30 @@ last_updated: 2026-08-29T20:44:17.416Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-08-29T20:44:17.416Z",
+    "resolved_at": null
+  },
+  {
+    "id": 3,
+    "kind": "deviation",
+    "phase": "25",
+    "file": "docker-compose.yml",
+    "line": null,
+    "description": "25-03 Rule 2: s3. reverse_proxy block left commented in deploy/Caddyfile — MinIO is external/TLS-terminated, not co-located; revisit if MinIO moves onto the app host",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-30T01:56:18.056Z",
+    "resolved_at": null
+  },
+  {
+    "id": 4,
+    "kind": "unrun-verify",
+    "phase": "25",
+    "file": "lib/tasks",
+    "line": null,
+    "description": "25-03: presigned round-trip against real MinIO from outside the LAN not executed — owed by 25-04 (needs MinIO reachable)",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-30T01:56:18.244Z",
     "resolved_at": null
   }
 ]
