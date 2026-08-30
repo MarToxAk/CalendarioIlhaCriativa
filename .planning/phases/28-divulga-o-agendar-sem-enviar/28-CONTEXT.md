@@ -110,6 +110,26 @@ verificável isoladamente e permite rollback do motor sem levar o CRUD junto.
   histórico por grupo são preservados. A honra do cancelamento pelos envios não-realizados é
   DIVU-08 / fase 29; aqui só a coluna, o estado e a ação de UI.
 
+### Perguntas em aberto da pesquisa — RESOLVIDAS
+
+- **Artes `caption_only` (só texto) EM ESCOPO.** DIVU-03 recusa **só** `arte.external_url.present?`
+  (link Drive/Dropbox) — NÃO recusa por ausência de `media_file`. Uma arte `caption_only`
+  (sem arquivo, sem link, com `caption`) é uma Divulgação válida: a fase 29 (ENVIO-10) envia
+  como mensagem de texto via `sendText`, e o schema desta fase precisa suportar isso.
+  Consequência: `arquivo_dentro_do_teto_whatsapp` (DIVU-04) só roda **quando
+  `media_file.attached?`**; o preview (DIVU-06) mostra "(sem mídia — mensagem de texto)" para
+  `caption_only`; a validação "precisa de arquivo anexado" some — o que vale é: recusa
+  `external_url`, aceita `media_file` OU `caption_only`.
+- **Fallback do delay para a estimativa (DIVU-07):** `WHATSAPP_SEND_DELAY_MIN_SECONDS=25` /
+  `WHATSAPP_SEND_DELAY_MAX_SECONDS=45` (bate com o exemplo do CONTEXT: 20 grupos × ~35s ≈
+  8–15 min). A fase 29 é dona da leitura canônica dessas env vars; a fase 28 só tem um helper
+  read-only com esse fallback.
+- **`scheduled_for` validado como futuro** (`validate :scheduled_for_no_futuro`) — recusa
+  agendar no passado.
+- **`divulgacoes#index`:** entrega os DOIS — página própria (`index`) E uma seção de lista no
+  `admin/clients#show`.
+- **Cancelamento:** member action dedicada `patch :cancel` (não `update` com state param).
+
 ### Claude's Discretion
 
 - Nome exato do controller de cancelamento (action `cancel` custom vs `update` com
