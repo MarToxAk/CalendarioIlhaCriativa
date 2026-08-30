@@ -11,7 +11,7 @@ Rails.application.routes.draw do
         post :rotate_token
       end
       resource :whatsapp_instance, only: [ :create, :destroy ], controller: "whatsapp_instances" do
-        get  :refresh_qr
+        post :refresh_qr
         post :verify
         post :adopt
         post :reconnect

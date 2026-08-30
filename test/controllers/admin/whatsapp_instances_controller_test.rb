@@ -179,7 +179,7 @@ class AdminWhatsappInstancesControllerTest < ActionDispatch::IntegrationTest
     )
 
     Evolution::Client.stub(:connect, ->(*) { raise "nao deveria chamar" }) do
-      get refresh_qr_admin_client_whatsapp_instance_path(@client)
+      post refresh_qr_admin_client_whatsapp_instance_path(@client)
     end
 
     assert_response :success
@@ -198,8 +198,8 @@ class AdminWhatsappInstancesControllerTest < ActionDispatch::IntegrationTest
     fake_connect = ->(*) { calls += 1; { base64: "data:image/png;base64,fresh", code: nil, pairing_code: nil, count: 1 } }
 
     Evolution::Client.stub(:connect, fake_connect) do
-      get refresh_qr_admin_client_whatsapp_instance_path(@client)
-      get refresh_qr_admin_client_whatsapp_instance_path(@client)
+      post refresh_qr_admin_client_whatsapp_instance_path(@client)
+      post refresh_qr_admin_client_whatsapp_instance_path(@client)
     end
 
     assert_equal 1, calls
@@ -208,7 +208,7 @@ class AdminWhatsappInstancesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "refresh_qr sem instancia responde unpaired sem erro 500" do
-    get refresh_qr_admin_client_whatsapp_instance_path(@client)
+    post refresh_qr_admin_client_whatsapp_instance_path(@client)
 
     assert_response :success
     body = JSON.parse(response.body)

@@ -27,7 +27,16 @@ export default class extends Controller {
     this.cycles += 1
 
     try {
-      const response = await fetch(this.urlValue, { headers: { Accept: "application/json" } })
+      // WR-02: refresh_qr é POST (dispara connect no Evolution + update! no
+      // banco) — GET não pode ter efeito colateral (isento de CSRF, alvo de
+      // prefetch/crawler). Envia o token CSRF do <meta> do layout admin.
+      const response = await fetch(this.urlValue, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content
+        }
+      })
       const data = await response.json()
 
       if (data.state === "connected") {
