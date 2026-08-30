@@ -1,0 +1,43 @@
+<%# Partial _picker.html.erb — picker escopado reutilizável (contrato da fase 28) %>
+<%# Locals: client: (obrigatório), selected_ids: (default []), field_name: (default nil) %>
+<%# NUNCA recebe ivars do controller (@client/@instance/@pagy) — só local_assigns, para a %>
+<%# fase 28 embutir isto num form de Divulgacao sem acoplamento ao %>
+<%# Admin::WhatsappGroupsController. Invariante (GRUPO-03/SC5): o option set é SEMPRE %>
+<%# client.whatsapp_instance.whatsapp_groups.where(active: true), resolvido AQUI DENTRO — %>
+<%# NUNCA WhatsappGroup.where/.find, NUNCA a coleção pronta vinda de fora. %>
+<% selected_ids = local_assigns.fetch(:selected_ids, []) %>
+<% field_name = local_assigns.fetch(:field_name, nil) %>
+<% active_groups = client.whatsapp_instance&.whatsapp_groups&.where(active: true)
+     &.order(Arel.sql("subject ASC NULLS LAST"))&.order(:remote_jid) %>
+
+<% if active_groups.blank? %>
+  <p class="text-sm text-slate-500">Nenhum grupo ativo para selecionar. Sincronize os grupos deste cliente primeiro.</p>
+<% else %>
+  <fieldset>
+    <legend class="sr-only">Grupos deste número</legend>
+
+    <% if field_name %>
+      <div class="flex items-center justify-between gap-3 py-2 px-4 border-b border-gray-100">
+        <label class="flex items-center gap-3 cursor-pointer">
+          <input type="checkbox"
+                 data-picker-select-all
+                 class="h-4 w-4 rounded border-gray-300 text-[#0F7949] focus:ring-2 focus:ring-[#0F7949]/20">
+          <span class="sr-only">Selecionar todos os grupos ativos</span>
+        </label>
+        <span class="text-xs font-medium text-slate-500" data-picker-counter>
+          0 de <%= active_groups.size %> grupos selecionados
+        </span>
+      </div>
+    <% end %>
+
+    <% active_groups.each do |g| %>
+      <%= render "admin/whatsapp_groups/group_row", group: g, field_name: field_name, selected_ids: selected_ids %>
+    <% end %>
+  </fieldset>
+
+  <% if local_assigns[:pagy].present? %>
+    <div class="flex justify-center mt-6">
+      <%= pagy_nav(pagy) %>
+    </div>
+  <% end %>
+<% end %>
