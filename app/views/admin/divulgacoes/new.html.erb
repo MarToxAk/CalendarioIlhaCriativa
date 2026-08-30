@@ -46,6 +46,7 @@
     <div class="mb-6">
       <%= f.label :scheduled_for, "Data e hora do envio (America/São_Paulo)", class: "block text-sm font-medium text-slate-900 mb-1.5" %>
       <%= f.datetime_field :scheduled_for,
+            min: Time.current,
             class: "block w-full h-11 px-3 border border-gray-200 rounded-lg text-sm text-slate-900 bg-white focus:outline-none focus:border-[#0F7949] focus:ring-2 focus:ring-[#0F7949]/20 transition-colors" %>
       <p class="text-xs text-slate-500 mt-1">Interpretada no fuso de Brasília (BRT).</p>
     </div>

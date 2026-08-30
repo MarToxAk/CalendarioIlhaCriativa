@@ -132,6 +132,42 @@ class Admin::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Selecione ao menos um grupo"
   end
 
+  # --- Task 2: datetime-local -> Time.zone round-trip (DIVU-05) --------
+
+  test "scheduled_for cru 2026-09-15T14:00 round-trips pra Time.zone.local Brasilia (-03:00)" do
+    assert_difference("Divulgacao.count", 1) do
+      post admin_client_divulgacoes_path(@client), params: {
+        divulgacao: { arte_id: @arte.id, whatsapp_group_ids: [ @g1.id ], scheduled_for: "2026-09-15T14:00" }
+      }
+    end
+
+    d = Divulgacao.last
+    assert_equal Time.zone.local(2026, 9, 15, 14, 0), d.scheduled_for
+    assert_equal(-3 * 3600, d.scheduled_for.utc_offset)
+  end
+
+  test "criar a divulgacao nao transforma Arte#scheduled_on num datetime — continua Date sem hora" do
+    post admin_client_divulgacoes_path(@client), params: {
+      divulgacao: { arte_id: @arte.id, whatsapp_group_ids: [ @g1.id ], scheduled_for: "2026-09-15T14:00" }
+    }
+    assert_redirected_to admin_client_divulgacao_path(@client, Divulgacao.last)
+
+    @arte.reload
+    assert_kind_of Date, @arte.scheduled_on
+    assert_not @arte.scheduled_on.respond_to?(:hour)
+  end
+
+  test "scheduled_for com lixo impossivel de parsear casta pra nil e cai no presence — sem 500" do
+    assert_no_difference "Divulgacao.count" do
+      post admin_client_divulgacoes_path(@client), params: {
+        divulgacao: { arte_id: @arte.id, whatsapp_group_ids: [ @g1.id ], scheduled_for: "not-a-date" }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "Informe a data e hora do envio."
+  end
+
   # --- DIVU-09 snapshot congelado -------------------------------------
 
   test "renomear e desativar o grupo apos criar nao altera o snapshot group_name/remote_jid" do
