@@ -88,6 +88,45 @@ class AdminClientsControllerTest < ActionDispatch::IntegrationTest
     assert_equal true, @client.active?
   end
 
+  # ── divulgações (mirror — DIVU-01) ───────────────────────────────────────
+
+  test "show com 0 divulgacoes exibe mensagem vazia e link Nova divulgacao" do
+    get admin_client_path(@client)
+
+    assert_response :success
+    assert_includes response.body, "Nenhuma divulgação agendada."
+    assert_includes response.body, new_admin_client_divulgacao_path(@client)
+  end
+
+  test "show com 6 divulgacoes lista as 5 mais recentes e um link Ver todas" do
+    instance = @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :connected
+    )
+    group = instance.whatsapp_groups.create!(remote_jid: "cg1@g.us", subject: "Grupo Cliente Show", active: true, synced_at: Time.current)
+    arte = @client.artes.new(scheduled_on: Date.current, platform: :instagram, media_type: :image, status: :approved, title: "Arte Show")
+    arte.media_file.attach(fixture_file_upload("sample.jpg", "image/jpeg"))
+    arte.save!
+
+    6.times do |i|
+      @client.divulgacoes.create!(
+        arte: arte, scheduled_for: (i + 1).days.from_now,
+        divulgacao_grupos: [ DivulgacaoGrupo.new(whatsapp_group: group, group_name: group.display_name, remote_jid: group.remote_jid) ]
+      )
+    end
+
+    get admin_client_path(@client)
+
+    assert_response :success
+    divulgacao_links = @client.divulgacoes.order(scheduled_for: :desc).first(5).map { |d| admin_client_divulgacao_path(@client, d) }
+    divulgacao_links.each { |path| assert_includes response.body, path }
+    sixth = @client.divulgacoes.order(scheduled_for: :desc).last
+    refute_includes response.body, admin_client_divulgacao_path(@client, sixth)
+    assert_includes response.body, "Ver todas"
+    assert_includes response.body, admin_client_divulgacoes_path(@client)
+    assert_includes response.body, "(BRT)"
+  end
+
   test "show_inclui_historico_de_aprovacoes" do
     arte = Arte.create!(
       client: @client,

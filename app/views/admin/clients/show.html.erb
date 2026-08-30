@@ -136,6 +136,43 @@
 <%# ===== CARD: WHATSAPP (PAIR-03/04/07/08 — contrato visual completo do 26-UI-SPEC) ===== %>
 <%= render "admin/whatsapp_instances/panel", client: @client, whatsapp_instance: @whatsapp_instance %>
 
+<%# ===== CARD: DIVULGACOES (espelho — DIVU-01) ===== %>
+<div class="bg-white rounded-xl border border-gray-200 shadow-card p-6 max-w-2xl mt-4">
+  <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+    <h2 class="text-sm font-semibold text-slate-900">Divulgações</h2>
+    <%= link_to "Nova divulgação", new_admin_client_divulgacao_path(@client),
+          class: "inline-flex items-center h-8 px-3 bg-[#0F7949] hover:bg-green-800 text-white text-xs font-medium rounded-lg transition-colors" %>
+  </div>
+
+  <% if @divulgacoes.blank? %>
+    <p class="text-sm text-slate-500">Nenhuma divulgação agendada.</p>
+  <% else %>
+    <div class="space-y-2">
+      <% @divulgacoes.first(5).each do |d| %>
+        <div class="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-slate-900 truncate">
+              <%= d.arte.title.presence || "Arte sem título" %>
+            </p>
+            <p class="text-xs text-slate-500 mt-0.5">
+              <%= divulgacao_datetime_label(d.scheduled_for) %>
+            </p>
+          </div>
+          <div class="ml-4 flex items-center gap-3 shrink-0">
+            <%= render "admin/divulgacoes/status_badge", divulgacao: d %>
+            <%= link_to "Ver", admin_client_divulgacao_path(@client, d), class: "text-xs text-[#0F7949] hover:underline" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    <% if @divulgacoes.size > 5 %>
+      <div class="mt-3">
+        <%= link_to "Ver todas", admin_client_divulgacoes_path(@client), class: "text-xs text-[#0F7949] hover:underline" %>
+      </div>
+    <% end %>
+  <% end %>
+</div>
+
 <%# ===== CARD: ARTES DO CLIENTE ===== %>
 <div class="bg-white rounded-xl border border-gray-200 shadow-card p-6 max-w-2xl mt-4">
   <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
