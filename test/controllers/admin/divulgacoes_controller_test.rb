@@ -335,4 +335,57 @@ class Admin::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Estimativa de duração"
     assert_includes response.body, "Tempo aproximado do disparo, do primeiro ao último grupo."
   end
+
+  # --- Task 3: fiação ponta a ponta dos três controllers no #new --------
+
+  test "GET new (2 artes aprovadas + 3 grupos): um pane por arte, placeholder, estimativa, marcadores do picker, min/max e ordem dos campos" do
+    arte_texto = @client.artes.new(
+      scheduled_on: Date.current, platform: :instagram, media_type: :caption_only,
+      status: :approved, title: "Arte Só Texto 2", caption: "Texto puro."
+    )
+    arte_texto.save!(validate: false)
+    @instance.whatsapp_groups.create!(remote_jid: "g3@g.us", subject: "Grupo Três", active: true, synced_at: Time.current)
+
+    get new_admin_client_divulgacao_path(@client)
+    assert_response :success
+
+    b = response.body
+    panes = b.scan('data-divulgacao-preview-target="pane"').size
+    assert_equal @client.artes.approved.count, panes
+    assert_equal 2, panes
+    assert_includes b, %(data-arte-id="#{@arte.id}")
+    assert_includes b, %(data-arte-id="#{arte_texto.id}")
+
+    assert_includes b, "Selecione uma arte para ver a prévia."
+    assert_match %r{<span data-divulgacao-estimate-target="text">\s*—\s*</span>}, b
+    assert_includes b, "data-picker-select-all"
+    assert_includes b, "data-picker-counter"
+    assert_includes b, %(data-divulgacao-estimate-min-value="25")
+    assert_includes b, %(data-divulgacao-estimate-max-value="45")
+
+    # os três controllers, uma vez cada, na fiação esperada. O data-action do
+    # <select> de arte vem do hash data: do collection_select — o Rails escapa o
+    # "->" para "-&gt;" no HTML serializado (o browser decodifica de volta ao
+    # ler getAttribute, então o Stimulus funciona); asserimos sem o prefixo.
+    assert_includes b, "divulgacao-preview#show"
+    assert_includes b, "change->divulgacao-estimate#recompute change->picker#refresh"
+    assert_equal 1, b.scan('data-controller="picker"').size
+    assert_equal 1, b.scan('data-controller="divulgacao-estimate"').size
+
+    # ordem dos campos: arte select → picker → datetime → estimativa → preview
+    assert_operator b.index('name="divulgacao[arte_id]"'), :<, b.index("data-picker-select-all")
+    assert_operator b.index("data-picker-select-all"), :<, b.index('name="divulgacao[scheduled_for]"')
+    assert_operator b.index('name="divulgacao[scheduled_for]"'), :<, b.index('data-divulgacao-estimate-target="text"')
+    assert_operator b.index('data-divulgacao-estimate-target="text"'), :<, b.index("Prévia — é exatamente isto que vai ao grupo")
+  end
+
+  test "GET new (exatamente 1 arte aprovada): o único pane renderiza e a página não quebra" do
+    assert_equal 1, @client.artes.approved.count
+
+    get new_admin_client_divulgacao_path(@client)
+    assert_response :success
+
+    assert_equal 1, response.body.scan('data-divulgacao-preview-target="pane"').size
+    assert_includes response.body, %(data-arte-id="#{@arte.id}")
+  end
 end
