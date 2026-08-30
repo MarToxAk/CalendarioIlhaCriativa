@@ -1,7 +1,8 @@
 ---
 phase: 27
 slug: grupos-do-cliente-sync-cache-e-sele-o-escopada
-status: draft
+status: approved
+reviewed_at: 2026-08-30
 shadcn_initialized: false
 preset: none
 created: 2026-08-30
@@ -315,11 +316,11 @@ Not applicable — no shadcn, no component registry. All components are hand-rol
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: FLAG (non-blocking — add one line naming the primary visual anchor per screen state)
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: FLAG (non-blocking — inherited justified 3-weight 400/500/600 from Phase 26; in-phase sizes held to 3)
+- [x] Dimension 5 Spacing: FLAG (non-blocking — inherited gap-1.5/py-0.5 reuse-only from Phase 26; no net-new non-grid tokens)
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** APPROVED (3 non-blocking FLAGs) — gsd-ui-checker, 2026-08-30
