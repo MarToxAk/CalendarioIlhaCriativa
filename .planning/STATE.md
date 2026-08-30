@@ -4,17 +4,17 @@ milestone: v1.7
 milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 25
 current_phase_name: Fundação — Transporte Evolution + Storage Alcançável
-status: verifying
-stopped_at: 25-04 COMPLETO — INFRA-01 + EVO-01 fechados; fase 25 com 4/4 planos. Orquestrador assume o tail da fase (aggregate/code-review/verify/phase.complete).
-last_updated: "2026-08-30T03:33:22.703Z"
-last_activity: 2026-08-29
-last_activity_desc: "Plano 25-04 COMPLETO — INFRA-01 + EVO-01 fechados. Endpoint S3 corrigido (s3.bomcustoilhabela.com.br era o console; API S3 e minio.bomcustoilhabela.com.br — 947413f); buckets calendario-livia-{development,production} criados; storage:migrate_to_s3 provada ponta a ponta em dev (copied 12, backfill 12, 2a rodada no-op); presigned GET buscado de fora da LAN -> HTTP/2 200 + content-type correto; EVO-01 outbound fetch_instances -> Array[6]/200/~654ms. Fase 25 com 4/4 planos — orquestrador assume o tail."
-state_head: 22f3c7ae9818bdaf26ce5a7c74323dbf79a2c726
+status: executing
+stopped_at: Completed 25-05-PLAN.md (gap-closure) — fase 25 com 5/5 planos
+last_updated: "2026-08-30T09:42:58.157Z"
+last_activity: 2026-08-30
+last_activity_desc: Plano 25-05 (gap-closure) COMPLETO — guards SECRET_KEY_BASE_DUMMY (CR-01), CORS_ORIGINS no compose + .env.example (CR-02), WR-01/WR-07/WR-02/WR-03/IN-07/WR-06/IN-05 aplicados. Fase 25 com 5/5 planos.
+state_head: ce13a35a0f4939f14fbc146ef359898c46e86bd7
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -29,16 +29,16 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 
 ## Current Position
 
-Phase: 25 (Fundação — Transporte Evolution + Storage Alcançável) — READY TO EXECUTE
-Plan: 4 of 4
-Status: gaps_found — 25-VERIFICATION 4/5; CR-01/CR-02 bloqueiam a topologia de deploy. Próximo: /gsd-plan-phase 25 --gaps
-Last activity: 2026-08-29 — Plano 25-04 FINALIZADO (INFRA-01 + EVO-01 fechados); endpoint S3 corrigido, buckets criados, migracao provada em dev, presigned externo 200
+Phase: 25 (Fundação — Transporte Evolution + Storage Alcançável) — 5/5 PLANOS EXECUTADOS
+Plan: 5 of 5
+Status: gap-closure 25-05 completo — aguardando o tail da fase (aggregate / code-review / verify)
+Last activity: 2026-08-30 — Plano 25-05 (gap-closure) FINALIZADO
 
 ## Progress Bar
 
 ```
-v1.7: [███░░░░░░░░░░░░░░░░░] 15% (0/6 phases · 4/4 planos da fase 25 — orquestrador no tail da fase)
-Phase 25: Fundação — Transporte Evolution + Storage Alcançável — 4/4 planos executados (aguardando o tail da fase: aggregate / code-review / verify)
+v1.7: [███░░░░░░░░░░░░░░░░░] 15% (0/6 phases · 5/5 planos da fase 25 — orquestrador no tail da fase)
+Phase 25: Fundação — Transporte Evolution + Storage Alcançável — 5/5 planos executados (aguardando o tail da fase: aggregate / code-review / verify)
 Phase 26: Instância de WhatsApp por Cliente + Pareamento — Not started
 Phase 27: Grupos do Cliente — Sync, Cache e Seleção Escopada — Not started
 Phase 28: Divulgação — Agendar sem Enviar — Not started
@@ -197,6 +197,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 25 P02 | 35min | 3 tasks | 7 files |
 | Phase 25 P03 | 15min | 3 tasks | 5 files |
 | Phase 25 P04 | ~40min | 2 tasks | 3 files |
+| Phase 25 P05 | ~12 min | 8 tasks | 6 files |
 
 ## Decisions
 
@@ -228,6 +229,10 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 25]: 25-04: aws.endpoint corrigido — s3.bomcustoilhabela.com.br era o console do MinIO; a API S3 e minio.bomcustoilhabela.com.br (947413f)
 - [Phase 25]: 25-04: buckets calendario-livia-{development,production} criados privados (sem bucket policy, default MinIO)
 - [Phase 25]: 25-04: INFRA-01 SC1 provado em development — presigned GET buscado de fora da LAN (DNS publico -> Cloudflare -> MinIO) -> HTTP/2 200 + content-type correto; storage:migrate_to_s3 provada ponta a ponta (copied 12, backfill 12, 2a rodada no-op)
+- [Phase 25]: [25-05]: CR-02 fechado SEM fallback de CORS_ORIGINS em config/application.rb — a KeyError visivel em producao continua sendo o contrato; fix = prover a var no compose (web+jobs) + documentar no .env.example
+- [Phase 25]: [25-05]: guards de build usam ENV[SECRET_KEY_BASE_DUMMY] (setada so pelo Rails em assets:precompile) em timezone_check.rb + evolution.rb — verificado que boot de runtime real sem essa var e sem TZ correto AINDA aborta (CR-01)
+- [Phase 25]: [25-05]: WR-07 endurece so o caminho de erro (2xx nao-JSON -> Evolution::Errors::Unknown com msg estatica); connection_state segue retornando a string de estado crua no caminho feliz — COVERAGE.md nao muda
+- [Phase 25]: [25-05]: suite bin/rails test nao executavel (PG::InsufficientPrivilege — banco de teste de outro usuario do SO); WR-01/WR-07 verificados por inspecao + bin/rails runner com conexao Faraday stub
 
 ## Quick Tasks Completed
 
@@ -237,8 +242,8 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-30T02:17:59.680Z
-**Stopped at:** 25-04 COMPLETO — INFRA-01 + EVO-01 fechados; fase 25 com 4/4 planos. Orquestrador assume o tail da fase (aggregate/code-review/verify/phase.complete).
+**Last session:** 2026-08-30T09:42:48.468Z
+**Stopped at:** Completed 25-05-PLAN.md (gap-closure) — fase 25 com 5/5 planos
 **Resume file:** None
 
 ### Blockers
