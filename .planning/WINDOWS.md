@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 4
+open_count: 5
 waived_count: 0
 fixed_count: 2
-total_count: 6
-last_updated: 2026-08-30T18:57:24.624Z
+total_count: 7
+last_updated: 2026-08-30T22:16:05.660Z
 ---
 
 # Broken Windows Ledger
@@ -21,6 +21,7 @@ last_updated: 2026-08-30T18:57:24.624Z
 | 4 | 25 | unrun-verify | lib/tasks |  | 25-03: presigned round-trip against real MinIO from outside the LAN not executed — owed by 25-04 (needs MinIO reachable) | fixed |  | 2026-08-30T01:56:18.244Z | 2026-08-30T02:20:08.971Z |
 | 5 | 25 | unrun-verify | config/environments/production.rb |  | 25-04: inbound curl -I https://<app-hostname>/up do host do Evolution nao executado — app ainda nao deployado em ilhacriativa.autopyweb.com.br; fecha na abertura da fase 26 (D-12 / A4, nao bloqueia a fase 25) | open |  | 2026-08-30T02:20:09.157Z |  |
 | 6 | 27 | stub | app/views/admin/whatsapp_groups/index.html.erb |  | Estados vazio/erro/bloqueado e seção de inativos não implementados neste plano (deferido a 27-03 por design — TODO no código); index atual renderiza card em branco sem @instance ou sem grupos ativos | open |  | 2026-08-30T18:57:24.624Z |  |
+| 7 | 28 | todo | app/controllers/admin/divulgacoes_controller.rb |  | show/cancel actions deferred to plan 04 — route contract exists, #create redirects to unimplemented #show | open |  | 2026-08-30T22:16:05.660Z |  |
 
 ````json
 [
@@ -94,6 +95,18 @@ last_updated: 2026-08-30T18:57:24.624Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-08-30T18:57:24.624Z",
+    "resolved_at": null
+  },
+  {
+    "id": 7,
+    "kind": "todo",
+    "phase": "28",
+    "file": "app/controllers/admin/divulgacoes_controller.rb",
+    "line": null,
+    "description": "show/cancel actions deferred to plan 04 — route contract exists, #create redirects to unimplemented #show",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-30T22:16:05.660Z",
     "resolved_at": null
   }
 ]
