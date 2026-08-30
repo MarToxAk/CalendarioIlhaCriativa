@@ -5,16 +5,16 @@ milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 26
 current_phase_name: Instância de WhatsApp por Cliente + Pareamento
 status: executing
-stopped_at: Completed 26-01-PLAN.md
-last_updated: "2026-08-30T13:18:01.029Z"
+stopped_at: Completed 26-02-PLAN.md
+last_updated: "2026-08-30T13:25:51.227Z"
 last_activity: 2026-08-30
 last_activity_desc: Phase 26 execution started
-state_head: 03f4e3502f00ab1c267a804b8db2aeaf7927024d
+state_head: c8eb3e8ab164afda80387efebd92d0ae24061562
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 10
-  completed_plans: 5
+  completed_plans: 7
   percent: 0
 ---
 
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 ## Current Position
 
 Phase: 26 (Instância de WhatsApp por Cliente + Pareamento) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-08-30 — Phase 26 execution started
 
@@ -199,6 +199,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 25 P04 | ~40min | 2 tasks | 3 files |
 | Phase 25 P05 | ~12 min | 8 tasks | 6 files |
 | Phase 26 P01 | ~45min | 2 tasks | 18 files |
+| Phase 26 P02 | 12min | 2 tasks | 5 files |
 
 ## Decisions
 
@@ -237,6 +238,9 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 26]: [Phase 26-01]: removida config/credentials/development.yml.enc órfã (não rastreada, vazia) que sombreava config/credentials.yml.enc em RAILS_ENV=development — Rails.application.credentials resolve por-env antes do arquivo único; sem essa remoção Evolution.base_url/global_api_key e as novas chaves de active_record_encryption ficariam invisíveis em dev
 - [Phase 26]: [Phase 26-01]: chaves active_record_encryption + evolution.webhook_hmac_key/webhook_base_url gravadas via Rails.application.credentials.write (API programática, sem EDITOR interativo) mesclando com o conteúdo existente — evolution.base_url/global_api_key/aws/jwt_secret/api preservados
 - [Phase 26]: [Phase 26-01]: InstanceProvisioner nesta task cobre SOMENTE o caminho de criação (create_instance -> persist_new) — adoção (403 already in use -> adopt) fica para 26-02, sem rescue prematuro
+- [Phase 26]: [Phase 26-02]: InstanceProvisioner#call rescue Evolution::Errors::Permanent seletivo (/already in use/i) -> desvia para #adopt; qualquer outro Permanent continua subindo cru para o controller
+- [Phase 26]: [Phase 26-02]: adopt() chama set_webhook SEMPRE antes de ler connection_state (Pitfall 4) -- sem essa ordem o painel trava em 'aguardando pareamento'
+- [Phase 26]: [Phase 26-02]: Admin::WhatsappInstancesController#create e #adopt convergem no mesmo InstanceProvisioner#call -- adocao acontece automaticamente dentro de #create quando o Evolution devolve 'already in use', sem exigir clique extra do admin
 
 ## Quick Tasks Completed
 
@@ -246,8 +250,8 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-30T13:17:53.498Z
-**Stopped at:** Completed 26-01-PLAN.md
+**Last session:** 2026-08-30T13:25:51.101Z
+**Stopped at:** Completed 26-02-PLAN.md
 **Resume file:** None
 
 ### Blockers

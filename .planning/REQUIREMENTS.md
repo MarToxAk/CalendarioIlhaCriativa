@@ -32,7 +32,7 @@
 ### Instância e Pareamento
 
 - [x] **PAIR-01**: Admin cria uma instância de WhatsApp para um cliente que ainda não tem uma
-- [ ] **PAIR-02**: Admin registra uma instância que já existe no Evolution, em vez de falhar quando o nome está em uso
+- [x] **PAIR-02**: Admin registra uma instância que já existe no Evolution, em vez de falhar quando o nome está em uso
 - [ ] **PAIR-03**: Admin vê o QR Code na tela do app e o código se mantém escaneável enquanto ele rotaciona (~25s)
 - [ ] **PAIR-04**: Admin vê o estado de conexão da instância de cada cliente (conectada / desconectada / aguardando pareamento)
 - [ ] **PAIR-05**: Admin consegue verificar a conexão manualmente, sem depender do webhook
@@ -153,7 +153,7 @@ Preenchido na criação do roadmap (2026-08-29). Fonte: `.planning/ROADMAP.md`.
 | EVO-03 | Phase 25 | Complete |
 | EVO-04 | Phase 26 | Complete |
 | PAIR-01 | Phase 26 | Complete |
-| PAIR-02 | Phase 26 | Pending |
+| PAIR-02 | Phase 26 | Complete |
 | PAIR-03 | Phase 26 | Pending |
 | PAIR-04 | Phase 26 | Pending |
 | PAIR-05 | Phase 26 | Pending |
