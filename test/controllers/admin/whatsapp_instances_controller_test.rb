@@ -107,6 +107,35 @@ class AdminWhatsappInstancesControllerTest < ActionDispatch::IntegrationTest
     assert_nil @client.reload.whatsapp_instance
   end
 
+  # WR-05 — na adoção, se o QR inicial falha DEPOIS do save!, a linha
+  # persiste e o operador vê a notice normal (não um alert de falha ao lado
+  # de um card vivo). O poller recupera o QR no próximo ciclo.
+  test "create com 403 already in use adota mesmo quando o connect do QR falha" do
+    fake_instance = { "name" => WhatsappInstance.evolution_name_for(@client), "hash" => "adopted-token-xyz", "id" => "remote-9" }
+
+    assert_difference "WhatsappInstance.count", 1 do
+      Evolution::Client.stub(:create_instance, ->(**) { raise Evolution::Errors::Permanent, '403 This name "x" is already in use.' }) do
+        Evolution::Client.stub(:fetch_instances, ->(**) { [ fake_instance ] }) do
+          Evolution::Client.stub(:set_webhook, ->(*, **) { { "webhook" => { "enabled" => true } } }) do
+            Evolution::Client.stub(:connection_state, ->(*, **) { "connecting" }) do
+              Evolution::Client.stub(:connect, ->(*, **) { raise Evolution::Errors::Transient, "timeout" }) do
+                post admin_client_whatsapp_instance_path(@client)
+              end
+            end
+          end
+        end
+      end
+    end
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "Instância criada. Escaneie o QR Code para parear.", flash[:notice]
+
+    wi = @client.reload.whatsapp_instance
+    assert_equal "adopted_existing", wi.origin
+    assert_equal "awaiting_qr", wi.connection_state
+    assert_nil wi.last_qr_base64
+  end
+
   # --- #verify — verificação manual síncrona (PAIR-05, 26-04) --------------
 
   test "verify com state open atualiza o banco e redireciona com notice de sucesso" do

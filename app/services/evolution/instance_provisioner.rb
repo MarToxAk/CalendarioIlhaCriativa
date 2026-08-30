@@ -75,8 +75,20 @@ module Evolution
       row.paired_at ||= Time.current if state == "open"
       row.save!
 
-      Result.new(instance: row, adopted: true,
-                 qr_base64: state == "open" ? nil : @api.connect(name)[:base64])
+      Result.new(instance: row, adopted: true, qr_base64: adopt_qr(name, state))
+    end
+
+    # WR-05 — a linha já foi persistida (save! acima). Um erro ao buscar o QR
+    # inicial NÃO pode propagar para fora de #call: o controller mostraria
+    # "Não foi possível criar a instância" ao lado de um card de instância já
+    # viva no painel. Silencioso em qualquer falha do Evolution, exatamente
+    # como #pull_fresh_qr — o poller do Stimulus busca o QR no próximo ciclo.
+    def adopt_qr(name, state)
+      return nil if state == "open"
+
+      @api.connect(name)[:base64]
+    rescue Evolution::Errors::Transient, Evolution::Errors::Unknown, Evolution::Errors::Permanent, Evolution::Errors::ConfigurationError
+      nil
     end
 
     def persist_new(name, resp)
