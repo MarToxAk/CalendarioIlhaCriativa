@@ -22,7 +22,21 @@ class Whatsapp::SyncGroupsJob < ApplicationJob
   # engolindo os handlers especificos abaixo e quebrando os retries -- verificado empiricamente
   # (ver 27-REVIEW-FIX.md WR-A). Declarado PRIMEIRO, ele so roda quando nenhum handler mais
   # especifico (declarado depois) responde pela excecao.
-  discard_on(StandardError) { |job, _err| mark_error(job, "transient") }
+  #
+  # 27-REVIEW.md WR-1: este catch-all pega QUALQUER StandardError nao coberto acima --
+  # nao so falhas reais da Evolution API, mas tambem bugs de programacao (nil inesperado,
+  # falha de validacao em update!, formato de payload nao previsto). Codigo distinto
+  # "unexpected_error" (em vez de reutilizar "transient") deixa claro pra quem depura via
+  # groups_sync_error/Rails console que esse caminho e generico, nao uma falha de rede
+  # conhecida -- e o Rails.logger.error com backtrace da o unico rastro disponivel, ja que
+  # este repo nao tem integracao de error-tracking (Sentry/Honeybadger/etc.) configurada.
+  discard_on(StandardError) do |job, err|
+    Rails.logger.error(
+      "[Whatsapp::SyncGroupsJob] erro inesperado (fora da taxonomia Evolution::Errors): " \
+      "#{err.class}: #{err.message}\n#{err.backtrace&.first(10)&.join("\n")}"
+    )
+    mark_error(job, "unexpected_error")
+  end
 
   # GET e idempotente -> ambos seguros para retry. Blocos disparam so apos as
   # 3 tentativas se esgotarem (comportamento padrao do ActiveJob) -- sem eles

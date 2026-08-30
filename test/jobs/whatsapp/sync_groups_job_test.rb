@@ -111,7 +111,12 @@ class Whatsapp::SyncGroupsJobTest < ActiveJob::TestCase
   # declarado PRIMEIRO na classe -- so pega excecoes que NENHUM handler mais especifico
   # cobre, e ainda assim tira groups_sync_state de :syncing (senao o gate groups_sync_syncing?
   # do WR-02 bloqueia todo re-sync futuro, permanentemente).
-  test "discard_on StandardError (catch-all) cobre excecao fora da taxonomia Evolution::Errors e ainda assim limpa groups_sync_state" do
+  #
+  # 27-REVIEW.md WR-1: codigo distinto "unexpected_error" (nao "transient") -- este catch-all
+  # cobre bugs de programacao alem de falhas reais da Evolution API, entao reutilizar
+  # "transient" mascararia um bug generico como flakiness de rede pra quem depura via
+  # groups_sync_error/Rails console.
+  test "discard_on StandardError (catch-all) cobre excecao fora da taxonomia Evolution::Errors, grava unexpected_error e limpa groups_sync_state" do
     fake = FakeSynchronizer.new(error_class: Faraday::ParsingError)
     Whatsapp::GroupSynchronizer.stub(:new, ->(*) { fake }) do
       assert_no_enqueued_jobs do
@@ -120,7 +125,7 @@ class Whatsapp::SyncGroupsJobTest < ActiveJob::TestCase
     end
     @instance.reload
     assert_equal "sync_error", @instance.groups_sync_state
-    assert_equal "transient", @instance.groups_sync_error
+    assert_equal "unexpected_error", @instance.groups_sync_error
     refute @instance.groups_sync_syncing?
   end
 
