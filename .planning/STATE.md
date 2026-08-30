@@ -2,20 +2,20 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: WhatsApp Auto-Post + Deploy
-current_phase: 27
-current_phase_name: Grupos do Cliente — Sync, Cache e Seleção Escopada
-status: executing
-stopped_at: Fase 26 verificada 5/5 (human_needed) — deferida para operador (26-UAT.md, 4 itens). Autônomo seguiu para a fase 27.
-last_updated: "2026-08-30T18:09:09.491Z"
+current_phase: 25
+current_phase_name: Fundação — Transporte Evolution + Storage Alcançável
+status: planning
+stopped_at: Phase 27 complete, ready to plan Phase 25
+last_updated: "2026-08-30T20:27:07.093Z"
 last_activity: 2026-08-30
-last_activity_desc: Phase 27 execution started
-state_head: 9235ae46d84bda8d388a0c654d9d32c234dbe73c
+last_activity_desc: Phase 27 complete, transitioned to Phase 25
+state_head: 2c14046fc60b304befd2a2c98c0b6b693cd3b773
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 13
-  completed_plans: 10
-  percent: 0
+  completed_plans: 13
+  percent: 17
 ---
 
 # Project State
@@ -36,10 +36,10 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 
 ## Current Position
 
-Phase: 27 (Grupos do Cliente — Sync, Cache e Seleção Escopada) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 27
-Last activity: 2026-08-30 — Phase 27 execution started
+Phase: 25 — Fundação — Transporte Evolution + Storage Alcançável
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-08-30 — Phase 27 complete, transitioned to Phase 25
 
 ## Progress Bar
 
@@ -265,7 +265,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 ## Session
 
 **Last session:** 2026-08-30T13:40:04.348Z
-**Stopped at:** Completed 26-04-PLAN.md
+**Stopped at:** Phase 27 complete, ready to plan Phase 25
 **Resume file:** None
 
 ### Blockers
