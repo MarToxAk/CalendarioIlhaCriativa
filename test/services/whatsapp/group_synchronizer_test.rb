@@ -100,7 +100,7 @@ class Whatsapp::GroupSynchronizerTest < ActiveSupport::TestCase
     assert_equal false, result.ok
     assert_equal :not_connected, result.reason
     assert_equal "not_connected", @instance.reload.groups_sync_error
-    assert_equal "error", @instance.groups_sync_state
+    assert_equal "sync_error", @instance.groups_sync_state
     assert_equal 0, fake.calls
   end
 

@@ -31,6 +31,6 @@ class Whatsapp::SyncGroupsJob < ApplicationJob
 
   def self.mark_error(job, code)
     inst = job.arguments.first
-    inst.update!(groups_sync_state: :error, groups_sync_error: code) if inst.is_a?(WhatsappInstance)
+    inst.update!(groups_sync_state: :sync_error, groups_sync_error: code) if inst.is_a?(WhatsappInstance)
   end
 end

@@ -74,7 +74,7 @@ class Whatsapp::SyncGroupsJobTest < ActiveJob::TestCase
       end
     end
     @instance.reload
-    assert_equal "error", @instance.groups_sync_state
+    assert_equal "sync_error", @instance.groups_sync_state
     assert_equal "transient", @instance.groups_sync_error
   end
 
@@ -86,7 +86,7 @@ class Whatsapp::SyncGroupsJobTest < ActiveJob::TestCase
       end
     end
     @instance.reload
-    assert_equal "error", @instance.groups_sync_state
+    assert_equal "sync_error", @instance.groups_sync_state
     assert_equal "not_connected", @instance.groups_sync_error
   end
 
@@ -98,7 +98,7 @@ class Whatsapp::SyncGroupsJobTest < ActiveJob::TestCase
       end
     end
     @instance.reload
-    assert_equal "error", @instance.groups_sync_state
+    assert_equal "sync_error", @instance.groups_sync_state
     assert_equal "transient", @instance.groups_sync_error
   end
 

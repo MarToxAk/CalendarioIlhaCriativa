@@ -22,7 +22,7 @@ module Whatsapp
       # Defense-in-depth (RESEARCH Pitfall 7): connection_state é coluna
       # cacheada; o controller no 27-02 também guarda antes de enfileirar.
       unless @instance.connected?
-        @instance.update!(groups_sync_state: :error, groups_sync_error: "not_connected")
+        @instance.update!(groups_sync_state: :sync_error, groups_sync_error: "not_connected")
         return Result.new(ok: false, reason: :not_connected)
       end
 

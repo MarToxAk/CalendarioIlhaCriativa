@@ -14,7 +14,12 @@ class WhatsappInstance < ApplicationRecord
 
   enum :connection_state, { unpaired: 0, awaiting_qr: 1, connected: 2, disconnected: 3 }
   enum :origin,           { created_by_app: 0, adopted_existing: 1 }, prefix: :origin
-  enum :groups_sync_state, { idle: 0, syncing: 1, error: 2 }, prefix: :groups_sync
+  # WR-03 (code review fase 27): valor renomeado de `error` para `sync_error`
+  # -- com prefix: :groups_sync, `error:` geraria `groups_sync_error?`, que
+  # colide com o método de presença auto-gerado pelo Rails para a coluna
+  # string `groups_sync_error` (mesmo nome, semântica oposta: "estado ==
+  # error?" vs "atributo presente?"). `sync_error:` elimina a colisão.
+  enum :groups_sync_state, { idle: 0, syncing: 1, sync_error: 2 }, prefix: :groups_sync
 
   # Nome determinístico e estável da instância no Evolution — namespaced porque
   # o manager é compartilhado com outras apps da agência. client.id não rotaciona
