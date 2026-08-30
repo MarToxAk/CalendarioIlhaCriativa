@@ -111,4 +111,18 @@ class Whatsapp::GroupSynchronizerTest < ActiveSupport::TestCase
 
     assert_equal WhatsappGroup.count, WhatsappGroup.joins(whatsapp_instance: :client).count
   end
+
+  # --- (g) elemento não-Hash no array não crasha (27-REVIEW.md WR-2) --------
+  test "malformed non-Hash element in groups array is skipped instead of raising" do
+    fake = FakeEvolutionClient.new([ [ group(1), nil, group(2) ] ])
+
+    result = nil
+    assert_nothing_raised do
+      result = Whatsapp::GroupSynchronizer.new(@instance, client_api: fake).call
+    end
+
+    assert result.ok
+    assert_equal 2, result.count
+    assert_equal %w[1@g.us 2@g.us], @instance.whatsapp_groups.active_groups.order(:remote_jid).pluck(:remote_jid)
+  end
 end

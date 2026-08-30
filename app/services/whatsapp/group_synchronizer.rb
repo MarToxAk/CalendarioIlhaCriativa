@@ -53,7 +53,17 @@ module Whatsapp
     # Grava só as chaves exatas do payload que interessam ao cache local — NUNCA
     # created_at/updated_at (Rails 8.1 auto-injeta para upsert_all; incluir
     # explicitamente quebra com "multiple assignments to same column").
+    #
+    # 27-REVIEW.md WR-2: Evolution::Client#fetch_groups só valida que o topo é
+    # um Array — não valida a forma de cada elemento. Um elemento não-Hash
+    # (nil ou outro tipo) faria g["id"] levantar NoMethodError, que hoje só
+    # seria capturado pelo discard_on(StandardError) catch-all do job
+    # (27-REVIEW.md WR-1), mascarando uma regressão real de contrato da API
+    # como flakiness de rede transitória. filter_map descarta o elemento e
+    # segue o batch em vez de crashar.
     def row_for(g, ts)
+      return nil unless g.is_a?(Hash)
+
       jid = g["id"].to_s
       return nil unless jid.end_with?("@g.us")
 
