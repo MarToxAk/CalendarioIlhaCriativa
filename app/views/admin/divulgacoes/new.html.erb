@@ -1,0 +1,51 @@
+<% content_for(:page_title) { "Nova divulgação" } %>
+
+<div class="mb-4">
+  <%= link_to admin_client_path(@client),
+        class: "inline-block text-sm text-slate-600 hover:text-slate-900 truncate max-w-[280px] sm:max-w-md" do %>
+    ← <%= @client.name %>
+  <% end %>
+</div>
+
+<h1 class="text-2xl font-semibold text-slate-900 mb-6">Nova divulgação</h1>
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-card p-8 max-w-2xl mt-4">
+  <%= form_with model: [ @client, @divulgacao ] do |f| %>
+    <% if @divulgacao.errors[:base].any? %>
+      <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+        <% @divulgacao.errors[:base].each do |msg| %>
+          <p><%= msg %></p>
+        <% end %>
+      </div>
+    <% end %>
+
+    <div class="mb-4">
+      <%= f.label :arte_id, "Arte aprovada", class: "block text-sm font-medium text-slate-900 mb-1.5" %>
+      <%= f.collection_select :arte_id, @approved_artes, :id,
+            ->(a) { "#{a.title.presence || 'Arte'} — #{l(a.scheduled_on)}" },
+            { prompt: "Selecione uma arte aprovada" },
+            class: "block w-full h-11 px-3 border border-gray-200 rounded-lg text-sm text-slate-900 bg-white focus:outline-none focus:border-[#0F7949] focus:ring-2 focus:ring-[#0F7949]/20 transition-colors" %>
+    </div>
+
+    <div class="mb-4">
+      <span class="block text-sm font-medium text-slate-900 mb-1.5">Grupos</span>
+      <div class="border border-gray-200 rounded-lg max-h-[380px] overflow-y-auto">
+        <%= render "admin/whatsapp_groups/picker",
+              client:       @client,
+              selected_ids: (@divulgacao.divulgacao_grupos.map(&:whatsapp_group_id).presence || []),
+              field_name:   "divulgacao[whatsapp_group_ids][]" %>
+      </div>
+    </div>
+
+    <div class="mb-6">
+      <%= f.label :scheduled_for, "Data e hora do envio (America/São_Paulo)", class: "block text-sm font-medium text-slate-900 mb-1.5" %>
+      <%= f.datetime_field :scheduled_for,
+            class: "block w-full h-11 px-3 border border-gray-200 rounded-lg text-sm text-slate-900 bg-white focus:outline-none focus:border-[#0F7949] focus:ring-2 focus:ring-[#0F7949]/20 transition-colors" %>
+      <p class="text-xs text-slate-500 mt-1">Interpretada no fuso de Brasília (BRT).</p>
+    </div>
+
+    <%= f.submit "Agendar divulgação",
+          data: { turbo_submits_with: "Agendando…" },
+          class: "h-10 px-4 bg-[#0F7949] hover:bg-[#0a5c37] active:scale-[0.99] text-white text-sm font-semibold rounded-lg transition-colors inline-flex items-center cursor-pointer" %>
+  <% end %>
+</div>

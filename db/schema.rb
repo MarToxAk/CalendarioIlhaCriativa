@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_30_184901) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_30_190002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -80,6 +80,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_184901) do
     t.string "password_plain"
     t.datetime "updated_at", null: false
     t.index ["access_token"], name: "index_clients_on_access_token", unique: true
+  end
+
+  create_table "divulgacao_grupos", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "divulgacao_id", null: false
+    t.string "error_code"
+    t.string "evolution_message_id"
+    t.string "group_name", null: false
+    t.string "remote_jid", null: false
+    t.datetime "sent_at"
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "whatsapp_group_id", null: false
+    t.index ["divulgacao_id", "whatsapp_group_id"], name: "index_divulgacao_grupos_on_divulgacao_id_and_whatsapp_group_id", unique: true
+    t.index ["divulgacao_id"], name: "index_divulgacao_grupos_on_divulgacao_id"
+    t.index ["whatsapp_group_id"], name: "index_divulgacao_grupos_on_whatsapp_group_id"
+  end
+
+  create_table "divulgacoes", force: :cascade do |t|
+    t.bigint "arte_id", null: false
+    t.bigint "client_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "scheduled_for", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["arte_id"], name: "index_divulgacoes_on_arte_id"
+    t.index ["client_id", "scheduled_for"], name: "index_divulgacoes_on_client_id_and_scheduled_for"
+    t.index ["client_id"], name: "index_divulgacoes_on_client_id"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -260,6 +288,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_184901) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "approval_responses", "artes"
   add_foreign_key "artes", "clients"
+  add_foreign_key "divulgacao_grupos", "divulgacoes"
+  add_foreign_key "divulgacao_grupos", "whatsapp_groups"
+  add_foreign_key "divulgacoes", "artes"
+  add_foreign_key "divulgacoes", "clients"
   add_foreign_key "sessions", "users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

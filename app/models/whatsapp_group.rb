@@ -6,6 +6,9 @@
 # before_save) porque upsert_all pula todos os callbacks (RESEARCH Pitfall 3).
 class WhatsappGroup < ApplicationRecord
   belongs_to :whatsapp_instance
+  # SEM dependent: — um grupo que some e desativado (fase 27), nunca apagado; a linha
+  # divulgacao_grupos mantem o snapshot group_name/remote_jid independente disso (Pitfall 7 / DIVU-09).
+  has_many :divulgacao_grupos
 
   scope :active_groups,   -> { where(active: true) }
   scope :inactive_groups, -> { where(active: false) }

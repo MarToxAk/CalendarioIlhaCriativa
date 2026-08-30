@@ -22,6 +22,9 @@ Rails.application.routes.draw do
           get  :sync_status
         end
       end
+      resources :divulgacoes, only: [ :index, :new, :create, :show ] do
+        member { patch :cancel }
+      end
     end
     resources :artes do
       member do

@@ -1,6 +1,8 @@
 class Arte < ApplicationRecord
   belongs_to :client
   has_many :approval_responses, -> { order(created_at: :desc) }, dependent: :destroy
+  # SEM dependent: — apagar uma arte nunca deve cascatear e apagar historico de envio (Pitfall 7 / DIVU-09).
+  has_many :divulgacoes
   has_one_attached :media_file
 
   # Test-only hook — allows integration tests to simulate destroy returning false

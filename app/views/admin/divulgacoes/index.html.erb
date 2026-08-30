@@ -1,0 +1,37 @@
+<% content_for(:page_title) { "Divulgações" } %>
+
+<div class="mb-4">
+  <%= link_to admin_client_path(@client),
+        class: "inline-block text-sm text-slate-600 hover:text-slate-900 truncate max-w-[280px] sm:max-w-md" do %>
+    ← <%= @client.name %>
+  <% end %>
+</div>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-semibold text-slate-900">Divulgações</h1>
+  <%= link_to "Nova divulgação", new_admin_client_divulgacao_path(@client),
+        class: "h-10 px-4 bg-[#0F7949] hover:bg-[#0a5c37] active:scale-[0.99] text-white text-sm font-semibold rounded-lg transition-colors inline-flex items-center" %>
+</div>
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-card p-6 max-w-2xl">
+  <% if @divulgacoes.any? %>
+    <ul class="divide-y divide-gray-100">
+      <% @divulgacoes.each do |d| %>
+        <li class="flex items-center justify-between py-3">
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-slate-900 truncate">
+              <%= d.arte.title.presence || "Arte" %>
+            </p>
+            <p class="text-xs text-slate-500 mt-0.5">
+              <%= l(d.scheduled_for) %> · <%= d.status %>
+            </p>
+          </div>
+          <%= link_to "Ver", admin_client_divulgacao_path(@client, d),
+                class: "ml-4 shrink-0 text-xs text-[#0F7949] hover:underline" %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="text-sm text-slate-500">Nenhuma divulgação agendada.</p>
+  <% end %>
+</div>
