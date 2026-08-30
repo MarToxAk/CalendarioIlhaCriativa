@@ -43,10 +43,10 @@
 ### Grupos
 
 - [x] **GRUPO-01**: Admin sincroniza a lista de grupos da instância de um cliente
-- [ ] **GRUPO-02**: A listagem de grupos é servida de cache local, não de uma chamada ao Evolution a cada request
-- [ ] **GRUPO-03**: Admin seleciona quais grupos recebem o post, a partir apenas dos grupos da instância daquele cliente
-- [ ] **GRUPO-04**: Grupos onde só administradores podem enviar aparecem sinalizados na seleção
-- [ ] **GRUPO-05**: Grupos que sumiram do WhatsApp são marcados como inativos, nunca apagados, preservando o histórico
+- [x] **GRUPO-02**: A listagem de grupos é servida de cache local, não de uma chamada ao Evolution a cada request
+- [x] **GRUPO-03**: Admin seleciona quais grupos recebem o post, a partir apenas dos grupos da instância daquele cliente
+- [x] **GRUPO-04**: Grupos onde só administradores podem enviar aparecem sinalizados na seleção
+- [x] **GRUPO-05**: Grupos que sumiram do WhatsApp são marcados como inativos, nunca apagados, preservando o histórico
 
 ### Divulgação
 
@@ -161,10 +161,10 @@ Preenchido na criação do roadmap (2026-08-29). Fonte: `.planning/ROADMAP.md`.
 | PAIR-07 | Phase 26 | Complete |
 | PAIR-08 | Phase 26 | Complete |
 | GRUPO-01 | Phase 27 | Complete |
-| GRUPO-02 | Phase 27 | Pending |
-| GRUPO-03 | Phase 27 | Pending |
-| GRUPO-04 | Phase 27 | Pending |
-| GRUPO-05 | Phase 27 | Pending |
+| GRUPO-02 | Phase 27 | Complete |
+| GRUPO-03 | Phase 27 | Complete |
+| GRUPO-04 | Phase 27 | Complete |
+| GRUPO-05 | Phase 27 | Complete |
 | DIVU-01 | Phase 28 | Pending |
 | DIVU-02 | Phase 28 | Pending |
 | DIVU-03 | Phase 28 | Pending |
