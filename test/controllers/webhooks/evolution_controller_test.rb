@@ -2,6 +2,7 @@ require "test_helper"
 
 class Webhooks::EvolutionControllerTest < ActionDispatch::IntegrationTest
   def setup
+    Rack::Attack.cache.store.clear if defined?(Rack::Attack)
     @client = Client.create!(
       name: "Webhook Test",
       password: "senha1234",
