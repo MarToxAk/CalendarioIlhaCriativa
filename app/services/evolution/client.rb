@@ -62,7 +62,10 @@ module Evolution
         resp = nil
         resp = connection.public_send(method, path) do |req|
           req.headers["apikey"] = api_key
-          req.options.timeout = read_timeout if read_timeout
+          # WR-01: setar a chave `read_timeout` (não `timeout`) — o Faraday resolve
+          # `options[:read_timeout]` ANTES de `options[:timeout]` em `request_timeout(:read, ...)`,
+          # então o valor rápido (15s) deixa de ser sombreado pelos 30s da conexão memoizada.
+          req.options.read_timeout = read_timeout if read_timeout
           req.body = body if body
         end
         raise_for_status!(resp)
