@@ -21,17 +21,20 @@ Rails.application.configure do
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  # Serve uploaded files from MinIO (S3-compatible) — INFRA-01 / CONTEXT.md D-01.
+  # A URL de midia e presigned (bucket privado) e alcancavel de fora da LAN pelo host
+  # do Evolution. Ver config/storage.yml stanza `amazon` e 25-RESEARCH.md Pattern 5.
+  config.active_storage.service = :amazon
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  # config.assume_ssl = true
+  # D-09 — o Caddy do docker-compose.yml termina o TLS; o web recebe HTTP puro atras dele.
+  config.assume_ssl = true
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  # config.force_ssl = true
+  config.force_ssl = true
 
   # Skip http-to-https redirect for the default health check endpoint.
-  # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
+  config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
 
   # Log to STDOUT with the current request id as a default log tag.
   config.log_tags = [ :request_id ]
@@ -58,7 +61,9 @@ Rails.application.configure do
   # config.action_mailer.raise_delivery_errors = false
 
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "example.com" }
+  # Casado com config.hosts abaixo — sem isto o link de reset de senha (PasswordsMailer)
+  # sai apontando para example.com em producao. Fase 25 / D-09 (Deviation Rule 2).
+  config.action_mailer.default_url_options = { host: "ilhacriativa.autopyweb.com.br", protocol: "https" }
 
   # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
   # config.action_mailer.smtp_settings = {
@@ -79,12 +84,12 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
-  # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
-  # ]
+  # Enable DNS rebinding protection and other `Host` header attacks — D-09 / Security V14.
+  # Allow-list restrita ao host publico do app (o Caddy encaminha o Host original).
+  config.hosts = [
+    "ilhacriativa.autopyweb.com.br" # host publico do app (fase 25, D-09)
+  ]
   #
   # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end
