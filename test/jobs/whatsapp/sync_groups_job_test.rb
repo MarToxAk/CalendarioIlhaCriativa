@@ -66,7 +66,10 @@ class Whatsapp::SyncGroupsJobTest < ActiveJob::TestCase
     assert_nil @instance.reload.groups_sync_error
   end
 
-  test "discard_on Permanent grava groups_sync_error=transient e state=error, sem reenfileirar" do
+  # 27-REVIEW.md WR-03-DUP: codigo distinto de "transient" -- Permanent (400/404/422/401/403)
+  # nao e a mesma causa raiz de uma falha de rede, e quem depura via groups_sync_error no
+  # Rails console/DB precisa distinguir os dois.
+  test "discard_on Permanent grava groups_sync_error=permanent e state=error, sem reenfileirar" do
     fake = FakeSynchronizer.new(error_class: Evolution::Errors::Permanent)
     Whatsapp::GroupSynchronizer.stub(:new, ->(*) { fake }) do
       assert_no_enqueued_jobs do
@@ -75,7 +78,7 @@ class Whatsapp::SyncGroupsJobTest < ActiveJob::TestCase
     end
     @instance.reload
     assert_equal "sync_error", @instance.groups_sync_state
-    assert_equal "transient", @instance.groups_sync_error
+    assert_equal "permanent", @instance.groups_sync_error
   end
 
   test "discard_on NotConnected grava groups_sync_error=not_connected, sem reenfileirar" do
@@ -90,7 +93,9 @@ class Whatsapp::SyncGroupsJobTest < ActiveJob::TestCase
     assert_equal "not_connected", @instance.groups_sync_error
   end
 
-  test "discard_on ConfigurationError grava groups_sync_error=transient, sem reenfileirar" do
+  # 27-REVIEW.md WR-03-DUP: codigo distinto de "transient" -- ConfigurationError e um erro de
+  # boot/config (base_url ou apikey global ausente), nao uma falha de rede transitoria.
+  test "discard_on ConfigurationError grava groups_sync_error=config_error, sem reenfileirar" do
     fake = FakeSynchronizer.new(error_class: Evolution::Errors::ConfigurationError)
     Whatsapp::GroupSynchronizer.stub(:new, ->(*) { fake }) do
       assert_no_enqueued_jobs do
@@ -99,7 +104,7 @@ class Whatsapp::SyncGroupsJobTest < ActiveJob::TestCase
     end
     @instance.reload
     assert_equal "sync_error", @instance.groups_sync_state
-    assert_equal "transient", @instance.groups_sync_error
+    assert_equal "config_error", @instance.groups_sync_error
   end
 
   # 27-REVIEW.md WR-A (re-review): garante que o discard_on(StandardError) catch-all --

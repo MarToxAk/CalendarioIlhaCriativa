@@ -35,10 +35,17 @@ class Whatsapp::SyncGroupsJob < ApplicationJob
     mark_error(job, "transient")
   end
 
-  # Retry nao resolve estes -> grava o motivo para a UI e para.
-  discard_on(Evolution::Errors::Permanent)          { |job, _err| mark_error(job, "transient") }
+  # Retry nao resolve estes -> grava o motivo para a UI e para. Codigos distintos por classe
+  # (27-REVIEW.md WR-03-DUP): "transient"/"permanent"/"config_error" nao podem colidir, senao
+  # quem depura via groups_sync_error no Rails console (padrao que a fase 29 e instruida a
+  # replicar) le "transient" para uma falha sistemica (400/404/422 de payload/rota, ou
+  # ConfigurationError de boot) e perde a pista real. A UI (wa_groups_sync_error_message)
+  # so tem copy dedicada para "not_connected" -- "permanent"/"config_error" caem de proposito
+  # na mensagem generica de "tente de novo" (retry e instrucao valida pro usuario nos dois
+  # casos), so o valor gravado no banco precisa ser preciso.
+  discard_on(Evolution::Errors::Permanent)          { |job, _err| mark_error(job, "permanent") }
   discard_on(Evolution::Errors::NotConnected)       { |job, _err| mark_error(job, "not_connected") }
-  discard_on(Evolution::Errors::ConfigurationError) { |job, _err| mark_error(job, "transient") }
+  discard_on(Evolution::Errors::ConfigurationError) { |job, _err| mark_error(job, "config_error") }
   discard_on(ActiveJob::DeserializationError) # instancia deletada mid-flight -- sem efeito colateral
 
   def perform(instance)

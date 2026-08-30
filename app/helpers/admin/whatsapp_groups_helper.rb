@@ -15,9 +15,14 @@ module Admin::WhatsappGroupsHelper
 
   # Copy verbatim do 27-UI-SPEC "Error state" -- a caixa de erro na página de
   # grupos escolhe o texto pelo código curto gravado em groups_sync_error
-  # (Whatsapp::SyncGroupsJob#mark_error). Qualquer código fora de
-  # "not_connected" (hoje só "transient") cai na mensagem genérica de falha
-  # de comunicação.
+  # (Whatsapp::SyncGroupsJob#mark_error). Códigos hoje: "transient", "permanent",
+  # "config_error", "not_connected". Só "not_connected" tem copy dedicada; os
+  # demais ("transient"/"permanent"/"config_error") caem, DE PROPÓSITO, na mesma
+  # mensagem genérica de "tente de novo" -- retry é instrução válida para o
+  # usuário em qualquer um desses casos, mesmo que a causa raiz varie (rede vs.
+  # payload/rota malformado vs. boot mal configurado). O valor gravado em
+  # groups_sync_error continua distinto por classe (27-REVIEW.md WR-03-DUP) para
+  # quem depura via Rails console/DB direto -- só a copy da UI não distingue.
   def wa_groups_sync_error_message(instance)
     case instance&.groups_sync_error
     when "not_connected"
