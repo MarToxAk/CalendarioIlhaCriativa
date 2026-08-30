@@ -234,3 +234,14 @@ None - nenhuma configuração de serviço externo necessária neste plano (sync 
 ---
 *Phase: 27-grupos-do-cliente-sync-cache-e-sele-o-escopada*
 *Completed: 2026-08-30*
+
+## Self-Check: PASSED
+
+- Todos os 10 arquivos-chave confirmados em disco (`ls` individual, sem `MISSING`).
+- Todos os 5 commits do plano confirmados em `git log --oneline --all` (31773ed, d018265,
+  99baf0c, 3c8647c, 85e17e0).
+- `bin/rails test` dos 3 arquivos de teste do plano: 38 runs, 96 assertions, 0 failures.
+- `bin/rails db:migrate` + diff de `db/schema.rb`: confirmado.
+- `bin/rails routes -g whatsapp_groups`: index/show/sync/sync_status presentes.
+- `grep -L Evolution app/controllers/admin/whatsapp_groups_controller.rb`: confirmado (arquivo
+  listado = substring ausente).
