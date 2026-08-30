@@ -6,14 +6,14 @@ current_phase: 25
 current_phase_name: Fundação — Transporte Evolution + Storage Alcançável
 status: verifying
 stopped_at: 25-04 COMPLETO — INFRA-01 + EVO-01 fechados; fase 25 com 4/4 planos. Orquestrador assume o tail da fase (aggregate/code-review/verify/phase.complete).
-last_updated: "2026-08-30T02:41:23.633Z"
+last_updated: "2026-08-30T03:33:22.703Z"
 last_activity: 2026-08-29
 last_activity_desc: "Plano 25-04 COMPLETO — INFRA-01 + EVO-01 fechados. Endpoint S3 corrigido (s3.bomcustoilhabela.com.br era o console; API S3 e minio.bomcustoilhabela.com.br — 947413f); buckets calendario-livia-{development,production} criados; storage:migrate_to_s3 provada ponta a ponta em dev (copied 12, backfill 12, 2a rodada no-op); presigned GET buscado de fora da LAN -> HTTP/2 200 + content-type correto; EVO-01 outbound fetch_instances -> Array[6]/200/~654ms. Fase 25 com 4/4 planos — orquestrador assume o tail."
-state_head: 820951b7eba3ebf66ed4d0420c20457bdfc72365
+state_head: 22f3c7ae9818bdaf26ce5a7c74323dbf79a2c726
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 4
+  total_plans: 5
   completed_plans: 4
   percent: 0
 ---
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 
 ## Current Position
 
-Phase: 25 (Fundação — Transporte Evolution + Storage Alcançável) — EXECUTING
+Phase: 25 (Fundação — Transporte Evolution + Storage Alcançável) — READY TO EXECUTE
 Plan: 4 of 4
 Status: gaps_found — 25-VERIFICATION 4/5; CR-01/CR-02 bloqueiam a topologia de deploy. Próximo: /gsd-plan-phase 25 --gaps
 Last activity: 2026-08-29 — Plano 25-04 FINALIZADO (INFRA-01 + EVO-01 fechados); endpoint S3 corrigido, buckets criados, migracao provada em dev, presigned externo 200
