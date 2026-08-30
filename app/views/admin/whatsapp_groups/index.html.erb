@@ -90,7 +90,7 @@
               class: "inline-flex items-center h-9 px-3 border border-gray-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-gray-50 transition-colors" %>
       </div>
     <% else %>
-      <%= render "admin/whatsapp_groups/picker", client: @client, selected_ids: [], field_name: nil, pagy: @pagy %>
+      <%= render "admin/whatsapp_groups/picker", client: @client, groups: @active_groups, selected_ids: [], field_name: nil, pagy: @pagy %>
 
       <% if @inactive_groups.present? %>
         <div class="mt-6 pt-4 border-t border-gray-100">

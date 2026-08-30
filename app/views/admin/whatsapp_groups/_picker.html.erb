@@ -7,7 +7,7 @@
 <%# NUNCA WhatsappGroup.where/.find, NUNCA a coleção pronta vinda de fora. %>
 <% selected_ids = local_assigns.fetch(:selected_ids, []) %>
 <% field_name = local_assigns.fetch(:field_name, nil) %>
-<% active_groups = client.whatsapp_instance&.whatsapp_groups&.where(active: true)
+<% active_groups = local_assigns[:groups] || client.whatsapp_instance&.whatsapp_groups&.where(active: true)
      &.order(Arel.sql("subject ASC NULLS LAST"))&.order(:remote_jid) %>
 
 <% if active_groups.blank? %>
