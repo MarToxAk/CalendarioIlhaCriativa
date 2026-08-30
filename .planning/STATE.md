@@ -4,12 +4,12 @@ milestone: v1.7
 milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 25
 current_phase_name: Fundação — Transporte Evolution + Storage Alcançável
-status: executing
+status: verifying
 stopped_at: 25-04 COMPLETO — INFRA-01 + EVO-01 fechados; fase 25 com 4/4 planos. Orquestrador assume o tail da fase (aggregate/code-review/verify/phase.complete).
-last_updated: "2026-08-30T02:17:59.710Z"
+last_updated: "2026-08-30T02:41:23.633Z"
 last_activity: 2026-08-29
 last_activity_desc: "Plano 25-04 COMPLETO — INFRA-01 + EVO-01 fechados. Endpoint S3 corrigido (s3.bomcustoilhabela.com.br era o console; API S3 e minio.bomcustoilhabela.com.br — 947413f); buckets calendario-livia-{development,production} criados; storage:migrate_to_s3 provada ponta a ponta em dev (copied 12, backfill 12, 2a rodada no-op); presigned GET buscado de fora da LAN -> HTTP/2 200 + content-type correto; EVO-01 outbound fetch_instances -> Array[6]/200/~654ms. Fase 25 com 4/4 planos — orquestrador assume o tail."
-state_head: e0a7a9e8c19c947a1c15237c8c161f053b2eacb9
+state_head: 820951b7eba3ebf66ed4d0420c20457bdfc72365
 progress:
   total_phases: 6
   completed_phases: 0
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 
 Phase: 25 (Fundação — Transporte Evolution + Storage Alcançável) — EXECUTING
 Plan: 4 of 4
-Status: Fase 25 com os 4 planos completos (25-01, 25-02, 25-03, 25-04). 25-04 FINALIZADO: `lib/tasks/storage_migration.rake` (`storage:migrate_to_s3` — copy-only, idempotente, backfill service_name where(nil,'local'); commit 8e5a3e0) provada ponta a ponta contra o DB de development — `copied: 12 skipped: 0 missing: 2 service_name_backfilled: 12` (os 2 missing eram orfaos de probe.txt, removidos), segunda rodada so-skip, os 12 blobs baixam OK por presigned URL nova. Endpoint S3 corrigido: `s3.bomcustoilhabela.com.br` era o CONSOLE do MinIO; a API S3 e `minio.bomcustoilhabela.com.br` — `aws.endpoint` em credentials.yml.enc atualizado (commit 947413f). Buckets `calendario-livia-{development,production}` criados privados. INFRA-01 / SC1 PROVADO: presigned GET buscado de FORA de 192.168.3.203 (DNS publico -> Cloudflare -> MinIO) -> `HTTP/2 200` + `content-type` correto. EVO-01 outbound FECHADO: Evolution::Client.fetch_instances -> Array[6] / HTTP 200 / ~654ms. Inbound `/up` do host do Evolution carregado adiante para operador / fase 26 (app nao deployado) — nao bloqueia a fase 25 (D-12 / A4). Orquestrador assume o tail da fase (aggregate / code-review / verify / phase.complete).
+Status: gaps_found — 25-VERIFICATION 4/5; CR-01/CR-02 bloqueiam a topologia de deploy. Próximo: /gsd-plan-phase 25 --gaps
 Last activity: 2026-08-29 — Plano 25-04 FINALIZADO (INFRA-01 + EVO-01 fechados); endpoint S3 corrigido, buckets criados, migracao provada em dev, presigned externo 200
 
 ## Progress Bar
