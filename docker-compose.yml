@@ -5,6 +5,10 @@ services:
       POSTGRES_DB: calendario_livia_production
       POSTGRES_USER: calendario_livia
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # IN-05 — mesmo wall-clock de web/jobs: com config.active_record.default_timezone = :local,
+      # defaults SQL (CURRENT_TIMESTAMP / now()) tem que bater com o relogio do app. NAO e migrar
+      # para :utc (Out of Scope) — so remove a divergencia de relogio. Ver 25-REVIEW.md IN-05.
+      TZ: America/Sao_Paulo
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
