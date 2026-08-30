@@ -30,10 +30,63 @@ services:
       CALENDARIO_LIVIA_DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
       RAILS_LOG_TO_STDOUT: "true"
       WEB_CONCURRENCY: 2
+      # INFRA-03 — timezone_check.rb aborta o boot em producao se TZ != America/Sao_Paulo
+      # (config.active_record.default_timezone = :local exige TZ fixo). Ver 25-RESEARCH.md Pattern 4 / Pitfall 5.
+      TZ: America/Sao_Paulo
     volumes:
       - storage:/rails/storage
+    restart: unless-stopped
+
+  # solid_queue worker dedicado. Sem este servico NENHUM job agendado dispara em producao
+  # (o SOLID_QUEUE_IN_PUMA vive no config/deploy.yml do Kamal, que NAO e o caminho de deploy
+  # escolhido no Task 1 do 25-03-PLAN: docker compose). Reusa a mesma imagem do web com o
+  # command sobrescrito e NAO roda db:prepare (o web e dono das migracoes via bin/docker-entrypoint,
+  # que so dispara db:prepare quando o comando termina em "./bin/rails server"). Ver 25-RESEARCH.md Pitfall 5.
+  jobs:
+    build: .
+    command: ["./bin/jobs"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      RAILS_ENV: production
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      POSTGRES_HOST: db
+      POSTGRES_USER: calendario_livia
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      CALENDARIO_LIVIA_DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      RAILS_LOG_TO_STDOUT: "true"
+      # INFRA-03 — TZ tem que estar nos DOIS servicos (web + jobs) ou o timezone_check.rb
+      # aborta o boot de quem faltar. Jobs agendados usam o wall-clock local (America/Sao_Paulo).
+      TZ: America/Sao_Paulo
+    volumes:
+      - storage:/rails/storage
+    restart: unless-stopped
+
+  # Reverse proxy — termina TLS (Let's Encrypt automatico quando as portas 80/443 do host
+  # estao acessiveis pela internet) e encaminha para o web. CONTEXT.md D-09 (app no host publico) /
+  # D-11 (co-locado com Evolution + MinIO — risco de co-locacao aceito conscientemente, threat T-25-13).
+  # Ver 25-RESEARCH.md Pitfall 5.
+  #
+  # O MinIO NAO e proxied aqui: nesta instalacao ele ja esta live e TLS-terminado em outra infra
+  # (endpoint externo em config/credentials.yml.enc -> aws.endpoint). O app o alcanca como servico
+  # HTTPS externo; nao ha container MinIO co-locado. Ver deploy/Caddyfile e 25-03-SUMMARY.md
+  # "Topology deviation" (Deviation Rule 2 — a premissa do plano de um bloco s3. proxied nao vale aqui).
+  proxy:
+    image: caddy:2-alpine
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
     restart: unless-stopped
 
 volumes:
   postgres_data:
   storage:
+  caddy_data:
+  caddy_config:

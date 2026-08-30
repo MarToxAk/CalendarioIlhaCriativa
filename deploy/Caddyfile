@@ -1,0 +1,22 @@
+# Reverse proxy do app Rails — fase 25 (CONTEXT.md D-09, deploy tool = docker compose / 25-03-PLAN Task 1).
+# TLS automatico via Let's Encrypt quando as portas 80/443 do host estao acessiveis pela internet.
+# O upstream `web:3000` e o servico `web` do docker-compose.yml — HTTP puro atras deste proxy
+# (production.rb tem config.assume_ssl + config.force_ssl; o proxy e quem termina o TLS).
+# Caddy encaminha o header Host original, entao config.hosts em production.rb valida
+# "ilhacriativa.autopyweb.com.br". Ver 25-RESEARCH.md Pitfall 5.
+
+ilhacriativa.autopyweb.com.br {
+	reverse_proxy web:3000
+}
+
+# --- OPCIONAL / forward-compat — NAO habilitado neste ambiente ---
+# O MinIO desta instalacao ja esta live e TLS-terminado em outra infra: o app o alcanca
+# como servico HTTPS externo pelo endpoint gravado em config/credentials.yml.enc (aws.endpoint).
+# Nao existe container MinIO co-locado neste host para fazer proxy, portanto NAO ha um site
+# block s3. ativo aqui (Deviation Rule 2 — a premissa do 25-03-PLAN Task 2 de um bloco
+# `s3.<domain>` proxied para um MinIO co-locado nao vale neste ambiente; ver 25-03-SUMMARY.md).
+# Se algum dia o MinIO passar a rodar neste mesmo host, descomente e ajuste o upstream:
+#
+# s3.autopyweb.com.br {
+# 	reverse_proxy minio:9000
+# }
