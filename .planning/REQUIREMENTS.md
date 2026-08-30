@@ -35,7 +35,7 @@
 - [x] **PAIR-02**: Admin registra uma instância que já existe no Evolution, em vez de falhar quando o nome está em uso
 - [ ] **PAIR-03**: Admin vê o QR Code na tela do app e o código se mantém escaneável enquanto ele rotaciona (~25s)
 - [ ] **PAIR-04**: Admin vê o estado de conexão da instância de cada cliente (conectada / desconectada / aguardando pareamento)
-- [ ] **PAIR-05**: Admin consegue verificar a conexão manualmente, sem depender do webhook
+- [x] **PAIR-05**: Admin consegue verificar a conexão manualmente, sem depender do webhook
 - [x] **PAIR-06**: O app recebe eventos do Evolution por webhook autenticado, com o segredo comparado por `secure_compare` antes de qualquer consulta ao banco
 - [ ] **PAIR-07**: A tela de pareamento avisa, no momento de escanear o QR, que o número está sujeito a banimento pelo WhatsApp
 - [ ] **PAIR-08**: A UI informa há quanto tempo o número foi pareado e recomenda cautela em números recentes — sem bloquear o envio
@@ -156,7 +156,7 @@ Preenchido na criação do roadmap (2026-08-29). Fonte: `.planning/ROADMAP.md`.
 | PAIR-02 | Phase 26 | Complete |
 | PAIR-03 | Phase 26 | Pending |
 | PAIR-04 | Phase 26 | Pending |
-| PAIR-05 | Phase 26 | Pending |
+| PAIR-05 | Phase 26 | Complete |
 | PAIR-06 | Phase 26 | Complete |
 | PAIR-07 | Phase 26 | Pending |
 | PAIR-08 | Phase 26 | Pending |

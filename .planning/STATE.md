@@ -5,16 +5,16 @@ milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 26
 current_phase_name: Instância de WhatsApp por Cliente + Pareamento
 status: executing
-stopped_at: Completed 26-03-PLAN.md
-last_updated: "2026-08-30T13:32:23.362Z"
+stopped_at: Completed 26-04-PLAN.md
+last_updated: "2026-08-30T13:40:04.474Z"
 last_activity: 2026-08-30
 last_activity_desc: Phase 26 execution started
-state_head: d29f4487662260fa0f33f7a484ee3319ad9d796f
+state_head: 45a803c3d7a9c13c4ba4b07408317ea3ba97a8aa
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 10
-  completed_plans: 7
+  completed_plans: 9
   percent: 0
 ---
 
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 ## Current Position
 
 Phase: 26 (Instância de WhatsApp por Cliente + Pareamento) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-08-30 — Phase 26 execution started
 
@@ -201,6 +201,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 26 P01 | ~45min | 2 tasks | 18 files |
 | Phase 26 P02 | 12min | 2 tasks | 5 files |
 | Phase 26 P03 | ~25min | 2 tasks | 4 files |
+| Phase 26 P04 | ~10min | 2 tasks | 4 files |
 
 ## Decisions
 
@@ -244,6 +245,8 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 26]: [Phase 26-02]: Admin::WhatsappInstancesController#create e #adopt convergem no mesmo InstanceProvisioner#call -- adocao acontece automaticamente dentro de #create quando o Evolution devolve 'already in use', sem exigir clique extra do admin
 - [Phase 26]: [Phase 26]: [Phase 26-03]: Webhooks::EvolutionController hashea os dois lados (SHA256) antes de secure_compare — nunca compara os valores crus, que podem ter comprimentos diferentes e levantar ArgumentError vazando o tamanho do segredo
 - [Phase 26]: [Phase 26]: [Phase 26-03]: throttle webhooks/evolution_by_ip (120/60s) cai no ramo HTML de throttled_responder (path não começa com /api/) — aceitável, o chamador é uma máquina que ignora o corpo
+- [Phase 26]: 26-04: verify — falha de TRANSPORTE em connection_state nunca toca o banco (connection_state/last_checked_at ficam com o último valor conhecido); um estado close/refused lido COM SUCESSO atualiza o banco normalmente, é resultado válido, não falha.
+- [Phase 26]: 26-04: refresh_qr é a única ação JSON do controller — sempre render json:, mesmo quando pull_fresh_qr falha silenciosamente. Rails.cache.write(key, true, unless_exist:true, expires_in:15.seconds) throttla a 1 chamada Evolution::Client.connect por instância a cada 15s.
 
 ## Quick Tasks Completed
 
@@ -253,8 +256,8 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-30T13:32:23.237Z
-**Stopped at:** Completed 26-03-PLAN.md
+**Last session:** 2026-08-30T13:40:04.348Z
+**Stopped at:** Completed 26-04-PLAN.md
 **Resume file:** None
 
 ### Blockers
