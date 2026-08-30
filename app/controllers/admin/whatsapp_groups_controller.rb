@@ -18,12 +18,22 @@ class Admin::WhatsappGroupsController < Admin::BaseController
 
   # Dispara Whatsapp::SyncGroupsJob em background (GRUPO-01). Instância
   # ausente/não conectada NUNCA enfileira -- guard cedo, sem gravar estado.
-  # Guard de cache (Pitfall 8) evita sync-spam: só prossegue se conseguiu
-  # ESCREVER a chave (mesmo precedente de #pull_fresh_qr, T-26-15).
+  # Guard de cache de 15s (Pitfall 8) evita duplo-clique/sync-spam: só
+  # prossegue se conseguiu ESCREVER a chave (mesmo precedente de
+  # #pull_fresh_qr, T-26-15). Esse TTL é mais curto que a pior duração
+  # possível do job (3 tentativas x 30s de retry_on + timeouts HTTP), então
+  # o guard sozinho não impede um segundo job concorrente para a mesma
+  # instância depois que a chave expira -- o check em groups_sync_syncing?
+  # cobre exatamente essa janela, gate no estado real em vez de um TTL fixo
+  # (WR-02 do code review da fase 27).
   def sync
     if @instance.nil? || !@instance.connected?
       return redirect_to admin_client_whatsapp_groups_path(@client),
              alert: "A instância está desconectada. Reconecte o número antes de sincronizar os grupos."
+    end
+
+    if @instance.groups_sync_syncing?
+      return redirect_to admin_client_whatsapp_groups_path(@client), notice: "Sincronização já em andamento."
     end
 
     return redirect_to(admin_client_whatsapp_groups_path(@client), notice: "Sincronização já em andamento.") \
