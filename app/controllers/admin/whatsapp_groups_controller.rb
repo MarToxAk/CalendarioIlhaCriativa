@@ -1,8 +1,9 @@
 class Admin::WhatsappGroupsController < Admin::BaseController
   before_action :set_client, :set_instance
 
-  # Lê SOMENTE o cache local (whatsapp_groups) — nunca Evolution::Client neste
-  # arquivo (GRUPO-02/SC2). #sync e #sync_status chegam na 27-02; #show na 27-03.
+  # Lê SOMENTE o cache local (whatsapp_groups) — este arquivo nunca fala com o
+  # host WhatsApp externo (GRUPO-02/SC2). #sync e #sync_status chegam na 27-02;
+  # #show na 27-03.
   def index
     return if @instance.nil?
 
