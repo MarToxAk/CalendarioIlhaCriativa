@@ -133,4 +133,68 @@ class AdminWhatsappGroupsControllerTest < ActionDispatch::IntegrationTest
     Rails.cache.delete("wa_groups_sync_#{instance_a&.id}")
     Rails.cache.delete("wa_groups_sync_#{instance_b&.id}")
   end
+
+  # --- #show — teste canônico A×B (GRUPO-03/SC5) --------------------------
+
+  test "show com id de grupo de OUTRO cliente -- RecordNotFound sem vazar subject/remote_jid de B" do
+    client_a = @client
+    instance_a = client_a.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(client_a),
+      connection_state: :connected
+    )
+    group_a = instance_a.whatsapp_groups.create!(remote_jid: "a1@g.us", subject: "Grupo do A", active: true, synced_at: Time.current)
+
+    client_b = Client.create!(name: "WA Groups Controller Test B", password: "senha1234", password_confirmation: "senha1234")
+    instance_b = client_b.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(client_b),
+      connection_state: :connected
+    )
+    group_b = instance_b.whatsapp_groups.create!(remote_jid: "b1@g.us", subject: "Segredo do B", active: true, synced_at: Time.current)
+
+    get admin_client_whatsapp_group_path(client_a, group_b)
+
+    assert_redirected_to admin_client_whatsapp_groups_path(client_a)
+    assert_equal "Grupo não encontrado.", flash[:alert]
+    refute_includes response.body.to_s, "Segredo do B"
+    refute_includes response.body.to_s, "b1@g.us"
+
+    get admin_client_whatsapp_group_path(client_a, group_a)
+
+    assert_response :success
+    assert_includes response.body, "Grupo do A"
+  ensure
+    Rails.cache.delete("wa_groups_sync_#{instance_a&.id}")
+    Rails.cache.delete("wa_groups_sync_#{instance_b&.id}")
+  end
+
+  test "show com id inexistente -- RecordNotFound, mesmo redirect genérico" do
+    @instance = @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :connected
+    )
+
+    get admin_client_whatsapp_group_path(@client, 999_999)
+
+    assert_redirected_to admin_client_whatsapp_groups_path(@client)
+    assert_equal "Grupo não encontrado.", flash[:alert]
+  end
+
+  test "show com cliente sem whatsapp_instance -- RecordNotFound, sem NoMethodError" do
+    assert_nil @client.whatsapp_instance
+
+    get admin_client_whatsapp_group_path(@client, 1)
+
+    assert_redirected_to admin_client_whatsapp_groups_path(@client)
+    assert_equal "Grupo não encontrado.", flash[:alert]
+  end
+
+  test "invariante -- todo whatsapp_group resolve para um client via a instância" do
+    @instance = @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :connected
+    )
+    @instance.whatsapp_groups.create!(remote_jid: "inv1@g.us", subject: "Grupo Invariante", active: true, synced_at: Time.current)
+
+    assert_equal WhatsappGroup.count, WhatsappGroup.joins(whatsapp_instance: :client).count
+  end
 end

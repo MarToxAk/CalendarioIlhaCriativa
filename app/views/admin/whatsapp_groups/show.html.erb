@@ -1,0 +1,44 @@
+<%# Locals: @client, @group — vindos de Admin::WhatsappGroupsController#show %>
+<%# @group SEMPRE resolvido via @client.whatsapp_instance.whatsapp_groups.find (set_group). %>
+<%# Sem ações — a fase 27 não muta grupos, só prova o escopo (GRUPO-03/SC5). %>
+<% content_for(:page_title) { @group.display_name } %>
+
+<h1 class="text-2xl font-semibold text-slate-900 mb-6"><%= @group.display_name %></h1>
+
+<%= link_to "← Voltar aos grupos", admin_client_whatsapp_groups_path(@client), class: "text-sm text-slate-600 mb-4 inline-block" %>
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-card p-6 max-w-2xl">
+  <dl class="space-y-3">
+    <div class="flex items-center gap-4">
+      <dt class="text-sm font-medium text-slate-500 w-36">Estado</dt>
+      <dd>
+        <% if @group.active? %>
+          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-[#F0FDF4] text-[#14A958] border-[#14A958]/20">
+            <span aria-hidden="true">●</span> Ativo
+          </span>
+        <% else %>
+          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-slate-100 text-slate-600 border-slate-200">
+            <span aria-hidden="true">●</span> Inativo
+          </span>
+        <% end %>
+      </dd>
+    </div>
+
+    <% if @group.announce? %>
+      <div class="flex items-center gap-4">
+        <dt class="text-sm font-medium text-slate-500 w-36">Envio</dt>
+        <dd>
+          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-[#FFFBEB] text-amber-800 border-[#F59E0B]/20"
+                title="Neste grupo, apenas administradores podem enviar mensagens.">
+            <span aria-hidden="true">●</span> Só admins enviam
+          </span>
+        </dd>
+      </div>
+    <% end %>
+
+    <div class="flex items-center gap-4">
+      <dt class="text-sm font-medium text-slate-500 w-36">JID</dt>
+      <dd class="text-sm text-slate-500 font-mono"><%= @group.remote_jid %></dd>
+    </div>
+  </dl>
+</div>
