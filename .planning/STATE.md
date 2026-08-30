@@ -5,8 +5,8 @@ milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 26
 current_phase_name: Instância de WhatsApp por Cliente + Pareamento
 status: verifying
-stopped_at: Fase 26 — 5/5 planos executados (26-01..26-05). Orquestrador no tail (aggregate / code-review / verify).
-last_updated: "2026-08-30T14:26:56.088Z"
+stopped_at: Fase 26 verificada 5/5 (human_needed) — deferida para operador (26-UAT.md, 4 itens). Autônomo seguiu para a fase 27.
+last_updated: "2026-08-30T15:27:23.498Z"
 last_activity: 2026-08-30
 last_activity_desc: Fase 26 5/5 planos — WhatsappInstance model+encrypts, InstanceProvisioner create+adopt, webhook receiver HMAC-antes-do-DB, verificação manual síncrona, UI de pareamento com QR polling. EVO-04/INFRA-04/PAIR-01..08 fechados.
 state_head: 8f342292dbe24303e38b119fcb12cf3d6823e18d
@@ -26,6 +26,13 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
 **Current focus:** Phase 26 — Instância de WhatsApp por Cliente + Pareamento
+
+## Deferred Verification
+
+| Phase | State | Resume |
+|-------|-------|--------|
+| 25 | verification_deferred_human | /gsd-verify-work 25 |
+| 26 | verification_deferred_human | /gsd-verify-work 26 |
 
 ## Current Position
 
