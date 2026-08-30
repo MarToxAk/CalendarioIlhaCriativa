@@ -2,7 +2,7 @@ class Admin::ClientsController < Admin::BaseController
   before_action :set_client, only: %i[ show edit update rotate_token ]
 
   def index
-    @clients = Client.order(created_at: :desc)
+    @clients = Client.includes(:whatsapp_instance).order(created_at: :desc)
   end
 
   def show

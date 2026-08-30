@@ -1,0 +1,27 @@
+<%# Partial _connection_badge.html.erb %>
+<%# Locals: whatsapp_instance (pode ser nil) %>
+<%# Mesmo shape de admin/clients/_status_badge.html.erb — 4 variantes por connection_state,
+    tabela canônica do 26-UI-SPEC "Connection-state -> color map". %>
+<% instance = local_assigns[:whatsapp_instance] %>
+
+<% if instance.nil? %>
+  <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-slate-100 text-slate-600 border-slate-200">
+    <span aria-hidden="true">●</span> Aguardando criação
+  </span>
+<% elsif instance.connected? %>
+  <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-[#F0FDF4] text-[#14A958] border-[#14A958]/20">
+    <span aria-hidden="true">●</span> Conectada<%= " (adotada)" if instance.origin_adopted_existing? %>
+  </span>
+<% elsif instance.awaiting_qr? %>
+  <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-[#FFFBEB] text-amber-800 border-[#F59E0B]/20">
+    <span aria-hidden="true">●</span> Aguardando pareamento
+  </span>
+<% elsif instance.disconnected? %>
+  <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-[#FEF2F2] text-[#EE3537] border-[#EE3537]/20">
+    <span aria-hidden="true">●</span> Desconectada
+  </span>
+<% else %>
+  <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-slate-100 text-slate-600 border-slate-200">
+    <span aria-hidden="true">●</span> Aguardando criação
+  </span>
+<% end %>

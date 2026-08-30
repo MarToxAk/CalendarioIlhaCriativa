@@ -6,6 +6,19 @@
   <td class="px-4 py-0 h-12 text-center">
     <%= render "status_badge", client: client %>
   </td>
+  <td class="px-4 py-0 h-12 text-center">
+    <% instance = client.whatsapp_instance %>
+    <% if instance.nil? || instance.unpaired? %>
+      <% dot_class, dot_label = "border border-slate-300", "Sem instância" %>
+    <% elsif instance.awaiting_qr? %>
+      <% dot_class, dot_label = "bg-[#F59E0B]", "Aguardando pareamento" %>
+    <% elsif instance.connected? %>
+      <% dot_class, dot_label = "bg-[#14A958]", "Conectada" %>
+    <% else %>
+      <% dot_class, dot_label = "bg-[#EE3537]", "Desconectada" %>
+    <% end %>
+    <span class="inline-block w-2 h-2 rounded-full <%= dot_class %>" title="<%= dot_label %>" aria-label="<%= dot_label %>"></span>
+  </td>
   <td class="px-4 py-0 h-12">
     <span class="text-sm text-slate-500"><%= client.created_at.strftime("%d/%m/%y") %></span>
   </td>
