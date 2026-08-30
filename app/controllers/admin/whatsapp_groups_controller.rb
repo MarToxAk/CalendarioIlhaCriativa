@@ -3,8 +3,7 @@ class Admin::WhatsappGroupsController < Admin::BaseController
   before_action :set_group, only: [ :show ]
 
   # Lê SOMENTE o cache local (whatsapp_groups) — este arquivo nunca fala com o
-  # host WhatsApp externo (GRUPO-02/SC2). #sync e #sync_status chegam na 27-02;
-  # #show na 27-03.
+  # host WhatsApp externo (GRUPO-02/SC2).
   def index
     return if @instance.nil?
 
@@ -13,6 +12,8 @@ class Admin::WhatsappGroupsController < Admin::BaseController
                .order(Arel.sql("subject ASC NULLS LAST")).order(:remote_jid),
       limit: 25
     )
+    @inactive_groups = @instance.whatsapp_groups.where(active: false)
+                                 .order(Arel.sql("subject ASC NULLS LAST")).order(:remote_jid)
   end
 
   # Dispara Whatsapp::SyncGroupsJob em background (GRUPO-01). Instância
