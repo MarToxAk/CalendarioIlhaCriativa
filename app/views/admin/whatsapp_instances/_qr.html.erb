@@ -1,0 +1,36 @@
+<%# Partial _qr.html.erb %>
+<%# Locals: instance (WhatsappInstance, connection_state awaiting_qr) %>
+<%# Banner de risco de banimento (PAIR-07) SEMPRE visível ACIMA do QR, sem checkbox —
+    decisão travada "sem bloquear nada". Polling real via qr_pairing_controller.js (PAIR-03). %>
+
+<div class="bg-[#FFFBEB] border border-[#F59E0B]/20 text-amber-800 text-sm rounded-lg p-3 leading-relaxed mb-4">
+  Atenção: automatizar mensagens pelo WhatsApp pode levar ao banimento do número. Pareie apenas um
+  número que a agência pode perder e vá com calma no volume de envios, principalmente nos primeiros dias.
+</div>
+
+<p class="text-sm text-slate-600 mb-3">
+  Abra o WhatsApp no celular do cliente, toque em Aparelhos conectados e escaneie o código abaixo.
+  Ele é atualizado sozinho a cada ~20 segundos.
+</p>
+
+<div data-controller="qr-pairing"
+     data-qr-pairing-url-value="<%= refresh_qr_admin_client_whatsapp_instance_path(instance.client) %>">
+  <div class="relative w-64 h-64">
+    <img data-qr-pairing-target="image"
+         class="w-64 h-64 border border-gray-200 rounded-lg bg-gray-50 object-contain"
+         src="<%= instance.last_qr_base64 %>"
+         alt="QR Code de pareamento" />
+    <% if instance.last_qr_base64.blank? %>
+      <div class="absolute inset-0 flex items-center justify-center text-sm text-slate-500 pointer-events-none">
+        Gerando QR Code…
+      </div>
+    <% end %>
+  </div>
+
+  <div data-qr-pairing-target="regenerate" class="hidden mt-3">
+    <p class="text-sm text-slate-600 mb-2">O código expirou. Clique em &quot;Gerar novo QR&quot; para continuar o pareamento.</p>
+    <%= button_to "Gerar novo QR", reconnect_admin_client_whatsapp_instance_path(instance.client),
+          method: :post,
+          class: "inline-flex items-center h-9 px-3 border border-gray-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-gray-50 transition-colors" %>
+  </div>
+</div>
