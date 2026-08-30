@@ -22,6 +22,37 @@ class AdminWhatsappGroupsControllerTest < ActionDispatch::IntegrationTest
     Rails.cache.delete("wa_groups_sync_#{@instance&.id}")
   end
 
+  # --- #index (CR-01: paginacao do picker) --------------------------------
+
+  # 27-REVIEW.md CR-01/WR-B: prova comprometida em automated test de que a pagina 1 renderiza
+  # exatamente 25 linhas (nunca as 30+) e a pagina 2 renderiza o restante -- sem isso, reverter
+  # o `groups: @active_groups` do index.html.erb ou o fallback `local_assigns[:groups] ||` do
+  # picker (que fazia a picker sempre re-resolver a query INTEIRA, ignorando @pagy) passaria
+  # zero testes vermelhos.
+  test "index renderiza exatamente 25 checkboxes na pagina 1 e o restante na pagina 2" do
+    @instance = @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :connected,
+      groups_synced_at: Time.current
+    )
+    30.times do |i|
+      @instance.whatsapp_groups.create!(
+        remote_jid: format("g%02d@g.us", i),
+        subject: format("Grupo %02d", i),
+        active: true,
+        synced_at: Time.current
+      )
+    end
+
+    get admin_client_whatsapp_groups_path(@client)
+    assert_response :success
+    assert_equal 25, response.body.scan('type="checkbox"').size
+
+    get admin_client_whatsapp_groups_path(@client), params: { page: 2 }
+    assert_response :success
+    assert_equal 5, response.body.scan('type="checkbox"').size
+  end
+
   # --- #sync -----------------------------------------------------------
 
   test "sync com instancia ausente nao enfileira e redireciona com alert" do
@@ -63,6 +94,30 @@ class AdminWhatsappGroupsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to admin_client_whatsapp_groups_path(@client)
     assert_equal "Sincronização iniciada. Os grupos aparecem aqui em instantes.", flash[:notice]
+    assert @instance.reload.groups_sync_syncing?
+  end
+
+  # 27-REVIEW.md WR-02/WR-B: o gate real (groups_sync_syncing?) tem que bloquear um 2o POST
+  # #sync enquanto o 1o job ainda esta rodando, MESMO depois do cache de 15s expirar (Pitfall 8) --
+  # e sobretudo NUNCA enfileirar um 2o job pra mesma instancia (a race que WR-02 fechou). Sem
+  # este teste, reverter o gate ou o guard `unless @instance.connected?` acima dele passaria
+  # zero testes vermelhos.
+  test "sync com groups_sync_state=syncing bloqueia o 2o POST, nao enfileira de novo, mostra notice de andamento" do
+    @instance = @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :connected,
+      groups_sync_state: :syncing
+    )
+    # cache TTL de 15s ja expirado -- exatamente a janela que o WR-02 fechou: sem o gate em
+    # groups_sync_syncing?, o guard de cache sozinho deixaria passar um 2o job aqui.
+    Rails.cache.delete("wa_groups_sync_#{@instance.id}")
+
+    assert_no_enqueued_jobs do
+      post sync_admin_client_whatsapp_groups_path(@client)
+    end
+
+    assert_redirected_to admin_client_whatsapp_groups_path(@client)
+    assert_equal "Sincronização já em andamento.", flash[:notice]
     assert @instance.reload.groups_sync_syncing?
   end
 
