@@ -8,10 +8,16 @@ class DivulgacaoGrupoTest < ActiveSupport::TestCase
       connection_state: :connected
     )
     @group = @instance.whatsapp_groups.create!(remote_jid: "dgm1@g.us", subject: "Grupo DG", active: true, synced_at: Time.current)
-    @arte = @client.artes.create!(
+    # Arte aprovada com arquivo anexado (a Divulgacao recusa external_url — DIVU-03).
+    @arte = @client.artes.new(
       scheduled_on: Date.current, platform: :instagram, media_type: :image,
-      status: :approved, title: "Arte", external_url: "https://drive.google.com/file/exemplo"
+      status: :approved, title: "Arte"
     )
+    @arte.media_file.attach(
+      io: File.open(Rails.root.join("test/fixtures/files/sample.jpg")),
+      filename: "sample.jpg", content_type: "image/jpeg"
+    )
+    @arte.save!
     @divulgacao = @client.divulgacoes.create!(
       arte:          @arte,
       scheduled_for: 3.days.from_now,
