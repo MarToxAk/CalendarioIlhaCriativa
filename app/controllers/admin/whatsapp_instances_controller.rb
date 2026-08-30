@@ -12,9 +12,9 @@ class Admin::WhatsappInstancesController < Admin::BaseController
 
   private
 
-  # Escopo SEMPRE por client_id (resource nested singular) — nunca um
-  # WhatsappInstance.find(params[:id]) solto (isolamento por cliente, groundwork
-  # para SEG-* de fases futuras).
+  # Escopo SEMPRE por client_id (resource nested singular) — nunca buscar a
+  # instância direto por um id de params solto (isolamento por cliente,
+  # groundwork para SEG-* de fases futuras).
   def set_client
     @client = Client.find(params[:client_id])
   end
