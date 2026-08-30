@@ -1,0 +1,24 @@
+<%# Partial _grupo_row.html.erb %>
+<%# Locals: dg: — uma DivulgacaoGrupo. group_name/remote_jid sao o snapshot %>
+<%# congelado na criacao (DIVU-09) — nunca uma live lookup no WhatsappGroup. %>
+<li class="flex items-center gap-3 py-3 px-4 border-b border-gray-100 last:border-0">
+  <span class="text-sm font-medium text-slate-900 min-w-0 flex-1 truncate" title="<%= dg.group_name %>"><%= dg.group_name %></span>
+  <% case dg.status %>
+  <% when "pendente" %>
+    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-slate-100 text-slate-600 border-slate-200 shrink-0">
+      <span aria-hidden="true">●</span> Pendente
+    </span>
+  <% when "enviado" %>
+    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-[#F0FDF4] text-[#14A958] border-[#14A958]/20 shrink-0">
+      <span aria-hidden="true">●</span> Enviado
+    </span>
+  <% when "falhou" %>
+    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-[#FEF2F2] text-[#EE3537] border-[#EE3537]/20 shrink-0">
+      <span aria-hidden="true">●</span> Falhou
+    </span>
+  <% when "incerto" %>
+    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-[#FFFBEB] text-amber-800 border-[#F59E0B]/20 shrink-0">
+      <span aria-hidden="true">●</span> Incerto
+    </span>
+  <% end %>
+</li>

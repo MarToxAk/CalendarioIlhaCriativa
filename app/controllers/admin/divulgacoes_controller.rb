@@ -1,11 +1,25 @@
 class Admin::DivulgacoesController < Admin::BaseController
   before_action :set_client
+  before_action :set_divulgacao, only: [ :show, :cancel ]
 
   def index
     @pagy, @divulgacoes = pagy(
       @client.divulgacoes.includes(:arte).order(scheduled_for: :desc),
       limit: 25
     )
+  end
+
+  def show
+  end
+
+  def cancel
+    if @divulgacao.cancelar!
+      redirect_to admin_client_divulgacao_path(@client, @divulgacao),
+                  notice: "Divulgação cancelada. Nenhum envio será feito."
+    else
+      redirect_to admin_client_divulgacao_path(@client, @divulgacao),
+                  alert: "Só é possível cancelar uma divulgação ainda agendada."
+    end
   end
 
   def new
@@ -65,6 +79,11 @@ class Admin::DivulgacoesController < Admin::BaseController
   private
 
   def set_client = @client = Client.find(params[:client_id])
+
+  # T-28-15/T-28-16: escopado pela associacao do cliente — um id de outra
+  # divulgacao (de outro cliente) cai em RecordNotFound -> Rails 404, nunca
+  # renderiza dado de B na resposta de A.
+  def set_divulgacao = @divulgacao = @client.divulgacoes.find(params[:id])
 
   # Invariante SEG-01: o option set e SEMPRE re-resolvido pela associacao do
   # cliente — nunca WhatsappGroup.find/.where cru. Cliente sem instancia degrada

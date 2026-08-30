@@ -1,0 +1,72 @@
+<%# Locals: @client, @divulgacao — @divulgacao SEMPRE resolvido via %>
+<%# @client.divulgacoes.find (set_divulgacao) — cross-client id -> 404. %>
+<% content_for(:page_title) { "Divulgação" } %>
+
+<div class="mb-4">
+  <%= link_to admin_client_divulgacoes_path(@client),
+        class: "inline-block text-sm text-slate-600 hover:text-slate-900 truncate max-w-[280px] sm:max-w-md" do %>
+    ← <%= @client.name %>
+  <% end %>
+</div>
+
+<h1 class="text-2xl font-semibold text-slate-900 mb-6">Divulgação</h1>
+
+<% if @divulgacao.status_cancelada? %>
+  <div class="mb-4">
+    <p class="bg-slate-100 border border-slate-200 text-slate-600 text-sm rounded-lg p-3">
+      Esta divulgação foi cancelada em <%= divulgacao_datetime_label(@divulgacao.updated_at) %>. Nenhum envio será feito.
+    </p>
+  </div>
+<% end %>
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-card p-6 max-w-2xl">
+  <h2 class="text-sm font-semibold text-slate-900 border-b border-gray-100 pb-3 mb-4">Detalhes</h2>
+  <dl class="space-y-3">
+    <div class="flex items-center gap-4">
+      <dt class="text-sm font-medium text-slate-500 w-36">Cliente</dt>
+      <dd class="text-sm text-slate-900"><%= @client.name %></dd>
+    </div>
+    <div class="flex items-center gap-4">
+      <dt class="text-sm font-medium text-slate-500 w-36">Arte</dt>
+      <dd class="text-sm text-slate-900">
+        <%= @divulgacao.arte.title.presence || "Arte sem título" %>
+        <%= link_to "Ver arte", admin_arte_path(@divulgacao.arte), class: "ml-2 text-[#0F7949] hover:underline" %>
+      </dd>
+    </div>
+    <div class="flex items-center gap-4">
+      <dt class="text-sm font-medium text-slate-500 w-36">Agendada para</dt>
+      <dd class="text-sm text-slate-900"><%= divulgacao_datetime_label(@divulgacao.scheduled_for) %></dd>
+    </div>
+    <div class="flex items-center gap-4">
+      <dt class="text-sm font-medium text-slate-500 w-36">Status</dt>
+      <dd><%= render "status_badge", divulgacao: @divulgacao %></dd>
+    </div>
+  </dl>
+
+  <% if @divulgacao.status_agendada? %>
+    <div class="mt-5 pt-4 border-t border-gray-100">
+      <%= button_to "Cancelar divulgação", cancel_admin_client_divulgacao_path(@client, @divulgacao),
+            method: :patch,
+            data: { turbo_confirm: "Cancelar esta divulgação? Ela não será enviada. O registro e o histórico por grupo são mantidos.", turbo_submits_with: "Cancelando…" },
+            class: "inline-flex items-center h-9 px-3 bg-[#EE3537] hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer" %>
+    </div>
+  <% end %>
+</div>
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-card p-6 max-w-2xl mt-4">
+  <h2 class="text-sm font-semibold text-slate-900 border-b border-gray-100 pb-3 mb-4">Grupos (<%= @divulgacao.divulgacao_grupos.size %>)</h2>
+  <% if @divulgacao.divulgacao_grupos.any? %>
+    <ul>
+      <% @divulgacao.divulgacao_grupos.order(:group_name).each do |dg| %>
+        <%= render "grupo_row", dg: dg %>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="text-sm text-slate-500">Nenhum grupo.</p>
+  <% end %>
+</div>
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-card p-6 max-w-2xl mt-4">
+  <h2 class="text-sm font-semibold text-slate-900 border-b border-gray-100 pb-3 mb-4">Prévia</h2>
+  <%= render "preview", arte: @divulgacao.arte %>
+</div>

@@ -198,4 +198,27 @@ class DivulgacaoTest < ActiveSupport::TestCase
     d = divulgacao_para(arte_com_arquivo)
     assert d.valid?, d.errors.full_messages.inspect
   end
+
+  # --- Task 2: cancelar! ---------------------------------------------------
+
+  test "cancelar! numa divulgacao agendada -- flipa pra cancelada e retorna true" do
+    d = @client.divulgacoes.create!(
+      arte: arte_com_arquivo, scheduled_for: 3.days.from_now,
+      divulgacao_grupos: [ DivulgacaoGrupo.new(whatsapp_group: @group, group_name: @group.display_name, remote_jid: @group.remote_jid) ]
+    )
+
+    assert d.cancelar!
+    assert_equal "cancelada", d.reload.status
+  end
+
+  test "cancelar! numa divulgacao ja cancelada -- retorna false, permanece cancelada" do
+    d = @client.divulgacoes.create!(
+      arte: arte_com_arquivo, scheduled_for: 3.days.from_now,
+      divulgacao_grupos: [ DivulgacaoGrupo.new(whatsapp_group: @group, group_name: @group.display_name, remote_jid: @group.remote_jid) ]
+    )
+    d.cancelar!
+
+    assert_not d.cancelar!
+    assert_equal "cancelada", d.reload.status
+  end
 end

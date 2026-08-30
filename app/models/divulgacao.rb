@@ -36,6 +36,15 @@ class Divulgacao < ApplicationRecord
   validate :arte_e_grupos_do_mesmo_cliente
   validate :ao_menos_um_grupo
 
+  # `patch :cancel` -> aqui. So flipa agendada -> cancelada; qualquer outro
+  # status atual (em_andamento/concluida/ja cancelada) e um no-op idempotente
+  # (T-28-15 — replay do cancel nao quebra nada, so nao muda nada). Nenhum
+  # param e lido — o unico jeito de mudar o status por esta via e este metodo.
+  def cancelar!
+    return false unless status_agendada?
+    update(status: :cancelada)
+  end
+
   private
 
   # DIVU-05 / 28-UI-SPEC: mensagem de branco verbatim, em errors[:base] (nao em

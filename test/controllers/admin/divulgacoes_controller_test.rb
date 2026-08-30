@@ -466,4 +466,107 @@ class Admin::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "(BRT)"
     [ d1, d2 ].each { |d| assert_includes response.body, admin_client_divulgacao_path(@client, d) }
   end
+
+  # --- Task 2: #show + #cancel + Divulgacao#cancelar! ---------------------
+
+  def build_divulgacao_agendada(client: @client, arte: @arte, groups: [ @g1, @g2 ])
+    client.divulgacoes.create!(
+      arte: arte, scheduled_for: 3.days.from_now,
+      divulgacao_grupos: groups.map { |g| DivulgacaoGrupo.new(whatsapp_group: g, group_name: g.display_name, remote_jid: g.remote_jid) }
+    )
+  end
+
+  test "GET show de divulgacao agendada -- tres secoes, (BRT), grupos pendente pill, botao cancelar" do
+    d = build_divulgacao_agendada
+
+    get admin_client_divulgacao_path(@client, d)
+
+    assert_response :success
+    assert_includes response.body, "Detalhes"
+    assert_includes response.body, "Grupos (2)"
+    assert_includes response.body, "Prévia"
+    assert_includes response.body, "(BRT)"
+    assert_includes response.body, "Grupo Um"
+    assert_includes response.body, "Grupo Dois"
+    assert_equal 2, response.body.scan("Pendente").size
+    assert_includes response.body, "Cancelar divulgação"
+  end
+
+  test "GET show de divulgacao cancelada -- banner neutro, pill vermelha Cancelada, sem botao cancelar, grupos preservados" do
+    d = build_divulgacao_agendada
+    d.cancelar!
+
+    get admin_client_divulgacao_path(@client, d)
+
+    assert_response :success
+    assert_includes response.body, "Esta divulgação foi cancelada em"
+    assert_includes response.body, "Nenhum envio será feito."
+    assert_includes response.body, "Cancelada"
+    assert_includes response.body, "text-[#EE3537]" # pill vermelha, nao a cor de acao
+    assert_no_match(/Cancelar divulgação/, response.body)
+    assert_includes response.body, "Grupo Um"
+    assert_includes response.body, "Grupo Dois"
+  end
+
+  test "PATCH cancel numa divulgacao agendada -- flipa pra cancelada, preserva registro/grupos, notice" do
+    d = build_divulgacao_agendada
+
+    assert_no_difference [ "Divulgacao.count", "DivulgacaoGrupo.count" ] do
+      patch cancel_admin_client_divulgacao_path(@client, d)
+    end
+
+    assert_redirected_to admin_client_divulgacao_path(@client, d)
+    assert_equal "Divulgação cancelada. Nenhum envio será feito.", flash[:notice]
+    assert_equal "cancelada", d.reload.status
+    assert_equal 2, d.divulgacao_grupos.count
+  end
+
+  test "PATCH cancel numa divulgacao ja cancelada -- no-op, alert de guarda" do
+    d = build_divulgacao_agendada
+    d.cancelar!
+
+    assert_no_difference "Divulgacao.count" do
+      patch cancel_admin_client_divulgacao_path(@client, d)
+    end
+
+    assert_redirected_to admin_client_divulgacao_path(@client, d)
+    assert_equal "Só é possível cancelar uma divulgação ainda agendada.", flash[:alert]
+    assert_equal "cancelada", d.reload.status
+  end
+
+  test "GET show / PATCH cancel de divulgacao de OUTRO cliente -- 404, nada vaza no corpo" do
+    _client_b, group_b, arte_b = build_client_b
+    d_b = build_divulgacao_agendada(client: _client_b, arte: arte_b, groups: [ group_b ])
+
+    get admin_client_divulgacao_path(@client, d_b)
+    assert_response :not_found
+    refute_includes response.body, arte_b.title
+    refute_includes response.body, group_b.subject
+    refute_includes response.body, group_b.remote_jid
+
+    patch cancel_admin_client_divulgacao_path(@client, d_b)
+    assert_response :not_found
+
+    d_b.reload
+    assert_equal "agendada", d_b.status
+  end
+
+  test "GET show de divulgacao com zero divulgacao_grupos -- Grupos (0), sem erro (backstop)" do
+    d = @client.divulgacoes.new(arte: @arte, scheduled_for: 3.days.from_now)
+    d.save!(validate: false) # ao_menos_um_grupo bloquearia via form -- so alcancavel via console/backstop
+
+    get admin_client_divulgacao_path(@client, d)
+
+    assert_response :success
+    assert_includes response.body, "Grupos (0)"
+    assert_includes response.body, "Nenhum grupo."
+  end
+
+  test "nao existe rota destroy para divulgacoes" do
+    d = build_divulgacao_agendada
+
+    delete admin_client_divulgacao_path(@client, d)
+    assert_response :not_found
+    assert_not_nil Divulgacao.find_by(id: d.id)
+  end
 end
