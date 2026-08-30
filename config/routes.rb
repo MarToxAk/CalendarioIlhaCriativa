@@ -16,6 +16,12 @@ Rails.application.routes.draw do
         post :adopt
         post :reconnect
       end
+      resources :whatsapp_groups, only: [ :index, :show ], controller: "whatsapp_groups" do
+        collection do
+          post :sync
+          get  :sync_status
+        end
+      end
     end
     resources :artes do
       member do

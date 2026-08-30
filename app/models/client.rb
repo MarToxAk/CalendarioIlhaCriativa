@@ -4,6 +4,7 @@ class Client < ApplicationRecord
 
   has_many :artes, dependent: :destroy
   has_one :whatsapp_instance, dependent: :destroy
+  has_many :whatsapp_groups, through: :whatsapp_instance
 
   validates :name, presence: true
   validates :access_token, presence: true, uniqueness: true

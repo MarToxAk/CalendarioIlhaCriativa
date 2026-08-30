@@ -118,13 +118,29 @@ module Evolution
         raise Evolution::Errors::NotConnected, "instância não conectada (state=#{state.inspect})"
       end
 
+      # GET /group/fetchAllGroups/{instance}?getParticipants=false — leitura de
+      # grupos da instância (fase 27, GRUPO-01). `getParticipants` é OBRIGATÓRIO
+      # como string (senão 400 -> Evolution::Errors::Permanent). Usa o TOKEN DA
+      # INSTÂNCIA (api_key: whatsapp_instance.token), não a apikey global. Espelha
+      # fetch_instances, inclusive o guard WR-07.
+      def fetch_groups(instance_name, api_key:)
+        body = request(:get, "/group/fetchAllGroups/#{instance_name}",
+                       api_key: api_key,
+                       query: { "getParticipants" => "false" },
+                       read_timeout: Evolution::READ_TIMEOUT_FAST).body
+        raise Evolution::Errors::Unknown, "resposta 2xx com corpo não-JSON do host Evolution" unless body.is_a?(Array)
+
+        body
+      end
+
       private
 
-      def request(method, path, api_key:, body: nil, read_timeout: nil)
+      def request(method, path, api_key:, body: nil, read_timeout: nil, query: nil)
         started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
         resp = nil
         resp = connection.public_send(method, path) do |req|
           req.headers["apikey"] = api_key
+          req.params.update(query) if query
           # WR-01: setar a chave `read_timeout` (não `timeout`) — o Faraday resolve
           # `options[:read_timeout]` ANTES de `options[:timeout]` em `request_timeout(:read, ...)`,
           # então o valor rápido (15s) deixa de ser sombreado pelos 30s da conexão memoizada.

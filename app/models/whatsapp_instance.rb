@@ -10,9 +10,11 @@
 class WhatsappInstance < ApplicationRecord
   belongs_to :client
   encrypts :token
+  has_many :whatsapp_groups, dependent: :destroy
 
   enum :connection_state, { unpaired: 0, awaiting_qr: 1, connected: 2, disconnected: 3 }
   enum :origin,           { created_by_app: 0, adopted_existing: 1 }, prefix: :origin
+  enum :groups_sync_state, { idle: 0, syncing: 1, error: 2 }, prefix: :groups_sync
 
   # Nome determinístico e estável da instância no Evolution — namespaced porque
   # o manager é compartilhado com outras apps da agência. client.id não rotaciona

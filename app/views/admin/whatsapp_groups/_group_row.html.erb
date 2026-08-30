@@ -1,0 +1,19 @@
+<%# Partial _group_row.html.erb %>
+<%# Locals: group (WhatsappGroup), field_name (String|nil), selected_ids (Array) %>
+<%# field_name nil -> checkboxes disabled/sem name (prova-de-escopo da fase 27, read-only). %>
+<label class="flex items-center gap-3 py-3 px-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors cursor-pointer">
+  <input type="checkbox"
+         class="h-4 w-4 rounded border-gray-300 text-[#0F7949] focus:ring-2 focus:ring-[#0F7949]/20"
+         <%= "name=#{field_name} value=#{group.id}".html_safe if field_name %>
+         <%= "checked".html_safe if selected_ids.include?(group.id) %>
+         <%= "disabled".html_safe unless field_name %>>
+  <span class="text-sm <%= group.subject.present? ? 'font-medium text-slate-900' : 'text-slate-500 italic' %> truncate" title="<%= group.display_name %>">
+    <%= group.display_name %>
+  </span>
+  <% if group.announce? %>
+    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-[#FFFBEB] text-amber-800 border-[#F59E0B]/20 shrink-0"
+          title="Neste grupo, apenas administradores podem enviar mensagens.">
+      <span aria-hidden="true">●</span> Só admins enviam
+    </span>
+  <% end %>
+</label>

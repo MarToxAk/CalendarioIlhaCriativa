@@ -1,0 +1,26 @@
+<%# Locals: @client, @instance, @active_groups, @pagy — vindos de Admin::WhatsappGroupsController#index %>
+<%# MÍNIMA (Task 1 do plano 27-01): só o caminho feliz — cache local paginado.
+    Estados vazio/erro/bloqueado, seção de inativos e o partial _picker
+    reutilizável (com field_name/selected_ids) chegam no 27-03. %>
+<% content_for(:page_title) { "Grupos do WhatsApp" } %>
+
+<h1 class="text-2xl font-semibold text-slate-900 mb-6">Grupos do WhatsApp</h1>
+
+<%= link_to "← #{@client.name}", admin_client_path(@client), class: "text-sm text-slate-600 mb-4 inline-block" %>
+
+<div class="bg-white rounded-xl border border-gray-200 shadow-card p-6 max-w-2xl">
+  <h2 class="text-sm font-semibold text-slate-900 border-b border-gray-100 pb-3 mb-4">Grupos</h2>
+
+  <fieldset>
+    <legend class="sr-only">Grupos deste número</legend>
+    <% @active_groups.each do |g| %>
+      <%= render "admin/whatsapp_groups/group_row", group: g, field_name: nil, selected_ids: [] %>
+    <% end %>
+  </fieldset>
+
+  <% if @pagy&.pages.to_i > 1 %>
+    <div class="flex justify-center mt-6">
+      <%= pagy_nav(@pagy) %>
+    </div>
+  <% end %>
+</div>

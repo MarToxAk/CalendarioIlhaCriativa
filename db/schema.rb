@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_30_130934) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_30_184901) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -221,10 +221,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_130934) do
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
+  create_table "whatsapp_groups", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.boolean "announce", default: false, null: false
+    t.datetime "created_at", null: false
+    t.string "remote_jid", null: false
+    t.string "subject"
+    t.datetime "synced_at"
+    t.datetime "updated_at", null: false
+    t.bigint "whatsapp_instance_id", null: false
+    t.index ["whatsapp_instance_id", "active"], name: "index_whatsapp_groups_on_whatsapp_instance_id_and_active"
+    t.index ["whatsapp_instance_id", "remote_jid"], name: "index_whatsapp_groups_on_whatsapp_instance_id_and_remote_jid", unique: true
+    t.index ["whatsapp_instance_id"], name: "index_whatsapp_groups_on_whatsapp_instance_id"
+  end
+
   create_table "whatsapp_instances", force: :cascade do |t|
     t.bigint "client_id", null: false
     t.integer "connection_state", default: 0, null: false
     t.datetime "created_at", null: false
+    t.string "groups_sync_error"
+    t.integer "groups_sync_state", default: 0, null: false
+    t.datetime "groups_synced_at"
     t.string "instance_name", null: false
     t.datetime "last_checked_at"
     t.text "last_error"
@@ -250,5 +267,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_130934) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "whatsapp_groups", "whatsapp_instances"
   add_foreign_key "whatsapp_instances", "clients"
 end
