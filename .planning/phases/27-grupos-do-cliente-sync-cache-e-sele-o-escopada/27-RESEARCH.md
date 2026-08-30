@@ -686,7 +686,7 @@ end
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **`fetchAllGroups` read timeout for busy numbers.**
    - What we know: CONTEXT.md locks `READ_TIMEOUT_FAST=15s`. The endpoint does a `profilePicture` call per group and is measured in seconds. The job has `retry_on Evolution::Errors::Unknown`.
