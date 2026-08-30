@@ -11,6 +11,13 @@
 # produção (um TZ errado publica na hora errada de forma irreversível — falhar no boot
 # é mais barato), warn em development (o dev pode legitimamente estar noutro fuso).
 
+# O Rails seta SECRET_KEY_BASE_DUMMY só durante `assets:precompile` / build da imagem
+# (RAILS_ENV=production, sem TZ, sem config/master.key na imagem) — não é um boot real e
+# o runtime dos containers (compose web/jobs, ./bin/rails server) nunca a seta. Pular a
+# asserção de TZ aqui mantém o `docker compose build` vivo sem enfraquecer o boot check
+# de produção real (CR-01 / 25-05).
+return if ENV["SECRET_KEY_BASE_DUMMY"]
+
 expected_tz   = "America/Sao_Paulo"
 expected_zone = "Brasilia" # config.time_zone em config/application.rb
 

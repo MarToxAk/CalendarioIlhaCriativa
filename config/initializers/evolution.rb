@@ -8,6 +8,10 @@
 # 25-RESEARCH.md Pattern 2).
 Rails.application.config.after_initialize do
   next unless Rails.env.production?
+  # SECRET_KEY_BASE_DUMMY só é setada pelo Rails no `assets:precompile` (build da imagem,
+  # sem config/master.key) — Evolution.global_api_key levantaria ConfigurationError ali.
+  # O runtime real nunca seta essa var, então o fail-fast de boot continua ativo (CR-01 / 25-05).
+  next if ENV["SECRET_KEY_BASE_DUMMY"]
 
   Evolution.global_api_key
   unless Evolution.base_url.start_with?("https://")
