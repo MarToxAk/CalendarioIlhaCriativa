@@ -8,9 +8,16 @@
 class Whatsapp::SyncGroupsJob < ApplicationJob
   queue_as :default # config/queue.yml: worker unico em queues: "*", sem fila dedicada nesta fase (INFRA-06 e fase 29)
 
-  # GET e idempotente -> ambos seguros para retry.
-  retry_on Evolution::Errors::Transient, wait: 30.seconds, attempts: 3
-  retry_on Evolution::Errors::Unknown,   wait: 30.seconds, attempts: 3
+  # GET e idempotente -> ambos seguros para retry. Blocos disparam so apos as
+  # 3 tentativas se esgotarem (comportamento padrao do ActiveJob) -- sem eles
+  # o job re-levanta e groups_sync_state fica preso em :syncing para sempre,
+  # ja que mark_error nunca roda (WR-01 do code review da fase 27).
+  retry_on Evolution::Errors::Transient, wait: 30.seconds, attempts: 3 do |job, _err|
+    mark_error(job, "transient")
+  end
+  retry_on Evolution::Errors::Unknown, wait: 30.seconds, attempts: 3 do |job, _err|
+    mark_error(job, "transient")
+  end
 
   # Retry nao resolve estes -> grava o motivo para a UI e para.
   discard_on(Evolution::Errors::Permanent)          { |job, _err| mark_error(job, "transient") }
