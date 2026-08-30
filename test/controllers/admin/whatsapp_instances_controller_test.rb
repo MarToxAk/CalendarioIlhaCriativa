@@ -151,6 +151,24 @@ class AdminWhatsappInstancesControllerTest < ActionDispatch::IntegrationTest
     assert_equal before_checked_at, wi.last_checked_at
   end
 
+  # WR-01 — rotas verify/reconnect são alcançáveis diretamente mesmo sem
+  # instância; não podem estourar NoMethodError (nil.instance_name) -> 500.
+  test "verify sem instância redireciona com alert em vez de estourar 500" do
+    assert_nil @client.whatsapp_instance
+    post verify_admin_client_whatsapp_instance_path(@client)
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "Este cliente ainda não tem uma instância de WhatsApp.", flash[:alert]
+  end
+
+  test "reconnect sem instância redireciona com alert em vez de estourar 500" do
+    assert_nil @client.whatsapp_instance
+    post reconnect_admin_client_whatsapp_instance_path(@client)
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "Este cliente ainda não tem uma instância de WhatsApp.", flash[:alert]
+  end
+
   # --- #refresh_qr — throttled, sempre JSON (PAIR-03, 26-04) ---------------
 
   test "refresh_qr com QR ja em cache responde o JSON sem chamar connect" do

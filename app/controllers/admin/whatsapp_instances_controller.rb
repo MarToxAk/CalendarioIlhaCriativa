@@ -34,6 +34,9 @@ class Admin::WhatsappInstancesController < Admin::BaseController
   # connection_state/last_checked_at permanecem com o último valor conhecido.
   def verify
     inst = @client.whatsapp_instance
+    return redirect_to(admin_client_path(@client),
+      alert: "Este cliente ainda não tem uma instância de WhatsApp.") if inst.nil?
+
     state = Evolution::Client.connection_state(inst.instance_name)
     mapped = WhatsappInstance.map_evolution_state(state)
     old_label = inst.connection_state_label
@@ -72,6 +75,9 @@ class Admin::WhatsappInstancesController < Admin::BaseController
   # a cargo da view no 26-05).
   def reconnect
     inst = @client.whatsapp_instance
+    return redirect_to(admin_client_path(@client),
+      alert: "Este cliente ainda não tem uma instância de WhatsApp.") if inst.nil?
+
     result = Evolution::Client.connect(inst.instance_name)
     inst.update!(connection_state: :awaiting_qr, last_qr_base64: result[:base64], last_checked_at: Time.current)
     redirect_to admin_client_path(@client), notice: "Pareamento reiniciado. Escaneie o novo QR Code."
