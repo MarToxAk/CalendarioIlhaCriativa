@@ -114,9 +114,12 @@ class Evolution::ClientTest < ActiveSupport::TestCase
     io = StringIO.new
     original = Rails.logger
     Rails.logger = ActiveSupport::Logger.new(io)
+    # WR-07 (25-05): fetch_instances agora exige corpo Array num 2xx — um Hash/String
+    # vira Evolution::Errors::Unknown. O stub aqui só existe para exercitar o log seguro,
+    # então um array vazio serve.
     Evolution::Client.instance_variable_set(
       :@connection,
-      stubbed_connection(200, '{"ok":true}', path: "/instance/fetchInstances")
+      stubbed_connection(200, "[]", path: "/instance/fetchInstances")
     )
 
     Evolution::Client.fetch_instances(api_key: "super-secret-apikey-value")

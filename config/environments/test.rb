@@ -50,4 +50,16 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # Após inserir as fixtures, o Rails revalida todas as FKs com um bloco PL/pgSQL que faz
+  # `UPDATE pg_catalog.pg_constraint SET convalidated = false` — escrita direta no catálogo,
+  # que exige SUPERUSER. Neste PostgreSQL compartilhado o usuário da aplicação não é
+  # superusuário, então a verificação aborta a suíte inteira no `before_setup`.
+  #
+  # Desligar isso NÃO relaxa as FKs: elas continuam existindo e sendo enforçadas pelo banco
+  # (ver `defer_foreign_keys_for_fixtures!` em test/test_helper.rb, que apenas adia a
+  # checagem para o COMMIT da transação de fixtures). O que se perde é só o aviso amigável
+  # do Rails quando uma fixture referencia uma chave inexistente — nesse caso o próprio
+  # PostgreSQL levanta o erro de FK no commit.
+  config.active_record.verify_foreign_keys_for_fixtures = false
 end

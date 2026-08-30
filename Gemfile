@@ -83,4 +83,9 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
+
+  # Pina o Minitest na série 5.x. A resolução transitiva do Rails trouxe minitest 6.0.6,
+  # que removeu `minitest/mock` do core (virou gem separada) — os testes deste projeto
+  # usam `Object#stub` (test/models/approval_response_test.rb etc.), API do Minitest 5.
+  gem "minitest", "~> 5.25"
 end
