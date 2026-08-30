@@ -322,4 +322,17 @@ class Admin::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;"
     assert_no_match %r{<script>alert\('xss'\)</script>}, response.body
   end
+
+  # --- Task 2: estimativa de duração no #new (DIVU-07) ------------------
+
+  test "GET new: o span da estimativa renderiza com o zero-state '—' e carrega min/max value" do
+    get new_admin_client_divulgacao_path(@client)
+
+    assert_response :success
+    assert_match %r{<span data-divulgacao-estimate-target="text">\s*—\s*</span>}, response.body
+    assert_includes response.body, %(data-divulgacao-estimate-min-value="25")
+    assert_includes response.body, %(data-divulgacao-estimate-max-value="45")
+    assert_includes response.body, "Estimativa de duração"
+    assert_includes response.body, "Tempo aproximado do disparo, do primeiro ao último grupo."
+  end
 end

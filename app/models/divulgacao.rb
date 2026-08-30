@@ -8,6 +8,15 @@ class Divulgacao < ApplicationRecord
   # que o consome (arquivo_dentro_do_teto_whatsapp).
   WHATSAPP_MEDIA_MAX_BYTES = 16.megabytes
 
+  # Faixa de intervalo (segundos) entre grupos, usada SO pela estimativa de
+  # duracao read-only da fase 28 (DIVU-07). Contrato de env var cross-phase com a
+  # fase 29 (ENVIO-02) — sem precedente no repo (28-RESEARCH Assumption A2). A
+  # leitura canonica e da fase 29; a leitura vive AQUI num unico lugar para um
+  # rename futuro ser uma mudanca de uma linha + .env.example. Fallback 25/45 bate
+  # com o exemplo do 28-CONTEXT ("≈ 8–15 min para 20 grupos").
+  SEND_DELAY_MIN = Integer(ENV.fetch("WHATSAPP_SEND_DELAY_MIN_SECONDS", "25"))
+  SEND_DELAY_MAX = Integer(ENV.fetch("WHATSAPP_SEND_DELAY_MAX_SECONDS", "45"))
+
   belongs_to :client
   belongs_to :arte
   has_many :divulgacao_grupos, dependent: :destroy

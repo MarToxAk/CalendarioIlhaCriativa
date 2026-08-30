@@ -35,22 +35,39 @@
             data: { action: "change->divulgacao-preview#show" } %>
     </div>
 
-    <div class="mb-4">
-      <span class="block text-sm font-medium text-slate-900 mb-1.5">Grupos</span>
-      <div class="border border-gray-200 rounded-lg max-h-[380px] overflow-y-auto">
-        <%= render "admin/whatsapp_groups/picker",
-              client:       @client,
-              selected_ids: (@divulgacao.divulgacao_grupos.map(&:whatsapp_group_id).presence || []),
-              field_name:   "divulgacao[whatsapp_group_ids][]" %>
-      </div>
-    </div>
+    <%# Wrapper do divulgacao-estimate: e o unico elemento que contem as caixas de %>
+    <%# grupo E o <span> alvo do texto, entao min/max-value + os targets vivem AQUI %>
+    <%# (Stimulus le static values do proprio elemento do controller, nao de %>
+    <%# descendentes — ver 28-03-SUMMARY "Deviations"). %>
+    <div data-controller="divulgacao-estimate"
+         data-divulgacao-estimate-min-value="<%= Divulgacao::SEND_DELAY_MIN %>"
+         data-divulgacao-estimate-max-value="<%= Divulgacao::SEND_DELAY_MAX %>">
 
-    <div class="mb-6">
-      <%= f.label :scheduled_for, "Data e hora do envio (America/São_Paulo)", class: "block text-sm font-medium text-slate-900 mb-1.5" %>
-      <%= f.datetime_field :scheduled_for,
-            min: Time.current,
-            class: "block w-full h-11 px-3 border border-gray-200 rounded-lg text-sm text-slate-900 bg-white focus:outline-none focus:border-[#0F7949] focus:ring-2 focus:ring-[#0F7949]/20 transition-colors" %>
-      <p class="text-xs text-slate-500 mt-1">Interpretada no fuso de Brasília (BRT).</p>
+      <div class="mb-4">
+        <span class="block text-sm font-medium text-slate-900 mb-1.5">Grupos</span>
+        <div data-controller="picker"
+             data-action="change->divulgacao-estimate#recompute change->picker#refresh"
+             class="border border-gray-200 rounded-lg max-h-[380px] overflow-y-auto">
+          <%= render "admin/whatsapp_groups/picker",
+                client:       @client,
+                selected_ids: (@divulgacao.divulgacao_grupos.map(&:whatsapp_group_id).presence || []),
+                field_name:   "divulgacao[whatsapp_group_ids][]" %>
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <%= f.label :scheduled_for, "Data e hora do envio (America/São_Paulo)", class: "block text-sm font-medium text-slate-900 mb-1.5" %>
+        <%= f.datetime_field :scheduled_for,
+              min: Time.current,
+              class: "block w-full h-11 px-3 border border-gray-200 rounded-lg text-sm text-slate-900 bg-white focus:outline-none focus:border-[#0F7949] focus:ring-2 focus:ring-[#0F7949]/20 transition-colors" %>
+        <p class="text-xs text-slate-500 mt-1">Interpretada no fuso de Brasília (BRT).</p>
+      </div>
+
+      <div class="mb-4">
+        <p class="text-xs text-slate-500">Estimativa de duração</p>
+        <p class="text-sm font-semibold text-slate-900"><span data-divulgacao-estimate-target="text"><%= divulgacao_duration_estimate(@divulgacao.divulgacao_grupos.size) %></span></p>
+        <p class="text-xs text-slate-400">Tempo aproximado do disparo, do primeiro ao último grupo.</p>
+      </div>
     </div>
 
     <div class="mb-6">
