@@ -272,4 +272,107 @@ class Evolution::ClientTest < ActiveSupport::TestCase
   ensure
     Evolution::Client.instance_variable_set(:@connection, nil)
   end
+
+  # --- fetch_groups (fase 27, GRUPO-01) ------------------------------------
+  test "fetch_groups returns the Array body on a 200" do
+    body = [ { "id" => "1@g.us", "subject" => "Grupo A" } ].to_json
+    Evolution::Client.instance_variable_set(
+      :@connection,
+      stubbed_connection(200, body, path: "/group/fetchAllGroups/livia_client_1?getParticipants=false")
+    )
+
+    resp = Evolution::Client.fetch_groups("livia_client_1", api_key: "test-api-key")
+
+    assert_equal 1, resp.size
+    assert_equal "1@g.us", resp.first["id"]
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
+
+  test "fetch_groups raises Unknown when the 2xx body is a Hash (not an Array)" do
+    Evolution::Client.instance_variable_set(
+      :@connection,
+      stubbed_connection(200, "{}", path: "/group/fetchAllGroups/livia_client_1?getParticipants=false")
+    )
+
+    error = assert_raises(Evolution::Errors::Unknown) do
+      Evolution::Client.fetch_groups("livia_client_1", api_key: "test-api-key")
+    end
+    refute_includes error.message, "{}"
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
+
+  test "fetch_groups raises Unknown when the 2xx body is HTML (Cloudflare interstitial)" do
+    html = "<html><body>cloudflare check</body></html>"
+    Evolution::Client.instance_variable_set(
+      :@connection,
+      stubbed_connection(200, html, { "Content-Type" => "text/html" },
+                          path: "/group/fetchAllGroups/livia_client_1?getParticipants=false")
+    )
+
+    assert_raises(Evolution::Errors::Unknown) do
+      Evolution::Client.fetch_groups("livia_client_1", api_key: "test-api-key")
+    end
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
+
+  test "fetch_groups surfaces a 400 (missing/invalid getParticipants) as Permanent" do
+    body = { "status" => 400, "error" => "Bad Request", "response" => { "message" => "getParticipants is required" } }.to_json
+    Evolution::Client.instance_variable_set(
+      :@connection,
+      stubbed_connection(400, body, path: "/group/fetchAllGroups/livia_client_1?getParticipants=false")
+    )
+
+    assert_raises(Evolution::Errors::Permanent) do
+      Evolution::Client.fetch_groups("livia_client_1", api_key: "test-api-key")
+    end
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
+
+  test "fetch_groups sends getParticipants=false in the query string" do
+    stubs = Faraday::Adapter::Test::Stubs.new do |s|
+      s.get("/group/fetchAllGroups/livia_client_1?getParticipants=false") do |_env|
+        [ 200, { "Content-Type" => "application/json" }, "[]" ]
+      end
+    end
+    Evolution::Client.instance_variable_set(
+      :@connection,
+      Faraday.new do |f|
+        f.request :json
+        f.response :json, content_type: /\bjson$/
+        f.adapter :test, stubs
+      end
+    )
+
+    assert_equal [], Evolution::Client.fetch_groups("livia_client_1", api_key: "test-api-key")
+    stubs.verify_stubbed_calls
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
+
+  test "fetch_groups api_key: per call overrides the memoized global apikey header" do
+    stubs = Faraday::Adapter::Test::Stubs.new do |s|
+      s.get("/group/fetchAllGroups/livia_client_1?getParticipants=false") do |env|
+        [ 200, { "Content-Type" => "application/json" }, [ { "id" => env.request_headers["apikey"] } ].to_json ]
+      end
+    end
+    Evolution::Client.instance_variable_set(
+      :@connection,
+      Faraday.new do |f|
+        f.request :json
+        f.response :json, content_type: /\bjson$/
+        f.headers["apikey"] = "global-apikey-value"
+        f.adapter :test, stubs
+      end
+    )
+
+    resp = Evolution::Client.fetch_groups("livia_client_1", api_key: "instance-token-value")
+
+    assert_equal "instance-token-value", resp.first["id"]
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
 end
