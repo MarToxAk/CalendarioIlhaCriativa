@@ -6,9 +6,10 @@ module Whatsapp
   # Evolution::Client permanece transporte HTTP puro. Analog:
   # app/services/evolution/instance_provisioner.rb (DI seam client_api:).
   #
-  # Caminho feliz (Task 1): grava os grupos retornados via upsert_all, keyed em
-  # [whatsapp_instance_id, remote_jid]. O guard de instância não conectada e a
-  # passada de desativação (GRUPO-05) chegam na Task 2.
+  # Grava os grupos retornados via upsert_all, keyed em
+  # [whatsapp_instance_id, remote_jid]. Guarda contra instância não conectada
+  # ANTES de qualquer HTTP, e roda a passada de desativação (GRUPO-05) depois do
+  # upsert — grupos sumidos do lote viram active:false, nunca delete/destroy.
   class GroupSynchronizer
     Result = Struct.new(:ok, :count, :reason, keyword_init: true)
 
@@ -18,11 +19,27 @@ module Whatsapp
     end
 
     def call
+      # Defense-in-depth (RESEARCH Pitfall 7): connection_state é coluna
+      # cacheada; o controller no 27-02 também guarda antes de enfileirar.
+      unless @instance.connected?
+        @instance.update!(groups_sync_state: :error, groups_sync_error: "not_connected")
+        return Result.new(ok: false, reason: :not_connected)
+      end
+
       batch_started_at = Time.current
       raw  = @api.fetch_groups(@instance.instance_name, api_key: @instance.token)
       rows = Array(raw).filter_map { |g| row_for(g, batch_started_at) }
 
       WhatsappGroup.upsert_all(rows, unique_by: %i[whatsapp_instance_id remote_jid]) if rows.any?
+
+      # GRUPO-05: escopado pela associação (nunca toca outra instância), "<"
+      # estrito, updated_at explícito (update_all não auto-toca). Roda MESMO
+      # com rows vazio — o `if rows.any?` acima só guarda o upsert_all
+      # (upsert_all([]) levanta ArgumentError — Pitfall 4). NUNCA delete/destroy.
+      @instance.whatsapp_groups
+               .where(active: true)
+               .where("synced_at < ?", batch_started_at)
+               .update_all(active: false, updated_at: Time.current)
 
       @instance.update!(groups_synced_at: batch_started_at,
                          groups_sync_state: :idle,
