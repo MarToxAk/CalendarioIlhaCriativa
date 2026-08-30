@@ -232,10 +232,18 @@ Plans:
   4. A data e hora da Divulgação aparecem com o fuso explícito, e `Arte#scheduled_on` continua sendo uma data sem hora.
   5. Uma Divulgação criada mostra um registro por grupo com status `pendente` e o nome do grupo congelado como estava; uma tentativa de combinar arte de um cliente com grupos de outro é recusada, e o formulário nunca aceita o identificador do grupo cru.
 
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+
+- [ ] 28-01-PLAN.md — Fatia vertical (tracer): migrações `divulgacoes` + `divulgacao_grupos` + inflexão, models `Divulgacao`/`DivulgacaoGrupo` (2 enums, `prefix:` em `Divulgacao`), rota aninhada completa (incl. `patch :cancel`), `Admin::DivulgacoesController#new/#create/#index` (happy path + snapshot por grupo `pendente`), reuso do `_picker.html.erb` com `field_name` vivo, teste canônico A×B cross-client (DIVU-01, DIVU-09, SEG-01, SEG-02) — **Wave 1**
+- [ ] 28-02-PLAN.md — Validações de criação: `arte_deve_estar_aprovada` (DIVU-02), recusa de link externo com `caption_only` EM ESCOPO (DIVU-03), `WHATSAPP_MEDIA_MAX_BYTES` só-quando-anexado (DIVU-04), `arte_e_grupos_do_mesmo_cliente` backstop (SEG-02), `scheduled_for` futuro; `divulgacao_datetime_label` + round-trip `datetime-local` → `Time.zone` com `(BRT)` explícito, `Arte#scheduled_on` intocado (DIVU-05) — **Wave 2**
+- [ ] 28-03-PLAN.md — Preview + estimativa: `_preview.html.erb` (imagem/vídeo/`caption_only`/sem-arte) via `rails_storage_proxy_path`, legenda verbatim (DIVU-06); `divulgacao_duration_estimate` helper + `SEND_DELAY_MIN/MAX` (fallback 25/45), 3 Stimulus controllers (`divulgacao_estimate`, `divulgacao_preview`, `picker`), `.env.example` + contrato de env var para a fase 29 (DIVU-07) — **Wave 3**
+- [ ] 28-04-PLAN.md — Estados + detalhe + cancelamento + ponto de entrada: estados vazio/bloqueado do form + `index` completo, `#show` (Detalhes/Grupos N/Prévia) com nomes congelados e fuso explícito, `patch :cancel` → `cancelada` (coluna/estado/UI; DIVU-08 é fase 29), card "Divulgações" + botão em `admin/clients#show` (DIVU-05, DIVU-01, DIVU-09) — **Wave 4**
+
 **UI hint**: yes
 **Nota de escopo**: parar antes do envio é intencional — torna o schema (a parte mais cara de errar) verificável isoladamente e permite fazer rollback do motor de envio sem levar o CRUD junto.
-**Decisão pendente a resolver aqui**: se houver variação de legenda anti-spam, ela precisa aparecer no preview — senão vai ao ar conteúdo que o cliente não aprovou.
+**Decisão pendente RESOLVIDA (CONTEXT)**: sem variação de legenda anti-spam no v1.7 — a legenda vai VERBATIM ao grupo e o preview mostra a legenda única (`caption_variants` fica deferido). O risco de ban é mitigado só pelo intervalo aleatório entre grupos (fase 29).
 
 ---
 
@@ -312,7 +320,7 @@ Plans:
 | 25. Fundação — Transporte Evolution + Storage | v1.7 | 5/5 | In Progress|  |
 | 26. Instância de WhatsApp + Pareamento | v1.7 | 5/5 | In Progress|  |
 | 27. Grupos do Cliente | v1.7 | 3/3 | Complete    | 2026-08-30 |
-| 28. Divulgação — Agendar sem Enviar | v1.7 | 0/? | Not started | - |
+| 28. Divulgação — Agendar sem Enviar | v1.7 | 0/4 | Planned | - |
 | 29. Motor de Envio | v1.7 | 0/? | Not started | - |
 | 30. Acompanhamento ao Vivo + Hardening | v1.7 | 0/? | Not started | - |
 
