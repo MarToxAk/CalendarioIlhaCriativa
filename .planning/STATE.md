@@ -5,16 +5,16 @@ milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 25
 current_phase_name: Fundação — Transporte Evolution + Storage Alcançável
 status: executing
-stopped_at: "25-04 PAUSADO num gate blocking-human: rake storage:migrate_to_s3 entregue+verificada por forma; EVO-01 outbound fechado (fetch_instances 200). Falta: MinIO expor a API S3 (hoje serve o console) + 2 human-checks (curl presigned de fora da LAN, curl /up do host Evolution)."
-last_updated: "2026-08-30T02:06:10.585Z"
+stopped_at: 25-04 COMPLETO — INFRA-01 + EVO-01 fechados; fase 25 com 4/4 planos. Orquestrador assume o tail da fase (aggregate/code-review/verify/phase.complete).
+last_updated: "2026-08-30T02:17:59.710Z"
 last_activity: 2026-08-29
-last_activity_desc: "Plano 25-04 PAUSADO num gate blocking-human — rake storage:migrate_to_s3 entregue+verificada por forma (commit 8e5a3e0); EVO-01 outbound fechado (fetch_instances -> Array[6]/200/~654ms). Falta: MinIO expor a API S3 (hoje serve o console — 400 InvalidArgument) + 2 human-checks out-of-band."
-state_head: 5cd027b09d2a034854d67e22a44357d706c6d5e1
+last_activity_desc: "Plano 25-04 COMPLETO — INFRA-01 + EVO-01 fechados. Endpoint S3 corrigido (s3.bomcustoilhabela.com.br era o console; API S3 e minio.bomcustoilhabela.com.br — 947413f); buckets calendario-livia-{development,production} criados; storage:migrate_to_s3 provada ponta a ponta em dev (copied 12, backfill 12, 2a rodada no-op); presigned GET buscado de fora da LAN -> HTTP/2 200 + content-type correto; EVO-01 outbound fetch_instances -> Array[6]/200/~654ms. Fase 25 com 4/4 planos — orquestrador assume o tail."
+state_head: e0a7a9e8c19c947a1c15237c8c161f053b2eacb9
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -31,14 +31,14 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 
 Phase: 25 (Fundação — Transporte Evolution + Storage Alcançável) — EXECUTING
 Plan: 4 of 4
-Status: Planos 25-01, 25-02, 25-03 completos. 25-04 PAUSADO num gate blocking-human. Entregue e commitado: `lib/tasks/storage_migration.rake` (`storage:migrate_to_s3` — copy-only, idempotente, backfill service_name where(nil,'local'); commit 8e5a3e0) + secao "Deploy reachability (phase 25)" em evolution-contract.md (commit 5cd027b). EVO-01 OUTBOUND FECHADO nesta sessao: Evolution::Client.fetch_instances -> Array[6] / HTTP 200 / ~654ms com as credenciais gravadas no 25-03. BLOQUEADO (blocking-human): (1) aws.endpoint (s3.bomcustoilhabela.com.br) serve o CONSOLE do MinIO, nao a API S3 -> 400 InvalidArgument "S3 API Requests must be made to API port." -> a migracao real nao copia nada; (2) curl -I da presigned URL de fora de 192.168.3.203; (3) curl -I /up do host do Evolution. Retomar apos o operador expor a API S3 do MinIO + criar buckets calendario-livia-* e colar os 2 resultados de curl (comandos em evolution-contract.md).
-Last activity: 2026-08-29 — Plano 25-04 PAUSADO (gate blocking-human: MinIO API S3 + 2 human-checks); rake de migracao entregue, EVO-01 outbound fechado
+Status: Fase 25 com os 4 planos completos (25-01, 25-02, 25-03, 25-04). 25-04 FINALIZADO: `lib/tasks/storage_migration.rake` (`storage:migrate_to_s3` — copy-only, idempotente, backfill service_name where(nil,'local'); commit 8e5a3e0) provada ponta a ponta contra o DB de development — `copied: 12 skipped: 0 missing: 2 service_name_backfilled: 12` (os 2 missing eram orfaos de probe.txt, removidos), segunda rodada so-skip, os 12 blobs baixam OK por presigned URL nova. Endpoint S3 corrigido: `s3.bomcustoilhabela.com.br` era o CONSOLE do MinIO; a API S3 e `minio.bomcustoilhabela.com.br` — `aws.endpoint` em credentials.yml.enc atualizado (commit 947413f). Buckets `calendario-livia-{development,production}` criados privados. INFRA-01 / SC1 PROVADO: presigned GET buscado de FORA de 192.168.3.203 (DNS publico -> Cloudflare -> MinIO) -> `HTTP/2 200` + `content-type` correto. EVO-01 outbound FECHADO: Evolution::Client.fetch_instances -> Array[6] / HTTP 200 / ~654ms. Inbound `/up` do host do Evolution carregado adiante para operador / fase 26 (app nao deployado) — nao bloqueia a fase 25 (D-12 / A4). Orquestrador assume o tail da fase (aggregate / code-review / verify / phase.complete).
+Last activity: 2026-08-29 — Plano 25-04 FINALIZADO (INFRA-01 + EVO-01 fechados); endpoint S3 corrigido, buckets criados, migracao provada em dev, presigned externo 200
 
 ## Progress Bar
 
 ```
-v1.7: [███░░░░░░░░░░░░░░░░░] 13% (0/6 phases · 3/4 planos da fase 25 — 25-04 pausado num gate blocking-human)
-Phase 25: Fundação — Transporte Evolution + Storage Alcançável — In progress (3/4 planos · 25-04 pausado)
+v1.7: [███░░░░░░░░░░░░░░░░░] 15% (0/6 phases · 4/4 planos da fase 25 — orquestrador no tail da fase)
+Phase 25: Fundação — Transporte Evolution + Storage Alcançável — 4/4 planos executados (aguardando o tail da fase: aggregate / code-review / verify)
 Phase 26: Instância de WhatsApp por Cliente + Pareamento — Not started
 Phase 27: Grupos do Cliente — Sync, Cache e Seleção Escopada — Not started
 Phase 28: Divulgação — Agendar sem Enviar — Not started
@@ -196,6 +196,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 25 P01 | 11min | 3 tasks | 9 files |
 | Phase 25 P02 | 35min | 3 tasks | 7 files |
 | Phase 25 P03 | 15min | 3 tasks | 5 files |
+| Phase 25 P04 | ~40min | 2 tasks | 3 files |
 
 ## Decisions
 
@@ -222,7 +223,11 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 25]: [Phase 25-03]: INFRA-03 COMPLETO — TZ=America/Sao_Paulo em web+jobs no docker-compose.yml + boot check timezone_check.rb (25-02). Boot real de produção com TZ correto passou. INFRA-01 continua parcial: config+credentials prontos, round-trip presignado real é 25-04.
 - [Phase 25]: [Phase 25-04]: storage:migrate_to_s3 entregue verbatim (RESEARCH Pattern 6 + Pitfall 6) — copy-only, idempotente, backfill service_name where(nil,'local'); sem exception-swallow em volta de dest.exist?/upload (abortar alto é o comportamento correto).
 - [Phase 25]: [Phase 25-04]: EVO-01 outbound FECHADO — Evolution::Client.fetch_instances -> Array[6]/200/~654ms com as credenciais do 25-03. Encerra o blocker de round-trip autenticado de leitura do 25-01.
-- [Phase 25]: [Phase 25-04]: INFRA-01 SC1 PAUSADO (gate blocking-human) — aws.endpoint (s3.bomcustoilhabela.com.br) serve o console do MinIO, nao a API S3 (400 InvalidArgument 'S3 API Requests must be made to API port.'); + curl da presigned URL de fora de 192.168.3.203 e /up do host Evolution exigem vantage point out-of-band. Deferido user_setup A6.
+- [Phase 25]: [Phase 25-04]: INFRA-01 COMPLETO — causa raiz do endpoint corrigida: s3.bomcustoilhabela.com.br era o CONSOLE do MinIO; a API S3 e minio.bomcustoilhabela.com.br (aws.endpoint em credentials.yml.enc atualizado, commit 947413f). Buckets calendario-livia-{development,production} criados privados. storage:migrate_to_s3 provada ponta a ponta contra o DB de dev (copied 12, backfill 12, 2a rodada no-op; 2 orfaos de probe.txt removidos). SC1 provado: presigned GET buscado de FORA de 192.168.3.203 (DNS publico -> Cloudflare -> MinIO) -> HTTP/2 200 + content-type correto. Rodar a migracao no host de producao = passo de operador de go-live, nao gate da fase.
+- [Phase 25]: [Phase 25-04]: Inbound /up do host do Evolution carregado adiante para operador / fase 26 (app nao deployado em ilhacriativa.autopyweb.com.br) — nao bloqueia a fase 25 (D-12 / A4: fase 26 lidera com PAIR-05).
+- [Phase 25]: 25-04: aws.endpoint corrigido — s3.bomcustoilhabela.com.br era o console do MinIO; a API S3 e minio.bomcustoilhabela.com.br (947413f)
+- [Phase 25]: 25-04: buckets calendario-livia-{development,production} criados privados (sem bucket policy, default MinIO)
+- [Phase 25]: 25-04: INFRA-01 SC1 provado em development — presigned GET buscado de fora da LAN (DNS publico -> Cloudflare -> MinIO) -> HTTP/2 200 + content-type correto; storage:migrate_to_s3 provada ponta a ponta (copied 12, backfill 12, 2a rodada no-op)
 
 ## Quick Tasks Completed
 
@@ -232,22 +237,25 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-30T02:06:10.556Z
-**Stopped at:** 25-04 PAUSADO num gate blocking-human: rake storage:migrate_to_s3 entregue+verificada por forma; EVO-01 outbound fechado (fetch_instances 200). Falta: MinIO expor a API S3 (hoje serve o console) + 2 human-checks (curl presigned de fora da LAN, curl /up do host Evolution).
-**Resume file:** .planning/phases/25-funda-o-transporte-evolution-storage-alcan-vel/25-04-SUMMARY.md
+**Last session:** 2026-08-30T02:17:59.680Z
+**Stopped at:** 25-04 COMPLETO — INFRA-01 + EVO-01 fechados; fase 25 com 4/4 planos. Orquestrador assume o tail da fase (aggregate/code-review/verify/phase.complete).
+**Resume file:** None
 
 ### Blockers
 
-**25-04 PAUSADO num gate blocking-human (autonomous:false — nao auto-aprovado):**
-
-- **INFRA-01 / SC1 — endpoint MinIO mal configurado.** `aws.endpoint` (`s3.bomcustoilhabela.com.br`) responde hoje pelo CONSOLE do MinIO (porta 9001), nao pela API S3 (9000): `head_bucket` -> `400 BadRequest`; `list_objects_v2` -> `400 InvalidArgument` corpo XML "S3 API Requests must be made to API port."; `GET /` -> 200 mas `content-type: text/html` (UI). Consequencia: `bin/rails storage:migrate_to_s3` aborta em `dest.exist?` e nao copia nada. AÇÃO OPERADOR: expor a porta da API S3 do MinIO sob TLS, ajustar `aws.endpoint` em credentials.yml.enc se o hostname mudar, criar os buckets `calendario-livia-{production,development}` privados. Passos completos em `.planning/notes/evolution-contract.md` §"Deploy reachability (phase 25)".
-- **INFRA-01 / SC1 — human-check.** Depois da API S3 alcançavel + migracao rodada no host deployado: `curl -sS -I "<presigned-url>"` de um host FORA de `192.168.3.203` (ou `docker exec` no container do Evolution) -> colar linha de status + `content-type` + `content-length`.
-- **EVO-01 / D-12 — human-check inbound.** `curl -sS -I https://<app-hostname>/up` do host do Evolution -> colar linha de status. Falha = registrada, NAO bloqueia a fase 25 (fase 26 lidera com o botao PAIR-05).
-- RECOMENDAÇÃO (não bloqueia): `aws.access_key_id`/`secret_access_key` gravados sao as credenciais ROOT do MinIO. Emitir uma access key com escopo dos buckets `calendario-livia-*` e rotacionar o bloco `aws:` antes/logo apos o go-live.
+**Nenhum blocker aberto na fase 25.** O gate blocking-human do 25-04 foi resolvido: o orquestrador rodou todos os passos empiricos e o executor dobrou os resultados nos artefatos.
 
 **Resolvido nesta sessão (25-04):**
 
-- ~~EVO-01 / SC2 (outbound) — round-trip autenticado de leitura~~: RESOLVIDO. `Evolution::Client.fetch_instances` (apikey global de credentials.yml.enc, contra `whatsapp.bomcustoilhabela.com.br`) retornou `Array` com 6 instancias, HTTP 200, latencia ~654ms (medido em RAILS_ENV=development). Registrado em `evolution-contract.md` §"Deploy reachability (phase 25)". Caminho de escrita (`sendText`/`sendMedia`, teto de midia) permanece PENDENTE por D-08 (fases 26/28/29). Inbound `/up` continua no gate acima.
+- ~~INFRA-01 / SC1 — endpoint MinIO mal configurado~~: RESOLVIDO. Causa raiz: `s3.bomcustoilhabela.com.br` serve o CONSOLE do MinIO (porta 9001, HTML); a API S3 e `minio.bomcustoilhabela.com.br` (`GET /` -> XML `<Error><Code>AccessDenied</Code>` + `x-amz-request-id`). `aws.endpoint` em `config/credentials.yml.enc` corrigido para `https://minio.bomcustoilhabela.com.br` (commit `947413f`). Buckets `calendario-livia-{development,production}` criados privados (sem bucket policy).
+- ~~INFRA-01 / SC1 — download presignado de fora da LAN~~: RESOLVIDO em development. `create_and_upload!` -> `blob.url(expires_in: 10.minutes)` -> fetch EXTERNO da presigned URL (host `minio.bomcustoilhabela.com.br` -> DNS publico -> edge Cloudflare -> MinIO; request saiu pela internet publica, nao pela LAN): `HTTP/2 200`, `content-type: text/plain`, `content-length: 28`, `content-disposition: attachment; filename="probe25.txt"`, corpo confere. `bin/rails storage:migrate_to_s3` rodada real (dev DB): `copied: 12 skipped: 0 missing: 2 service_name_backfilled: 12` (os 2 missing eram orfaos de probe.txt #13/#14 sem arquivo, removidos depois); 2a rodada so-skip; os 12 blobs baixam OK por presigned URL nova. INFRA-01 marcado COMPLETO em REQUIREMENTS.md.
+- ~~EVO-01 / SC2 (outbound) — round-trip autenticado de leitura~~: RESOLVIDO. `Evolution::Client.fetch_instances` (apikey global de credentials.yml.enc, contra `whatsapp.bomcustoilhabela.com.br`) retornou `Array` com 6 instancias, HTTP 200, latencia ~654ms (medido em RAILS_ENV=development). Registrado em `evolution-contract.md` §"Deploy reachability (phase 25)". EVO-01 marcado COMPLETO em REQUIREMENTS.md. Caminho de escrita (`sendText`/`sendMedia`, teto de midia, casing de webhook) permanece PENDENTE por D-08 (fases 26/28/29).
+
+**Carregado adiante (operador / fase 26 — NAO bloqueia a fase 25):**
+
+- **Migração no host deployado (DB de produção, bucket `calendario-livia-production`).** `bin/rails storage:migrate_to_s3` rodou contra o DB de development para provar a task ponta a ponta; o DB de produção nao e alcançavel daqui. Rodar a mesma task no host deployado e passo de operador de go-live, nao gate da fase 25.
+- **Inbound `/up` do host do Evolution.** `curl -sS -I https://<app-hostname>/up` do host do Evolution -> colar linha de status. O app ainda nao esta deployado em `ilhacriativa.autopyweb.com.br`. Falha = registrada, NAO bloqueia a fase 25 (D-12 / A4 — a fase 26 lidera com o botao PAIR-05).
+- **RECOMENDAÇÃO de segurança (não bloqueia):** `aws.access_key_id`/`secret_access_key` gravados sao as credenciais ROOT do MinIO. Emitir uma access key com escopo dos buckets `calendario-livia-*` e rotacionar o bloco `aws:` antes/logo apos o go-live (repetido de 25-03).
 
 **Resolvido nesta sessão (25-03):**
 

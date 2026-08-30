@@ -14,7 +14,7 @@
 
 ### Infraestrutura e Fundação
 
-- [ ] **INFRA-01**: ActiveStorage serve arquivos via S3 em produção, com URL alcançável pelo host público do Evolution
+- [x] **INFRA-01**: ActiveStorage serve arquivos via S3 em produção, com URL alcançável pelo host público do Evolution
 - [x] **INFRA-02**: Jobs agendados sobrevivem a reinício do servidor em development (queue adapter explícito + schema de fila carregado), viabilizando UAT de agendamento
 - [x] **INFRA-03**: O fuso horário é determinístico entre development e produção (`TZ` fixado no deploy, com verificação no boot)
 - [ ] **INFRA-04**: Segredos do Evolution (`apikey`, `hash`, `token`, QR) nunca aparecem em log — `filter_parameters` corrigido, e nenhum segredo trafega como argumento de job
@@ -24,7 +24,7 @@
 
 ### Transporte Evolution API
 
-- [ ] **EVO-01**: O contrato do Evolution é verificado empiricamente contra o host real da agência antes de qualquer código depender dele (versão, shape dos DTOs, casing dos eventos de webhook, JID de grupo em `sendMedia`)
+- [x] **EVO-01**: O contrato do Evolution é verificado empiricamente contra o host real da agência antes de qualquer código depender dele (versão, shape dos DTOs, casing dos eventos de webhook, JID de grupo em `sendMedia`)
 - [x] **EVO-02**: Toda comunicação HTTP com o Evolution passa por um único service PORO, com timeouts explícitos e header `apikey`
 - [x] **EVO-03**: Erros do Evolution são classificados em transitório / permanente / incerto / não-conectado, e cada classe tem tratamento distinto
 - [ ] **EVO-04**: O token de cada instância é persistido criptografado no banco (`encrypts`), com as chaves de `active_record_encryption` configuradas antes da primeira gravação
@@ -141,14 +141,14 @@ Preenchido na criação do roadmap (2026-08-29). Fonte: `.planning/ROADMAP.md`.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | Phase 25 | Pending |
+| INFRA-01 | Phase 25 | Complete |
 | INFRA-02 | Phase 25 | Complete |
 | INFRA-03 | Phase 25 | Complete |
 | INFRA-04 | Phase 26 | Pending |
 | INFRA-05 | Phase 25 | Complete |
 | INFRA-06 | Phase 29 | Pending |
 | INFRA-07 | Phase 30 | Pending |
-| EVO-01 | Phase 25 | Pending |
+| EVO-01 | Phase 25 | Complete |
 | EVO-02 | Phase 25 | Complete |
 | EVO-03 | Phase 25 | Complete |
 | EVO-04 | Phase 26 | Pending |

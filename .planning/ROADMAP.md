@@ -128,7 +128,7 @@ Full details: [.planning/milestones/v1.6-ROADMAP.md](.planning/milestones/v1.6-R
   4. Um job agendado para daqui a alguns minutos continua executando depois de reiniciar o servidor de desenvolvimento.
   5. O horário do app é o mesmo em development e em produção (TZ fixado e verificado no boot), e o bundle tem um único adapter de fila.
 
-**Plans**: 3/4 plans executed (waves 1→2→3→4)
+**Plans**: 4/4 plans executed (waves 1→2→3→4)
 **Wave 1**
 
 - [x] 25-01-PLAN.md — Evolution transport seam: `Evolution::Client` + `Errors` + initializer, `+faraday` / `-good_job`, `:apikey`/`:hash` log filter, authenticated read round-trip (EVO-01/02/03, INFRA-05)
@@ -143,7 +143,7 @@ Full details: [.planning/milestones/v1.6-ROADMAP.md](.planning/milestones/v1.6-R
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 25-04-PLAN.md — Reachable media: idempotent blob migration rake task + outside-LAN download proof + app↔Evolution both-directions reachability (INFRA-01, EVO-01) — **PAUSADO (gate blocking-human)**: `lib/tasks/storage_migration.rake` entregue+commitado (8e5a3e0); EVO-01 outbound fechado (fetch_instances→200). Bloqueado: MinIO `aws.endpoint` serve o console e não a API S3 (400 InvalidArgument) + 2 human-checks out-of-band (curl presigned de fora da LAN, curl /up do host Evolution).
+- [x] 25-04-PLAN.md — Reachable media: idempotent blob migration rake task + outside-LAN download proof + app↔Evolution both-directions reachability (INFRA-01, EVO-01) — **COMPLETO**: `lib/tasks/storage_migration.rake` (8e5a3e0) provada ponta a ponta contra o DB de dev (copied 12 / backfill 12 / 2ª rodada no-op). Endpoint S3 corrigido — `s3.bomcustoilhabela.com.br` era o console do MinIO; a API S3 é `minio.bomcustoilhabela.com.br` (`aws.endpoint` atualizado, 947413f); buckets `calendario-livia-{development,production}` criados. INFRA-01 / SC1 provado: presigned GET buscado de fora da LAN (DNS público→Cloudflare→MinIO) → HTTP/2 200 + content-type correto. EVO-01 outbound fechado (fetch_instances→Array[6]/200/~654ms). Inbound `/up` carregado adiante para operador / fase 26 (app não deployado) — não bloqueia a fase 25 (D-12 / A4).
 
 **Scope note**: the "+ Deploy" of the milestone is anchored here (CONTEXT.md D-09) — the app is deployed to the public host this phase, beyond the original ROADMAP statement of "transporte + storage + jobs".
 **Research**: `--research-phase` — a verificação empírica do contrato Evolution contra `whatsapp.bomcustoilhabela.com.br` é *a* tarefa mais importante do milestone e é pesquisa, não implementação. Os 8 itens a confirmar estão em SUMMARY.md → "ASSUMIDO (precisa de verificação empírica no passo A)". Decidir aqui também: migração dos blobs locais já existentes para o S3.
@@ -279,7 +279,7 @@ Full details: [.planning/milestones/v1.6-ROADMAP.md](.planning/milestones/v1.6-R
 | 22. Endpoints Admin | v1.6 | 4/4 | Complete ✅ | 2026-06-11 |
 | 23. Endpoints Cliente | v1.6 | 3/3 | Complete ✅ | 2026-06-12 |
 | 24. Endpoints IA + Rate Limiting | v1.6 | 4/4 | Complete ✅ | 2026-06-13 |
-| 25. Fundação — Transporte Evolution + Storage | v1.7 | 3/4 | In Progress|  |
+| 25. Fundação — Transporte Evolution + Storage | v1.7 | 4/4 | In Progress|  |
 | 26. Instância de WhatsApp + Pareamento | v1.7 | 0/? | Not started | - |
 | 27. Grupos do Cliente | v1.7 | 0/? | Not started | - |
 | 28. Divulgação — Agendar sem Enviar | v1.7 | 0/? | Not started | - |
