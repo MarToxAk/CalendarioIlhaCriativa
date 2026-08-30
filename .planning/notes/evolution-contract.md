@@ -74,25 +74,50 @@ sessão de research — por isso o caminho de envio fica PENDENTE.
 - Probe HTTP real (`curl`) contra `https://whatsapp.bomcustoilhabela.com.br`, 2026-08-29 — `GET /`, `GET /instance/fetchInstances` (sem auth / Bearer / apikey inválida), `GET /rota-inexistente`.
 - `.planning/research/STACK.md`, `FEATURES.md`, `ARCHITECTURE.md` — contrato lido do código-fonte `evolution-foundation/evolution-api` @ tag `2.3.7` (agora casado com a versão do host).
 
-## Deploy reachability (phase 25) — 2026-08-29
+## Deploy reachability (phase 25) — 2026-08-29 (atualizado — INFRA-01 SC1 provado em dev)
 
 Registrado pelo plano **25-04** (INFRA-01 / EVO-01 / CONTEXT.md D-12). Sem segredos,
-tokens, assinaturas de URL presignada ou telefones nesta seção.
+tokens, assinaturas de URL presignada, query strings ou telefones nesta seção.
+
+### Correção de causa raiz do endpoint S3
+
+O hostname que o operador forneceu, `s3.bomcustoilhabela.com.br`, serve o **console** do
+MinIO (porta 9001) — `GET /` devolve o HTML `"MinIO Console"`. A **API S3** fica em
+`minio.bomcustoilhabela.com.br` — `GET /` ali devolve `<?xml ...><Error><Code>AccessDenied</Code>...`
+com header `x-amz-request-id`, o shape correto de um endpoint S3. `config/credentials.yml.enc`
+`aws.endpoint` foi corrigido para `https://minio.bomcustoilhabela.com.br` e commitado (`947413f`).
+Os dois hostnames ficam atrás do Cloudflare (`server: cloudflare`).
+
+### Buckets
+
+`calendario-livia-development` e `calendario-livia-production` criados via `create_bucket` com as
+credenciais root gravadas + `force_path_style: true` — privados, sem bucket policy (default
+privado do MinIO). Buckets pré-existentes não relacionados no host (`boxpersonalizado`,
+`orcamento`) deixados intactos.
+
+### Resultado — os três eixos de reachability
 
 | Direção | Verificação | Resultado | Status |
 |---|---|---|---|
-| **Outbound — app → Evolution** | `Evolution::Client.fetch_instances` com a `apikey` global de `credentials.yml.enc`, contra `whatsapp.bomcustoilhabela.com.br` | `Array` com **6** instâncias, HTTP 200, latência ~**654 ms** (medido em `RAILS_ENV=development` a partir da máquina de build) | **VERIFICADO** — fecha o round-trip autenticado de leitura de EVO-01 que ficou DEFERIDO no 25-01 (credenciais agora presentes). Parser de erro / caminho de escrita permanecem PENDENTE (D-08, UAT 26/28/29). |
-| **Inbound — Evolution host → app `/up`** | `curl -sS -I https://<app-hostname>/up` rodado **do host do Evolution / container** | **NÃO EXECUTADO** — o app ainda não está deployado num hostname público alcançável pelo host do Evolution; exige input out-of-band do operador | **PENDENTE (operador)** — se falhar, a fase 26 deve liderar com o botão manual "Verificar conexão" (PAIR-05) em vez do webhook (A4 / D-12). Não bloqueia a fase 25. |
-| **Mídia — download de fora da LAN** | `curl -sS -I "<presigned-url>"` de um host **fora de `192.168.3.203`** (ou `docker exec` no container do Evolution) → esperado `HTTP/2 200` + `content-type` da arte | **NÃO EXECUTADO / BLOQUEADO** — o endpoint S3 configurado (`aws.endpoint` em `credentials.yml.enc`) responde `400 InvalidArgument: "S3 API Requests must be made to API port."` — o hostname aponta hoje para o **console do MinIO** (porta 9001), não para a **porta da API S3** (9000). `head_bucket` → `400 BadRequest`; `list_objects_v2` → o XML `InvalidArgument` acima. Endpoint TCP/TLS alcançável (`GET /` → 200, mas devolve o HTML do console, não XML S3). | **PENDENTE (operador)** — ver "Ações de operador" abaixo. Sem a API S3 alcançável, a rake `storage:migrate_to_s3` não copia nada e SC1 / INFRA-01 **não fecha** (flagged assumption A6). |
+| **Outbound — app → Evolution** | `Evolution::Client.fetch_instances` com a `apikey` global de `credentials.yml.enc`, contra `whatsapp.bomcustoilhabela.com.br` | `Array` com **6** instâncias, HTTP 200, latência ~**654 ms** (medido em `RAILS_ENV=development` a partir da máquina de build) | **VERIFICADO / FECHADO** — fecha o round-trip autenticado de leitura de EVO-01 que ficou DEFERIDO no 25-01 (credenciais agora presentes). Parser de erro / caminho de escrita permanecem PENDENTE (D-08, UAT 26/28/29). |
+| **Mídia — download de fora da LAN** | `ActiveStorage::Blob.create_and_upload!` → `blob.url(expires_in: 10.minutes)` → fetch **externo** dessa URL presignada (host `minio.bomcustoilhabela.com.br` → DNS público → edge Cloudflare → MinIO; a request saiu pela internet pública, **não** pela LAN `192.168.x`) | `HTTP/2 200`, `content-type: text/plain`, `content-length: 28`, `server: cloudflare`, `content-disposition: attachment; filename="probe25.txt"`; bytes do corpo conferem com o objeto enviado. Assinatura / query string omitidas deste registro. | **VERIFICADO em development** (bucket `calendario-livia-development`) — é a prova de SC1: uma URL presignada de GET que resolve em DNS público e devolve o objeto com o `content-type` certo, a partir de fora de `192.168.3.203`. |
+| **Blobs de development migrados** | `bin/rails storage:migrate_to_s3` contra o DB de **development** | Pré: histograma `service_name` `{"local"=>12, "amazon"=>2}`, 14 linhas de blob. Resumo da task: `[storage:migrate] done — copied: 12 skipped: 0 missing: 2 service_name_backfilled: 12`. Os 2 `missing` eram linhas órfãs de `probe.txt` (blob #13/#14, `service_name="amazon"`, sem arquivo na origem nem no destino — lixo de sessões de probe anteriores, anteriores a esta fase); a task **reportou alto e não quebrou**. As 2 linhas órfãs foram então removidas (`ActiveStorage::Blob.where(id:[13,14]).delete_all`). Pós: 12 linhas, histograma `{"amazon"=>12}`, e **cada um dos 12** baixou OK por uma URL presignada nova. Nenhuma arte perdeu o arquivo (copy-only; os arquivos Disk locais ficaram no lugar). | **VERIFICADO em development** — a rake `storage:migrate_to_s3` está provada ponta a ponta (cópia real + segunda rodada só-skip + backfill de `service_name`). |
+| **Inbound — Evolution host → app `/up`** | `curl -sS -I https://<app-hostname>/up` rodado **do host do Evolution / container** | **NÃO EXECUTADO** — o app ainda não está deployado num hostname público (`ilhacriativa.autopyweb.com.br`) alcançável pelo host do Evolution | **CARREGADO ADIANTE (operador / fase 26)** — se falhar, a fase 26 deve liderar com o botão manual "Verificar conexão" (PAIR-05) em vez do webhook (A4 / D-12). **Não bloqueia a fase 25** — não é uma lacuna. |
 
-### Ações de operador para destravar INFRA-01 (SC1)
+### Operador — passo de go-live (não é gate da fase 25)
 
-1. **Expor a porta da API S3 do MinIO** sob um hostname TLS (ex.: rotear `s3.bomcustoilhabela.com.br` para a porta **9000** da API, ou publicar um subdomínio dedicado à API). Hoje o hostname serve o console (porta 9001).
-2. **Atualizar `aws.endpoint`** em `config/credentials.yml.enc` para esse hostname da API S3 (se mudar).
-3. **Criar os buckets** `calendario-livia-production` (e `calendario-livia-development` para exercitar em dev), privados, `force_path_style`.
-4. Rodar no host deployado: `bin/rails storage:migrate_to_s3` — conferir o resumo `copied: N skipped: N missing: 0 service_name_backfilled: N`.
-5. Mintar uma URL presignada (`bin/rails runner "puts ActiveStorage::Blob.order(:id).last.url(expires_in: 15.minutes)"`) e rodar, **de fora de `192.168.3.203`**:
-   `curl -sS -I "<presigned-url>"` → colar aqui a linha de status + `content-type` + `content-length` (sem a query string).
-6. **Inbound**, do host do Evolution: `curl -sS -I https://<app-hostname>/up` → colar a linha de status.
+A migração acima rodou contra o DB de **development** para provar a task ponta a ponta. O DB de
+**produção** não é alcançável a partir daqui. Rodar `bin/rails storage:migrate_to_s3` no host
+deployado (contra `calendario-livia-production`) permanece um passo de operador para o go-live —
+a task já está provada e a config + prova empírica de INFRA-01 estão satisfeitas em dev.
 
-> Recomendação de segurança (não bloqueia): as chaves `aws.*` gravadas são as credenciais ROOT do MinIO — emitir uma access key com escopo dos buckets `calendario-livia-*` e rotacionar antes/logo após o go-live.
+Passos de go-live:
+
+1. No host deployado, com `config.active_storage.service = :amazon` ativo:
+   `bin/rails storage:migrate_to_s3` — conferir o resumo `copied: N skipped: N missing: 0 service_name_backfilled: N`.
+2. Mintar uma URL presignada e, **de fora de `192.168.3.203`**, `curl -sS -I "<presigned-url>"` →
+   registrar aqui a linha de status + `content-type` + `content-length` (sem a query string).
+3. Do host do Evolution: `curl -sS -I https://<app-hostname>/up` → registrar a linha de status
+   (falha = registrada, não bloqueia; fase 26 lidera com PAIR-05).
+
+> Recomendação de segurança (não bloqueia): as chaves `aws.*` gravadas são as credenciais ROOT do MinIO — emitir uma access key com escopo dos buckets `calendario-livia-*` e rotacionar o bloco `aws:` antes / logo após o go-live (repetido de 25-03).
