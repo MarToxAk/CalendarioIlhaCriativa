@@ -5,7 +5,7 @@
   <%= check_box_tag field_name, group.id, selected_ids.include?(group.id),
         disabled: !field_name,
         class: "h-4 w-4 rounded border-gray-300 text-[#0F7949] focus:ring-2 focus:ring-[#0F7949]/20" %>
-  <span class="text-sm <%= group.subject.present? ? 'font-medium text-slate-900' : 'text-slate-500 italic' %> truncate" title="<%= group.display_name %>">
+  <span class="text-sm min-w-0 flex-1 <%= group.subject.present? ? 'font-medium text-slate-900' : 'text-slate-500 italic' %> truncate" title="<%= group.display_name %>">
     <%= group.display_name %>
   </span>
   <% if group.announce? %>

@@ -12,6 +12,7 @@
        data-controller="group-sync"
        data-group-sync-status-url-value="<%= sync_status_admin_client_whatsapp_groups_path(@client) %>"
        data-group-sync-since-value="<%= @instance.groups_synced_at&.iso8601 %>"
+       data-group-sync-active-value="<%= @instance.groups_sync_syncing? %>"
      <% end %>>
   <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
     <div class="flex items-center">
@@ -39,7 +40,7 @@
   <% if @instance %>
     <div class="mb-4">
       <p class="text-xs font-medium text-slate-500">Sincronizado pela última vez em <%= wa_groups_synced_label(@instance) %></p>
-      <span aria-live="polite" class="sr-only" data-group-sync-target="status"></span>
+      <span aria-live="polite" class="block text-xs font-medium text-[#0F7949] empty:hidden mt-1" data-group-sync-target="status"><%= "Sincronizando grupos… isso pode levar alguns segundos." if @instance.groups_sync_syncing? %></span>
     </div>
   <% end %>
 
@@ -102,7 +103,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="text-slate-300 shrink-0" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
-                <span class="text-sm truncate" title="<%= g.display_name %>"><%= g.display_name %></span>
+                <span class="text-sm min-w-0 flex-1 truncate" title="<%= g.display_name %>"><%= g.display_name %></span>
                 <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-slate-100 text-slate-600 border-slate-200 shrink-0">
                   <span aria-hidden="true">●</span> Inativo
                 </span>

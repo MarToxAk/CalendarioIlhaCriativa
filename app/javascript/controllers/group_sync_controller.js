@@ -10,12 +10,19 @@ import { Controller } from "@hotwired/stimulus"
 // poller só olha para synced_at/error/count, nunca imprime o corpo cru.
 export default class extends Controller {
   static targets = [ "error", "timeout", "status" ]
-  static values = { statusUrl: String, since: String }
+  static values = { statusUrl: String, since: String, active: Boolean }
 
   INTERVAL_MS = 3000
   MAX_CYCLES = 20
 
+  // Só liga o poller quando há uma sincronização REALMENTE em andamento
+  // (activeValue = @instance.groups_sync_syncing? no servidor). Sem esse gate,
+  // uma visita normal à página dispararia MAX_CYCLES requests a sync_status e
+  // depois mostraria o aviso "a sincronização está demorando" sem sync nenhum
+  // rodando (27-UI-REVIEW.md BLOCKER).
   connect() {
+    if (!this.activeValue) return
+
     this.cycles = 0
     this.poll()
     this.timer = setInterval(() => this.poll(), this.INTERVAL_MS)
