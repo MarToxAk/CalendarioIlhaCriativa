@@ -58,6 +58,33 @@ module Evolution
         resp.body
       end
 
+      # GET /instance/connect/{instance} — devolve o QR corrente. Pitfall 6 do
+      # RESEARCH: em alguns builds devolve HTTP 200 com { "error": true, "message":
+      # "..." } em vez de um QR — NUNCA tratar esse corpo como QR válido.
+      def connect(instance_name, api_key: Evolution.global_api_key)
+        resp = request(:get, "/instance/connect/#{instance_name}",
+                       api_key: api_key, read_timeout: Evolution::READ_TIMEOUT_FAST)
+        body = resp.body
+        raise Evolution::Errors::Unknown, "resposta 2xx com corpo não-JSON do host Evolution" unless body.is_a?(Hash)
+        raise Evolution::Errors::Transient, "connect retornou error=true" if body["error"]
+
+        # normaliza: aceita tanto chaves top-level quanto aninhadas em "qrcode"
+        {
+          base64: body["base64"] || body.dig("qrcode", "base64"),
+          code: body["code"] || body.dig("qrcode", "code"),
+          pairing_code: body["pairingCode"] || body.dig("qrcode", "pairingCode"),
+          count: body["count"] || body.dig("qrcode", "count")
+        }
+      end
+
+      # POST /webhook/set/{instance} — reaponta o webhook (usado incondicionalmente
+      # na adoção — Pitfall 4). `events` é SEMPRE explícito: um array vazio faz o
+      # Evolution trocar por "todos os eventos". Retorna o body do 201.
+      def set_webhook(instance_name, url:, headers:, events: %w[QRCODE_UPDATED CONNECTION_UPDATE], api_key: Evolution.global_api_key)
+        body = { webhook: { enabled: true, url: url, byEvents: false, base64: true, events: events, headers: headers } }
+        request(:post, "/webhook/set/#{instance_name}", api_key: api_key, body: body).body
+      end
+
       # GET /instance/fetchInstances — leitura rápida. Retorna o corpo (Array).
       def fetch_instances(api_key: Evolution.global_api_key)
         body = request(:get, "/instance/fetchInstances",

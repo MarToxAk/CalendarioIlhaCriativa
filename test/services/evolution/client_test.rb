@@ -196,4 +196,80 @@ class Evolution::ClientTest < ActiveSupport::TestCase
   ensure
     Evolution::Client.instance_variable_set(:@connection, nil)
   end
+
+  # --- connect / set_webhook (PAIR-02, 26-02) ------------------------------
+  test "connect returns a normalized Hash on a 2xx with a valid QR" do
+    body = { "base64" => "data:image/png;base64,qr", "code" => "2@abc", "pairingCode" => "ABCD1234", "count" => 1 }.to_json
+    Evolution::Client.instance_variable_set(
+      :@connection, stubbed_connection(200, body, path: "/instance/connect/livia_client_1")
+    )
+
+    resp = Evolution::Client.connect("livia_client_1", api_key: "test-api-key")
+
+    assert_equal "data:image/png;base64,qr", resp[:base64]
+    assert_equal "2@abc", resp[:code]
+    assert_equal "ABCD1234", resp[:pairing_code]
+    assert_equal 1, resp[:count]
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
+
+  test "connect normalizes a QR nested under the qrcode key" do
+    body = { "qrcode" => { "base64" => "data:image/png;base64,nested", "code" => "2@nested", "count" => 2 } }.to_json
+    Evolution::Client.instance_variable_set(
+      :@connection, stubbed_connection(200, body, path: "/instance/connect/livia_client_1")
+    )
+
+    resp = Evolution::Client.connect("livia_client_1", api_key: "test-api-key")
+
+    assert_equal "data:image/png;base64,nested", resp[:base64]
+    assert_equal "2@nested", resp[:code]
+    assert_equal 2, resp[:count]
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
+
+  test "connect raises Transient when the 2xx body has error=true (Pitfall 6)" do
+    body = { "error" => true, "message" => "The instance does not exist" }.to_json
+    Evolution::Client.instance_variable_set(
+      :@connection, stubbed_connection(200, body, path: "/instance/connect/livia_client_1")
+    )
+
+    error = assert_raises(Evolution::Errors::Transient) do
+      Evolution::Client.connect("livia_client_1", api_key: "test-api-key")
+    end
+    refute_includes error.message, "does not exist"
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
+
+  test "connect raises Unknown when the 2xx body is not a Hash" do
+    Evolution::Client.instance_variable_set(
+      :@connection, stubbed_connection(200, "[]", path: "/instance/connect/livia_client_1")
+    )
+
+    assert_raises(Evolution::Errors::Unknown) do
+      Evolution::Client.connect("livia_client_1", api_key: "test-api-key")
+    end
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
+
+  test "set_webhook returns the response body on a 201" do
+    body = { "webhook" => { "enabled" => true } }.to_json
+    Evolution::Client.instance_variable_set(
+      :@connection, stubbed_post_connection(201, body, path: "/webhook/set/livia_client_1")
+    )
+
+    resp = Evolution::Client.set_webhook(
+      "livia_client_1",
+      url: "https://example.com/webhooks/evolution",
+      headers: { "X-Webhook-Secret" => "hmac-value" },
+      api_key: "test-api-key"
+    )
+
+    assert_equal true, resp.dig("webhook", "enabled")
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
 end
