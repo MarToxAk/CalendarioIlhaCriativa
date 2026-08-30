@@ -4,17 +4,17 @@ milestone: v1.7
 milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 26
 current_phase_name: Instância de WhatsApp por Cliente + Pareamento
-status: executing
-stopped_at: Completed 26-04-PLAN.md
-last_updated: "2026-08-30T13:40:04.474Z"
+status: verifying
+stopped_at: Fase 26 — 5/5 planos executados (26-01..26-05). Orquestrador no tail (aggregate / code-review / verify).
+last_updated: "2026-08-30T14:26:56.088Z"
 last_activity: 2026-08-30
-last_activity_desc: Phase 26 execution started
-state_head: 45a803c3d7a9c13c4ba4b07408317ea3ba97a8aa
+last_activity_desc: Fase 26 5/5 planos — WhatsappInstance model+encrypts, InstanceProvisioner create+adopt, webhook receiver HMAC-antes-do-DB, verificação manual síncrona, UI de pareamento com QR polling. EVO-04/INFRA-04/PAIR-01..08 fechados.
+state_head: 8f342292dbe24303e38b119fcb12cf3d6823e18d
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 10
-  completed_plans: 9
+  completed_plans: 10
   percent: 0
 ---
 
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 
 Phase: 26 (Instância de WhatsApp por Cliente + Pareamento) — EXECUTING
 Plan: 5 of 5
-Status: Ready to execute
+Status: 5/5 planos executados — aguardando tail da fase (aggregate / code-review / verify)
 Last activity: 2026-08-30 — Phase 26 execution started
 
 ## Progress Bar
@@ -202,6 +202,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 26 P02 | 12min | 2 tasks | 5 files |
 | Phase 26 P03 | ~25min | 2 tasks | 4 files |
 | Phase 26 P04 | ~10min | 2 tasks | 4 files |
+| Phase 26-inst-ncia-de-whatsapp-por-cliente-pareamento P05 | ~15min | 3 tasks | 9 files |
 
 ## Decisions
 
