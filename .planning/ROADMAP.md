@@ -171,10 +171,21 @@ Full details: [.planning/milestones/v1.6-ROADMAP.md](.planning/milestones/v1.6-R
 **Plans**: 5 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 26-01-PLAN.md — Chaves de encryption + filter_parameters + migração/model + Evolution::Client#create_instance + InstanceProvisioner + admin#create ponta a ponta (EVO-04, INFRA-04, PAIR-01)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 26-02-PLAN.md — Evolution::Client#connect/#set_webhook + InstanceProvisioner#adopt + admin#adopt — adoção automática de instância existente (PAIR-02)
 - [ ] 26-03-PLAN.md — Webhooks::EvolutionController autenticado por HMAC + throttle (PAIR-06)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 26-04-PLAN.md — #verify síncrono + #refresh_qr throttled + #reconnect (PAIR-05)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
 - [ ] 26-05-PLAN.md — Badge de estado + QR pairing Stimulus + banner de banimento + aviso de idade (PAIR-03, PAIR-04, PAIR-07, PAIR-08)
 
 **UI hint**: yes

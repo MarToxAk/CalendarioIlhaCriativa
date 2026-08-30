@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: WhatsApp Auto-Post + Deploy
-current_phase: 25
-current_phase_name: Fundação — Transporte Evolution + Storage Alcançável
+current_phase: 26
+current_phase_name: Instância de WhatsApp por Cliente + Pareamento
 status: verifying
-stopped_at: Fase 25 verificada 5/5 (human_needed) — 2 provas de operador docker compose build/up pendentes. Rodar /gsd-verify-work 25.
-last_updated: "2026-08-30T10:00:01.538Z"
+stopped_at: Phase 26 UI-SPEC approved
+last_updated: "2026-08-30T13:04:39.168Z"
 last_activity: 2026-08-30
 last_activity_desc: Plano 25-05 (gap-closure) COMPLETO — guards SECRET_KEY_BASE_DUMMY (CR-01), CORS_ORIGINS no compose + .env.example (CR-02), WR-01/WR-07/WR-02/WR-03/IN-07/WR-06/IN-05 aplicados. Fase 25 com 5/5 planos.
-state_head: ce13a35a0f4939f14fbc146ef359898c46e86bd7
+state_head: 3c0695a088dd1d65541a6d8fc1059251f55062b9
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 5
+  total_plans: 10
   completed_plans: 5
   percent: 0
 ---
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 
 ## Current Position
 
-Phase: 25 (Fundação — Transporte Evolution + Storage Alcançável) — 5/5 PLANOS EXECUTADOS
+Phase: 26 (Instância de WhatsApp por Cliente + Pareamento) — READY TO EXECUTE
 Plan: 5 of 5
 Status: verificada 5/5 must-haves (human_needed) — aguardando /gsd-verify-work 25 (docker compose build + up no host)
 Last activity: 2026-08-30 — Plano 25-05 (gap-closure) FINALIZADO
@@ -242,9 +242,9 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-30T09:42:48.468Z
-**Stopped at:** Completed 25-05-PLAN.md (gap-closure) — fase 25 com 5/5 planos
-**Resume file:** None
+**Last session:** 2026-08-30T11:50:08.078Z
+**Stopped at:** Phase 26 UI-SPEC approved
+**Resume file:** .planning/phases/26-inst-ncia-de-whatsapp-por-cliente-pareamento/26-UI-SPEC.md
 
 ### Blockers
 
