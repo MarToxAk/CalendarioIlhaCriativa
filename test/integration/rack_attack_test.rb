@@ -96,4 +96,27 @@ class RackAttackTest < ActionDispatch::IntegrationTest
   ensure
     ENV["AI_API_KEY"] = original
   end
+
+  # ---------------------------------------------------------------------------
+  # Throttle webhook: webhooks/evolution_by_ip — PAIR-06 / T-26-12
+  # ---------------------------------------------------------------------------
+
+  def webhook_headers
+    { "X-Webhook-Secret" => "irrelevante" }
+  end
+
+  test "120 primeiros POSTs ao webhook não retornam 429" do
+    Rack::Attack.cache.store.clear
+    120.times do |i|
+      post "/webhooks/evolution", params: { instance: "qualquer", event: "connection.update" }, headers: webhook_headers
+      assert_not_equal 429, response.status,
+        "Requisição #{i + 1}/120 retornou 429 inesperadamente"
+    end
+  end
+
+  test "121ª requisição ao webhook retorna 429" do
+    Rack::Attack.cache.store.clear
+    121.times { post "/webhooks/evolution", params: { instance: "qualquer", event: "connection.update" }, headers: webhook_headers }
+    assert_equal 429, response.status
+  end
 end

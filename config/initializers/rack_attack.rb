@@ -37,6 +37,10 @@ class Rack::Attack
     req.ip if req.path.start_with?("/api/v1/ai/")
   end
 
+  throttle("webhooks/evolution_by_ip", limit: 120, period: 60) do |req|
+    req.ip if req.path == "/webhooks/evolution" && req.post?
+  end
+
   Rack::Attack.throttled_responder = lambda do |request|
     if request.path.start_with?("/api/")
       [429, { "Content-Type" => "application/json" },
