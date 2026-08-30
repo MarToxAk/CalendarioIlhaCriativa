@@ -207,7 +207,13 @@ Plans:
   4. Um grupo que sumiu do WhatsApp aparece como inativo e continua legível — nenhum registro de grupo é apagado.
   5. A seleção de grupos de um cliente nunca oferece, nem aceita, grupos de outro cliente.
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 27-01-PLAN.md — Fatia vertical (tracer): migrações `whatsapp_groups` + colunas de sync, `WhatsappGroup` model, `Evolution::Client.fetch_groups` + `query:` no `#request`, `Whatsapp::GroupSynchronizer` (upsert keyed no par + passada de desativação GRUPO-05 + guard de não-conectado), `#index` servido do cache, rota aninhada completa (GRUPO-01, GRUPO-02, GRUPO-04, GRUPO-05) — **Wave 1**
+- [ ] 27-02-PLAN.md — Disparo + primeiro ActiveJob: `Whatsapp::SyncGroupsJob` (taxonomia `Evolution::Errors` -> retry/discard), `#sync` + `#sync_status` + throttle Rack::Attack, `group_sync_controller.js` (poll 3s, GET puro), botão "Sincronizar grupos" + link "Ver grupos" no painel, helper `wa_groups_synced_label` (GRUPO-01, GRUPO-02) — **Wave 2**
+- [ ] 27-03-PLAN.md — Picker escopado + isolamento cross-client + estados de tela: `_picker.html.erb` reutilizável (contrato da fase 28), `#show` + finder escopado + teste canônico A×B 404, `index.html.erb` completa (empty/blocked/error/inativos) (GRUPO-02, GRUPO-03, GRUPO-04, GRUPO-05) — **Wave 3**
+
 **UI hint**: yes
 
 ---
@@ -304,7 +310,7 @@ Plans:
 | 24. Endpoints IA + Rate Limiting | v1.6 | 4/4 | Complete ✅ | 2026-06-13 |
 | 25. Fundação — Transporte Evolution + Storage | v1.7 | 5/5 | In Progress|  |
 | 26. Instância de WhatsApp + Pareamento | v1.7 | 5/5 | In Progress|  |
-| 27. Grupos do Cliente | v1.7 | 0/? | Not started | - |
+| 27. Grupos do Cliente | v1.7 | 0/3 | Planned | - |
 | 28. Divulgação — Agendar sem Enviar | v1.7 | 0/? | Not started | - |
 | 29. Motor de Envio | v1.7 | 0/? | Not started | - |
 | 30. Acompanhamento ao Vivo + Hardening | v1.7 | 0/? | Not started | - |
