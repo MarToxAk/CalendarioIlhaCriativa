@@ -34,8 +34,14 @@ module Evolution
 
       # GET /instance/fetchInstances — leitura rápida. Retorna o corpo (Array).
       def fetch_instances(api_key: Evolution.global_api_key)
-        request(:get, "/instance/fetchInstances",
-                api_key: api_key, read_timeout: Evolution::READ_TIMEOUT_FAST).body
+        body = request(:get, "/instance/fetchInstances",
+                       api_key: api_key, read_timeout: Evolution::READ_TIMEOUT_FAST).body
+        # WR-07 / SC3: um 2xx com corpo não-JSON (interstitial HTML da Cloudflare) chega
+        # aqui como String — classificar como incerto em vez de deixar um TypeError cru
+        # escapar. Mensagem estática: o corpo (HTML da CF) nunca é interpolado.
+        raise Evolution::Errors::Unknown, "resposta 2xx com corpo não-JSON do host Evolution" unless body.is_a?(Array)
+
+        body
       end
 
       # GET /instance/connectionState/{instance} — retorna a string crua
@@ -44,6 +50,10 @@ module Evolution
       def connection_state(instance_name, api_key: Evolution.global_api_key)
         resp = request(:get, "/instance/connectionState/#{instance_name}",
                        api_key: api_key, read_timeout: Evolution::READ_TIMEOUT_FAST)
+        # WR-07 / SC3: idem fetch_instances — só seguir com o .dig quando o corpo é mesmo
+        # um Hash JSON; um 2xx não-JSON vira Unknown com mensagem estática (sem ecoar o body).
+        raise Evolution::Errors::Unknown, "resposta 2xx com corpo não-JSON do host Evolution" unless resp.body.is_a?(Hash)
+
         resp.body.dig("instance", "state")
       end
 
