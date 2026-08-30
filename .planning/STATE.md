@@ -4,12 +4,12 @@ milestone: v1.7
 milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 27
 current_phase_name: Grupos do Cliente — Sync, Cache e Seleção Escopada
-status: verifying
+status: executing
 stopped_at: Fase 26 verificada 5/5 (human_needed) — deferida para operador (26-UAT.md, 4 itens). Autônomo seguiu para a fase 27.
-last_updated: "2026-08-30T17:59:09.342Z"
+last_updated: "2026-08-30T18:09:09.491Z"
 last_activity: 2026-08-30
-last_activity_desc: Fase 26 5/5 planos — WhatsappInstance model+encrypts, InstanceProvisioner create+adopt, webhook receiver HMAC-antes-do-DB, verificação manual síncrona, UI de pareamento com QR polling. EVO-04/INFRA-04/PAIR-01..08 fechados.
-state_head: 55053ad9603475a34ea0daaf59ace9667d26d41e
+last_activity_desc: Phase 27 execution started
+state_head: 9235ae46d84bda8d388a0c654d9d32c234dbe73c
 progress:
   total_phases: 6
   completed_phases: 0
@@ -25,7 +25,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-29)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 26 — Instância de WhatsApp por Cliente + Pareamento
+**Current focus:** Phase 27 — Grupos do Cliente — Sync, Cache e Seleção Escopada
 
 ## Deferred Verification
 
@@ -36,10 +36,10 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 
 ## Current Position
 
-Phase: 27 (Grupos do Cliente — Sync, Cache e Seleção Escopada) — READY TO EXECUTE
-Plan: 5 of 5
-Status: 5/5 planos executados — aguardando tail da fase (aggregate / code-review / verify)
-Last activity: 2026-08-30 — Phase 26 execution started
+Phase: 27 (Grupos do Cliente — Sync, Cache e Seleção Escopada) — EXECUTING
+Plan: 1 of 3
+Status: Executing Phase 27
+Last activity: 2026-08-30 — Phase 27 execution started
 
 ## Progress Bar
 
