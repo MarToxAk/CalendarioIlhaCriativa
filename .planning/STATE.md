@@ -5,11 +5,11 @@ milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 26
 current_phase_name: Instância de WhatsApp por Cliente + Pareamento
 status: executing
-stopped_at: Completed 26-02-PLAN.md
-last_updated: "2026-08-30T13:25:51.227Z"
+stopped_at: Completed 26-03-PLAN.md
+last_updated: "2026-08-30T13:32:23.362Z"
 last_activity: 2026-08-30
 last_activity_desc: Phase 26 execution started
-state_head: c8eb3e8ab164afda80387efebd92d0ae24061562
+state_head: d29f4487662260fa0f33f7a484ee3319ad9d796f
 progress:
   total_phases: 6
   completed_phases: 0
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 ## Current Position
 
 Phase: 26 (Instância de WhatsApp por Cliente + Pareamento) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-08-30 — Phase 26 execution started
 
@@ -200,6 +200,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 25 P05 | ~12 min | 8 tasks | 6 files |
 | Phase 26 P01 | ~45min | 2 tasks | 18 files |
 | Phase 26 P02 | 12min | 2 tasks | 5 files |
+| Phase 26 P03 | ~25min | 2 tasks | 4 files |
 
 ## Decisions
 
@@ -241,6 +242,8 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 26]: [Phase 26-02]: InstanceProvisioner#call rescue Evolution::Errors::Permanent seletivo (/already in use/i) -> desvia para #adopt; qualquer outro Permanent continua subindo cru para o controller
 - [Phase 26]: [Phase 26-02]: adopt() chama set_webhook SEMPRE antes de ler connection_state (Pitfall 4) -- sem essa ordem o painel trava em 'aguardando pareamento'
 - [Phase 26]: [Phase 26-02]: Admin::WhatsappInstancesController#create e #adopt convergem no mesmo InstanceProvisioner#call -- adocao acontece automaticamente dentro de #create quando o Evolution devolve 'already in use', sem exigir clique extra do admin
+- [Phase 26]: [Phase 26]: [Phase 26-03]: Webhooks::EvolutionController hashea os dois lados (SHA256) antes de secure_compare — nunca compara os valores crus, que podem ter comprimentos diferentes e levantar ArgumentError vazando o tamanho do segredo
+- [Phase 26]: [Phase 26]: [Phase 26-03]: throttle webhooks/evolution_by_ip (120/60s) cai no ramo HTML de throttled_responder (path não começa com /api/) — aceitável, o chamador é uma máquina que ignora o corpo
 
 ## Quick Tasks Completed
 
@@ -250,8 +253,8 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-30T13:25:51.101Z
-**Stopped at:** Completed 26-02-PLAN.md
+**Last session:** 2026-08-30T13:32:23.237Z
+**Stopped at:** Completed 26-03-PLAN.md
 **Resume file:** None
 
 ### Blockers
