@@ -4,9 +4,9 @@ milestone: v1.7
 milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 25
 current_phase_name: Fundação — Transporte Evolution + Storage Alcançável
-status: executing
-stopped_at: Completed 25-05-PLAN.md (gap-closure) — fase 25 com 5/5 planos
-last_updated: "2026-08-30T09:42:58.157Z"
+status: verifying
+stopped_at: Fase 25 verificada 5/5 (human_needed) — 2 provas de operador docker compose build/up pendentes. Rodar /gsd-verify-work 25.
+last_updated: "2026-08-30T10:00:01.538Z"
 last_activity: 2026-08-30
 last_activity_desc: Plano 25-05 (gap-closure) COMPLETO — guards SECRET_KEY_BASE_DUMMY (CR-01), CORS_ORIGINS no compose + .env.example (CR-02), WR-01/WR-07/WR-02/WR-03/IN-07/WR-06/IN-05 aplicados. Fase 25 com 5/5 planos.
 state_head: ce13a35a0f4939f14fbc146ef359898c46e86bd7
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 
 Phase: 25 (Fundação — Transporte Evolution + Storage Alcançável) — 5/5 PLANOS EXECUTADOS
 Plan: 5 of 5
-Status: gap-closure 25-05 completo — aguardando o tail da fase (aggregate / code-review / verify)
+Status: verificada 5/5 must-haves (human_needed) — aguardando /gsd-verify-work 25 (docker compose build + up no host)
 Last activity: 2026-08-30 — Plano 25-05 (gap-closure) FINALIZADO
 
 ## Progress Bar
