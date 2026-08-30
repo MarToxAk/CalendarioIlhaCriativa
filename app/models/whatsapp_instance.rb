@@ -27,12 +27,24 @@ class WhatsappInstance < ApplicationRecord
     OpenSSL::HMAC.hexdigest("SHA256", Evolution.webhook_hmac_key, instance_name)
   end
 
-  # Fonte única do mapa estado Evolution -> connection_state. Qualquer valor
-  # desconhecido (nil, string vazia, evento futuro) cai em :awaiting_qr por
-  # default — nunca levanta KeyError.
+  # Fonte única do mapa estado Evolution -> connection_state.
+  EVOLUTION_STATE_MAP = {
+    "open" => :connected, "connecting" => :awaiting_qr, "close" => :disconnected, "refused" => :disconnected
+  }.freeze
+
+  # Qualquer valor desconhecido (nil, string vazia, evento futuro) cai em
+  # :awaiting_qr por default — nunca levanta KeyError.
   def self.map_evolution_state(state)
-    { "open" => :connected, "connecting" => :awaiting_qr, "close" => :disconnected, "refused" => :disconnected }
-      .fetch(state, :awaiting_qr)
+    EVOLUTION_STATE_MAP.fetch(state, :awaiting_qr)
+  end
+
+  # WR-06 — o receiver de webhook usa isto para IGNORAR um state que o
+  # Evolution não emite hoje (payload malformado, ou string nova de uma
+  # release futura chegando de um caller assinado) em vez de rebaixar uma
+  # instância `connected` para `awaiting_qr`. map_evolution_state mantém o
+  # default :awaiting_qr — a garantia "nunca levanta KeyError" continua.
+  def self.known_evolution_state?(state)
+    EVOLUTION_STATE_MAP.key?(state.to_s)
   end
 
   def paired_days = paired_at && ((Time.current - paired_at) / 1.day).floor

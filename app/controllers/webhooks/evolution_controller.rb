@@ -54,6 +54,10 @@ class Webhooks::EvolutionController < ActionController::API
   def apply_connection_update(instance)
     state = params.dig(:data, :state)
     return if state.blank?
+    # WR-06 — estado fora do conjunto que o Evolution emite hoje: no-op
+    # silencioso. Nunca rebaixar uma instância saudável para awaiting_qr por
+    # causa de um payload malformado ou de um state novo de release futura.
+    return unless WhatsappInstance.known_evolution_state?(state)
 
     mapped = WhatsappInstance.map_evolution_state(state)
     instance.connection_state = mapped

@@ -97,6 +97,22 @@ class Webhooks::EvolutionControllerTest < ActionDispatch::IntegrationTest
     assert_equal "disconnected", @instance.connection_state
   end
 
+  # WR-06 — um state que o Evolution não emite hoje (release futura ou
+  # payload malformado de um caller assinado) NÃO pode rebaixar uma
+  # instância connected para awaiting_qr. No-op silencioso, responde 200.
+  test "connection.update com state desconhecido nao rebaixa uma instancia connected" do
+    @instance.update!(connection_state: :connected, paired_at: 3.days.ago, last_qr_base64: nil)
+
+    post "/webhooks/evolution",
+      params: { instance: @name, event: "connection.update", data: { state: "reconnecting" } },
+      headers: { "X-Webhook-Secret" => @secret }
+    assert_response :ok
+
+    @instance.reload
+    assert_equal "connected", @instance.connection_state
+    assert_nil @instance.last_qr_base64
+  end
+
   # --- paired_at write-once (PAIR-08) ---------------------------------------
 
   test "paired_at não é sobrescrito numa segunda reconexão state open" do
