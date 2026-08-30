@@ -388,4 +388,82 @@ class Admin::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, response.body.scan('data-divulgacao-preview-target="pane"').size
     assert_includes response.body, %(data-arte-id="#{@arte.id}")
   end
+
+  # --- Task 1: #new guards + estados vazios/bloqueados + index completo ---
+
+  test "GET new sem whatsapp_instance -- empty state, sem <form" do
+    client_sem_instancia = Client.create!(name: "Sem Instancia", password: "senha1234", password_confirmation: "senha1234")
+
+    get new_admin_client_divulgacao_path(client_sem_instancia)
+
+    assert_response :success
+    assert_includes response.body, "Nenhuma instância de WhatsApp"
+    # A layout tem seu proprio <form> de logout — o marcador real de "form de
+    # divulgacao NAO renderizado" e a ausencia do campo arte_id.
+    assert_no_match(/name="divulgacao\[arte_id\]"/, response.body)
+  end
+
+  test "GET new com instancia disconnected -- banner amber + submit disabled, form ainda renderiza" do
+    @instance.update!(connection_state: :disconnected)
+
+    get new_admin_client_divulgacao_path(@client)
+
+    assert_response :success
+    assert_includes response.body, "A instância de WhatsApp deste cliente está desconectada. Reconecte o número antes de agendar uma divulgação."
+    assert_match(/<form/, response.body)
+    assert_match(/<input[^>]*type="submit"[^>]*disabled/, response.body)
+  end
+
+  test "GET new sem arte aprovada -- empty state, sem <form" do
+    @arte.update!(status: :pending)
+
+    get new_admin_client_divulgacao_path(@client)
+
+    assert_response :success
+    assert_includes response.body, "Nenhuma arte aprovada"
+    assert_no_match(/name="divulgacao\[arte_id\]"/, response.body)
+  end
+
+  test "POST create sem whatsapp_instance -- re-render :new 422, zero linhas" do
+    client_sem_instancia = Client.create!(name: "Sem Instancia Create", password: "senha1234", password_confirmation: "senha1234")
+    arte = client_sem_instancia.artes.new(scheduled_on: Date.current, platform: :instagram, media_type: :caption_only, status: :approved, title: "Arte X", caption: "Oi")
+    arte.save!(validate: false)
+
+    assert_no_difference "Divulgacao.count" do
+      post admin_client_divulgacoes_path(client_sem_instancia), params: {
+        divulgacao: { arte_id: arte.id, scheduled_for: future_param }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "Nenhuma instância de WhatsApp"
+  end
+
+  test "GET index vazio -- empty state com Nova divulgacao" do
+    client_vazio = Client.create!(name: "Sem Divulgacoes", password: "senha1234", password_confirmation: "senha1234")
+
+    get admin_client_divulgacoes_path(client_vazio)
+
+    assert_response :success
+    assert_includes response.body, "Nenhuma divulgação agendada"
+  end
+
+  test "GET index com 2 registros -- table + 2 links Ver + datetime com (BRT)" do
+    d1 = @client.divulgacoes.create!(
+      arte: @arte, scheduled_for: 3.days.from_now,
+      divulgacao_grupos: [ DivulgacaoGrupo.new(whatsapp_group: @g1, group_name: @g1.display_name, remote_jid: @g1.remote_jid) ]
+    )
+    d2 = @client.divulgacoes.create!(
+      arte: @arte, scheduled_for: 4.days.from_now,
+      divulgacao_grupos: [ DivulgacaoGrupo.new(whatsapp_group: @g2, group_name: @g2.display_name, remote_jid: @g2.remote_jid) ]
+    )
+
+    get admin_client_divulgacoes_path(@client)
+
+    assert_response :success
+    assert_match(/<table/, response.body)
+    assert_equal 2, response.body.scan(">Ver<").size
+    assert_includes response.body, "(BRT)"
+    [ d1, d2 ].each { |d| assert_includes response.body, admin_client_divulgacao_path(@client, d) }
+  end
 end

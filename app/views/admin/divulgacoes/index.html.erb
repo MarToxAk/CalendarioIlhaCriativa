@@ -13,25 +13,69 @@
         class: "h-10 px-4 bg-[#0F7949] hover:bg-[#0a5c37] active:scale-[0.99] text-white text-sm font-semibold rounded-lg transition-colors inline-flex items-center" %>
 </div>
 
-<div class="bg-white rounded-xl border border-gray-200 shadow-card p-6 max-w-2xl">
-  <% if @divulgacoes.any? %>
-    <ul class="divide-y divide-gray-100">
-      <% @divulgacoes.each do |d| %>
-        <li class="flex items-center justify-between py-3">
-          <div class="min-w-0">
-            <p class="text-sm font-medium text-slate-900 truncate">
-              <%= d.arte.title.presence || "Arte" %>
-            </p>
-            <p class="text-xs text-slate-500 mt-0.5">
-              <%= l(d.scheduled_for) %> · <%= d.status %>
-            </p>
+<% if @divulgacoes.empty? %>
+  <div class="py-16 text-center">
+    <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto text-slate-300 mb-4" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+    <h2 class="text-lg font-semibold text-slate-900 mb-1">Nenhuma divulgação agendada</h2>
+    <p class="text-sm text-slate-500 mb-6">Crie a primeira divulgação para este cliente escolhendo uma arte aprovada e os grupos.</p>
+    <%= link_to "Nova divulgação", new_admin_client_divulgacao_path(@client),
+          class: "h-10 px-4 bg-[#0F7949] hover:bg-[#0a5c37] active:scale-[0.99] text-white text-sm font-semibold rounded-lg transition-colors inline-flex items-center" %>
+  </div>
+<% else %>
+  <%# Tabela desktop %>
+  <div class="bg-white rounded-xl border border-gray-200 shadow-card overflow-hidden hidden sm:block">
+    <table aria-label="Lista de divulgações" class="w-full">
+      <caption class="sr-only">Divulgações agendadas — clique em Ver para ver os detalhes</caption>
+      <thead class="bg-gray-50 border-b border-gray-200">
+        <tr>
+          <th scope="col" class="py-3 px-4 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">Arte</th>
+          <th scope="col" class="py-3 px-4 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">Agendada para</th>
+          <th scope="col" class="py-3 px-4 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">Grupos</th>
+          <th scope="col" class="py-3 px-4 text-xs font-medium text-slate-500 uppercase tracking-wide text-left">Status</th>
+          <th scope="col" class="py-3 px-4 w-[48px]"><span class="sr-only">Ações</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @divulgacoes.each do |d| %>
+          <tr class="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+            <td class="py-3 px-4 text-sm font-medium text-slate-900 truncate max-w-[220px]" title="<%= d.arte.title.presence || "Arte sem título" %>">
+              <%= d.arte.title.presence || "Arte sem título" %>
+            </td>
+            <td class="py-3 px-4 text-sm text-slate-700"><%= divulgacao_datetime_label(d.scheduled_for) %></td>
+            <td class="py-3 px-4 text-sm text-slate-700"><%= d.divulgacao_grupos.size %></td>
+            <td class="py-3 px-4"><%= render "status_badge", divulgacao: d %></td>
+            <td class="py-3 px-4 text-right">
+              <%= link_to "Ver", admin_client_divulgacao_path(@client, d), class: "text-xs text-[#0F7949] hover:underline" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <%# Lista de cards mobile %>
+  <div class="block sm:hidden space-y-3">
+    <% @divulgacoes.each do |d| %>
+      <%= link_to admin_client_divulgacao_path(@client, d), class: "block bg-white rounded-xl border border-gray-200 shadow-card px-4 py-3" do %>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-sm font-semibold text-slate-900 truncate"><%= d.arte.title.presence || "Arte sem título" %></span>
+            <%= render "status_badge", divulgacao: d %>
           </div>
-          <%= link_to "Ver", admin_client_divulgacao_path(@client, d),
-                class: "ml-4 shrink-0 text-xs text-[#0F7949] hover:underline" %>
-        </li>
+          <svg xmlns="http://www.w3.org/2000/svg" class="text-slate-400 shrink-0" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+        <p class="text-xs text-slate-500 mt-1"><%= divulgacao_datetime_label(d.scheduled_for) %> · <%= d.divulgacao_grupos.size %> grupo(s)</p>
       <% end %>
-    </ul>
-  <% else %>
-    <p class="text-sm text-slate-500">Nenhuma divulgação agendada.</p>
+    <% end %>
+  </div>
+
+  <% if @pagy.pages > 1 %>
+    <div class="mt-6 flex justify-center">
+      <%== pagy_nav(@pagy) %>
+    </div>
   <% end %>
-</div>
+<% end %>
