@@ -143,7 +143,7 @@ Full details: [.planning/milestones/v1.6-ROADMAP.md](.planning/milestones/v1.6-R
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 25-04-PLAN.md — Reachable media: idempotent blob migration rake task + outside-LAN download proof + app↔Evolution both-directions reachability (INFRA-01, EVO-01)
+- [ ] 25-04-PLAN.md — Reachable media: idempotent blob migration rake task + outside-LAN download proof + app↔Evolution both-directions reachability (INFRA-01, EVO-01) — **PAUSADO (gate blocking-human)**: `lib/tasks/storage_migration.rake` entregue+commitado (8e5a3e0); EVO-01 outbound fechado (fetch_instances→200). Bloqueado: MinIO `aws.endpoint` serve o console e não a API S3 (400 InvalidArgument) + 2 human-checks out-of-band (curl presigned de fora da LAN, curl /up do host Evolution).
 
 **Scope note**: the "+ Deploy" of the milestone is anchored here (CONTEXT.md D-09) — the app is deployed to the public host this phase, beyond the original ROADMAP statement of "transporte + storage + jobs".
 **Research**: `--research-phase` — a verificação empírica do contrato Evolution contra `whatsapp.bomcustoilhabela.com.br` é *a* tarefa mais importante do milestone e é pesquisa, não implementação. Os 8 itens a confirmar estão em SUMMARY.md → "ASSUMIDO (precisa de verificação empírica no passo A)". Decidir aqui também: migração dos blobs locais já existentes para o S3.

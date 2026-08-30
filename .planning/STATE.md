@@ -5,11 +5,11 @@ milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 25
 current_phase_name: Fundação — Transporte Evolution + Storage Alcançável
 status: executing
-stopped_at: "Completed 25-03-PLAN.md (deploy topology: docker compose + jobs worker + TZ pin + Caddy TLS; production.rb SSL/hosts/:amazon; evolution+aws credentials). INFRA-03 fechado. Próximo: 25-04."
-last_updated: "2026-08-30T01:55:06.302Z"
+stopped_at: "25-04 PAUSADO num gate blocking-human: rake storage:migrate_to_s3 entregue+verificada por forma; EVO-01 outbound fechado (fetch_instances 200). Falta: MinIO expor a API S3 (hoje serve o console) + 2 human-checks (curl presigned de fora da LAN, curl /up do host Evolution)."
+last_updated: "2026-08-30T02:06:10.585Z"
 last_activity: 2026-08-29
-last_activity_desc: "Plano 25-03 executado — deploy topology docker compose (jobs worker + TZ pin + Caddy proxy), production.rb SSL/hosts/:amazon, evolution+aws em credentials.yml.enc. INFRA-03 fechado."
-state_head: af3018684a630f268ad287ef3b0f81c25280c67a
+last_activity_desc: "Plano 25-04 PAUSADO num gate blocking-human — rake storage:migrate_to_s3 entregue+verificada por forma (commit 8e5a3e0); EVO-01 outbound fechado (fetch_instances -> Array[6]/200/~654ms). Falta: MinIO expor a API S3 (hoje serve o console — 400 InvalidArgument) + 2 human-checks out-of-band."
+state_head: 5cd027b09d2a034854d67e22a44357d706c6d5e1
 progress:
   total_phases: 6
   completed_phases: 0
@@ -31,14 +31,14 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 
 Phase: 25 (Fundação — Transporte Evolution + Storage Alcançável) — EXECUTING
 Plan: 4 of 4
-Status: Planos 25-01, 25-02 e 25-03 completos. 25-03: ferramenta de deploy = docker compose (Task 1 checkpoint resolvido pelo operador); docker-compose.yml ganha worker `jobs` + `TZ` em web+jobs + proxy Caddy; production.rb -> :amazon + assume_ssl/force_ssl/ssl_options + config.hosts (ilhacriativa.autopyweb.com.br) + host_authorization; blocos evolution: e aws: em credentials.yml.enc (valores do operador). INFRA-03 FECHADO (TZ nos containers + boot check). INFRA-01 parcial: config + credentials prontos; round-trip presignado real de fora da LAN é o 25-04. Topologia real: MinIO externo já TLS-terminado (sem s3. proxy no Caddyfile do app — desvio Rule 2 documentado). Próximo: 25-04 (reachable media: rake de migração de blobs + prova de download externo).
-Last activity: 2026-08-29 — Plano 25-03 executado (deploy topology docker compose + production SSL/hosts/:amazon + credentials Evolution/aws)
+Status: Planos 25-01, 25-02, 25-03 completos. 25-04 PAUSADO num gate blocking-human. Entregue e commitado: `lib/tasks/storage_migration.rake` (`storage:migrate_to_s3` — copy-only, idempotente, backfill service_name where(nil,'local'); commit 8e5a3e0) + secao "Deploy reachability (phase 25)" em evolution-contract.md (commit 5cd027b). EVO-01 OUTBOUND FECHADO nesta sessao: Evolution::Client.fetch_instances -> Array[6] / HTTP 200 / ~654ms com as credenciais gravadas no 25-03. BLOQUEADO (blocking-human): (1) aws.endpoint (s3.bomcustoilhabela.com.br) serve o CONSOLE do MinIO, nao a API S3 -> 400 InvalidArgument "S3 API Requests must be made to API port." -> a migracao real nao copia nada; (2) curl -I da presigned URL de fora de 192.168.3.203; (3) curl -I /up do host do Evolution. Retomar apos o operador expor a API S3 do MinIO + criar buckets calendario-livia-* e colar os 2 resultados de curl (comandos em evolution-contract.md).
+Last activity: 2026-08-29 — Plano 25-04 PAUSADO (gate blocking-human: MinIO API S3 + 2 human-checks); rake de migracao entregue, EVO-01 outbound fechado
 
 ## Progress Bar
 
 ```
-v1.7: [███░░░░░░░░░░░░░░░░░] 13% (0/6 phases · 3/4 planos da fase 25)
-Phase 25: Fundação — Transporte Evolution + Storage Alcançável — In progress (3/4 planos)
+v1.7: [███░░░░░░░░░░░░░░░░░] 13% (0/6 phases · 3/4 planos da fase 25 — 25-04 pausado num gate blocking-human)
+Phase 25: Fundação — Transporte Evolution + Storage Alcançável — In progress (3/4 planos · 25-04 pausado)
 Phase 26: Instância de WhatsApp por Cliente + Pareamento — Not started
 Phase 27: Grupos do Cliente — Sync, Cache e Seleção Escopada — Not started
 Phase 28: Divulgação — Agendar sem Enviar — Not started
@@ -220,6 +220,9 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 25]: [Phase 25-03]: ferramenta de deploy = docker compose (estende docker-compose.yml hand-rolled; Kamal não adotado — config/deploy.yml + .kamal/ ficam como scaffolding morto). Task 1 checkpoint:decision resolvido pelo operador.
 - [Phase 25]: [Phase 25-03]: topologia real (Deviation Rule 2) — MinIO/Evolution já live e TLS-terminados em infra separada (bomcustoilhabela.com.br); app deploya em ilhacriativa.autopyweb.com.br. Caddyfile do app tem 1 site block (web:3000); MinIO alcançado via aws.endpoint externo, sem bloco s3. proxied (deixado comentado p/ forward-compat).
 - [Phase 25]: [Phase 25-03]: INFRA-03 COMPLETO — TZ=America/Sao_Paulo em web+jobs no docker-compose.yml + boot check timezone_check.rb (25-02). Boot real de produção com TZ correto passou. INFRA-01 continua parcial: config+credentials prontos, round-trip presignado real é 25-04.
+- [Phase 25]: [Phase 25-04]: storage:migrate_to_s3 entregue verbatim (RESEARCH Pattern 6 + Pitfall 6) — copy-only, idempotente, backfill service_name where(nil,'local'); sem exception-swallow em volta de dest.exist?/upload (abortar alto é o comportamento correto).
+- [Phase 25]: [Phase 25-04]: EVO-01 outbound FECHADO — Evolution::Client.fetch_instances -> Array[6]/200/~654ms com as credenciais do 25-03. Encerra o blocker de round-trip autenticado de leitura do 25-01.
+- [Phase 25]: [Phase 25-04]: INFRA-01 SC1 PAUSADO (gate blocking-human) — aws.endpoint (s3.bomcustoilhabela.com.br) serve o console do MinIO, nao a API S3 (400 InvalidArgument 'S3 API Requests must be made to API port.'); + curl da presigned URL de fora de 192.168.3.203 e /up do host Evolution exigem vantage point out-of-band. Deferido user_setup A6.
 
 ## Quick Tasks Completed
 
@@ -229,15 +232,22 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-30T01:55:05.579Z
-**Stopped at:** Completed 25-03-PLAN.md (deploy topology: docker compose + jobs worker + TZ pin + Caddy TLS; production.rb SSL/hosts/:amazon; evolution+aws credentials). INFRA-03 fechado. Próximo: 25-04.
-**Resume file:** None
+**Last session:** 2026-08-30T02:06:10.556Z
+**Stopped at:** 25-04 PAUSADO num gate blocking-human: rake storage:migrate_to_s3 entregue+verificada por forma; EVO-01 outbound fechado (fetch_instances 200). Falta: MinIO expor a API S3 (hoje serve o console) + 2 human-checks (curl presigned de fora da LAN, curl /up do host Evolution).
+**Resume file:** .planning/phases/25-funda-o-transporte-evolution-storage-alcan-vel/25-04-SUMMARY.md
 
 ### Blockers
 
-- EVO-01 / SC2: round-trip autenticado do Evolution::Client contra whatsapp.bomcustoilhabela.com.br ainda não executado. As credenciais (EVOLUTION_BASE_URL + EVOLUTION_GLOBAL_API_KEY) foram fornecidas pelo operador e escritas em config/credentials.yml.enc no 25-03 — o probe pode ser rodado agora (25-04 ou fase 26). Só falta executá-lo.
-- INFRA-01 / SC1: round-trip presignado real contra o MinIO originado de fora de 192.168.3.203 ainda não executado — é o plano 25-04 e exige o serviço MinIO acessível. Metade config pronta: storage.yml `amazon` (25-02), production.rb -> :amazon + blocos aws: em credentials.yml.enc com os valores do operador (25-03, `af30186`). S3_ENDPOINT externo (`s3.bomcustoilhabela.com.br`) já está no aws.endpoint. Requisito não marcado completo até o 25-04.
-- RECOMENDAÇÃO (não bloqueia): aws.access_key_id/secret_access_key gravados são as credenciais ROOT do MinIO. Emitir uma access key com escopo dos buckets calendario-livia-* e rotacionar o bloco aws: antes/logo após o go-live.
+**25-04 PAUSADO num gate blocking-human (autonomous:false — nao auto-aprovado):**
+
+- **INFRA-01 / SC1 — endpoint MinIO mal configurado.** `aws.endpoint` (`s3.bomcustoilhabela.com.br`) responde hoje pelo CONSOLE do MinIO (porta 9001), nao pela API S3 (9000): `head_bucket` -> `400 BadRequest`; `list_objects_v2` -> `400 InvalidArgument` corpo XML "S3 API Requests must be made to API port."; `GET /` -> 200 mas `content-type: text/html` (UI). Consequencia: `bin/rails storage:migrate_to_s3` aborta em `dest.exist?` e nao copia nada. AÇÃO OPERADOR: expor a porta da API S3 do MinIO sob TLS, ajustar `aws.endpoint` em credentials.yml.enc se o hostname mudar, criar os buckets `calendario-livia-{production,development}` privados. Passos completos em `.planning/notes/evolution-contract.md` §"Deploy reachability (phase 25)".
+- **INFRA-01 / SC1 — human-check.** Depois da API S3 alcançavel + migracao rodada no host deployado: `curl -sS -I "<presigned-url>"` de um host FORA de `192.168.3.203` (ou `docker exec` no container do Evolution) -> colar linha de status + `content-type` + `content-length`.
+- **EVO-01 / D-12 — human-check inbound.** `curl -sS -I https://<app-hostname>/up` do host do Evolution -> colar linha de status. Falha = registrada, NAO bloqueia a fase 25 (fase 26 lidera com o botao PAIR-05).
+- RECOMENDAÇÃO (não bloqueia): `aws.access_key_id`/`secret_access_key` gravados sao as credenciais ROOT do MinIO. Emitir uma access key com escopo dos buckets `calendario-livia-*` e rotacionar o bloco `aws:` antes/logo apos o go-live.
+
+**Resolvido nesta sessão (25-04):**
+
+- ~~EVO-01 / SC2 (outbound) — round-trip autenticado de leitura~~: RESOLVIDO. `Evolution::Client.fetch_instances` (apikey global de credentials.yml.enc, contra `whatsapp.bomcustoilhabela.com.br`) retornou `Array` com 6 instancias, HTTP 200, latencia ~654ms (medido em RAILS_ENV=development). Registrado em `evolution-contract.md` §"Deploy reachability (phase 25)". Caminho de escrita (`sendText`/`sendMedia`, teto de midia) permanece PENDENTE por D-08 (fases 26/28/29). Inbound `/up` continua no gate acima.
 
 **Resolvido nesta sessão (25-03):**
 
