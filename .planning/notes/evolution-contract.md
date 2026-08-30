@@ -73,3 +73,26 @@ sessão de research — por isso o caminho de envio fica PENDENTE.
 
 - Probe HTTP real (`curl`) contra `https://whatsapp.bomcustoilhabela.com.br`, 2026-08-29 — `GET /`, `GET /instance/fetchInstances` (sem auth / Bearer / apikey inválida), `GET /rota-inexistente`.
 - `.planning/research/STACK.md`, `FEATURES.md`, `ARCHITECTURE.md` — contrato lido do código-fonte `evolution-foundation/evolution-api` @ tag `2.3.7` (agora casado com a versão do host).
+
+## Deploy reachability (phase 25) — 2026-08-29
+
+Registrado pelo plano **25-04** (INFRA-01 / EVO-01 / CONTEXT.md D-12). Sem segredos,
+tokens, assinaturas de URL presignada ou telefones nesta seção.
+
+| Direção | Verificação | Resultado | Status |
+|---|---|---|---|
+| **Outbound — app → Evolution** | `Evolution::Client.fetch_instances` com a `apikey` global de `credentials.yml.enc`, contra `whatsapp.bomcustoilhabela.com.br` | `Array` com **6** instâncias, HTTP 200, latência ~**654 ms** (medido em `RAILS_ENV=development` a partir da máquina de build) | **VERIFICADO** — fecha o round-trip autenticado de leitura de EVO-01 que ficou DEFERIDO no 25-01 (credenciais agora presentes). Parser de erro / caminho de escrita permanecem PENDENTE (D-08, UAT 26/28/29). |
+| **Inbound — Evolution host → app `/up`** | `curl -sS -I https://<app-hostname>/up` rodado **do host do Evolution / container** | **NÃO EXECUTADO** — o app ainda não está deployado num hostname público alcançável pelo host do Evolution; exige input out-of-band do operador | **PENDENTE (operador)** — se falhar, a fase 26 deve liderar com o botão manual "Verificar conexão" (PAIR-05) em vez do webhook (A4 / D-12). Não bloqueia a fase 25. |
+| **Mídia — download de fora da LAN** | `curl -sS -I "<presigned-url>"` de um host **fora de `192.168.3.203`** (ou `docker exec` no container do Evolution) → esperado `HTTP/2 200` + `content-type` da arte | **NÃO EXECUTADO / BLOQUEADO** — o endpoint S3 configurado (`aws.endpoint` em `credentials.yml.enc`) responde `400 InvalidArgument: "S3 API Requests must be made to API port."` — o hostname aponta hoje para o **console do MinIO** (porta 9001), não para a **porta da API S3** (9000). `head_bucket` → `400 BadRequest`; `list_objects_v2` → o XML `InvalidArgument` acima. Endpoint TCP/TLS alcançável (`GET /` → 200, mas devolve o HTML do console, não XML S3). | **PENDENTE (operador)** — ver "Ações de operador" abaixo. Sem a API S3 alcançável, a rake `storage:migrate_to_s3` não copia nada e SC1 / INFRA-01 **não fecha** (flagged assumption A6). |
+
+### Ações de operador para destravar INFRA-01 (SC1)
+
+1. **Expor a porta da API S3 do MinIO** sob um hostname TLS (ex.: rotear `s3.bomcustoilhabela.com.br` para a porta **9000** da API, ou publicar um subdomínio dedicado à API). Hoje o hostname serve o console (porta 9001).
+2. **Atualizar `aws.endpoint`** em `config/credentials.yml.enc` para esse hostname da API S3 (se mudar).
+3. **Criar os buckets** `calendario-livia-production` (e `calendario-livia-development` para exercitar em dev), privados, `force_path_style`.
+4. Rodar no host deployado: `bin/rails storage:migrate_to_s3` — conferir o resumo `copied: N skipped: N missing: 0 service_name_backfilled: N`.
+5. Mintar uma URL presignada (`bin/rails runner "puts ActiveStorage::Blob.order(:id).last.url(expires_in: 15.minutes)"`) e rodar, **de fora de `192.168.3.203`**:
+   `curl -sS -I "<presigned-url>"` → colar aqui a linha de status + `content-type` + `content-length` (sem a query string).
+6. **Inbound**, do host do Evolution: `curl -sS -I https://<app-hostname>/up` → colar a linha de status.
+
+> Recomendação de segurança (não bloqueia): as chaves `aws.*` gravadas são as credenciais ROOT do MinIO — emitir uma access key com escopo dos buckets `calendario-livia-*` e rotacionar antes/logo após o go-live.
