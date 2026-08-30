@@ -318,6 +318,27 @@ class Evolution::ClientTest < ActiveSupport::TestCase
     Evolution::Client.instance_variable_set(:@connection, nil)
   end
 
+  # 27-REVIEW.md WR-A (re-review): antes desta cobertura, um 200 com Content-Type json e
+  # corpo malformado fazia o middleware :json do Faraday levantar Faraday::ParsingError, que
+  # NÃO era um Faraday::ConnectionFailed/TimeoutError -- escapava cru de #request, o
+  # SyncGroupsJob nunca rodava retry_on/discard_on, e groups_sync_state ficava preso em
+  # :syncing para sempre (reproduzido empiricamente no code review). Agora todo
+  # Faraday::Error residual vira Evolution::Errors::Unknown, que já está coberto por
+  # retry_on no job.
+  test "fetch_groups raises Unknown (not a raw Faraday::ParsingError) when the 2xx body is malformed JSON with a json Content-Type" do
+    Evolution::Client.instance_variable_set(
+      :@connection,
+      stubbed_connection(200, "not json{", path: "/group/fetchAllGroups/livia_client_1?getParticipants=false")
+    )
+
+    error = assert_raises(Evolution::Errors::Unknown) do
+      Evolution::Client.fetch_groups("livia_client_1", api_key: "test-api-key")
+    end
+    assert_kind_of Evolution::Errors::Unknown, error
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
+
   test "fetch_groups surfaces a 400 (missing/invalid getParticipants) as Permanent" do
     body = { "status" => 400, "error" => "Bad Request", "response" => { "message" => "getParticipants is required" } }.to_json
     Evolution::Client.instance_variable_set(

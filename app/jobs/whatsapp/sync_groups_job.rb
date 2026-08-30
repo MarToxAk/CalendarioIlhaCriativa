@@ -8,6 +8,22 @@
 class Whatsapp::SyncGroupsJob < ApplicationJob
   queue_as :default # config/queue.yml: worker unico em queues: "*", sem fila dedicada nesta fase (INFRA-06 e fase 29)
 
+  # Fallback de ultima linha (27-REVIEW.md WR-A, re-review): qualquer excecao NAO listada
+  # abaixo (StandardError alem da taxonomia Evolution::Errors::*) tambem tem que tirar
+  # groups_sync_state de :syncing, senao o job falha cru, o estado fica preso em :syncing
+  # para sempre, e o gate groups_sync_syncing? do WR-02 bloqueia TODO re-sync futuro dessa
+  # instancia -- permanentemente, sem nenhuma affordance de recuperacao na UI.
+  #
+  # PRECISA ficar DECLARADO PRIMEIRO (antes de todo retry_on/discard_on mais especifico
+  # abaixo). ActiveJob::Exceptions#handler_for_rescue busca em rescue_handlers.reverse_each
+  # e usa o PRIMEIRO match -- ou seja, o handler mais RECENTEMENTE declarado tem prioridade
+  # mais alta (doc oficial: "handlers are searched from bottom to top"). Um discard_on(StandardError)
+  # declarado por ULTIMO venceria SEMPRE (StandardError é superclasse de Transient/Unknown/etc.),
+  # engolindo os handlers especificos abaixo e quebrando os retries -- verificado empiricamente
+  # (ver 27-REVIEW-FIX.md WR-A). Declarado PRIMEIRO, ele so roda quando nenhum handler mais
+  # especifico (declarado depois) responde pela excecao.
+  discard_on(StandardError) { |job, _err| mark_error(job, "transient") }
+
   # GET e idempotente -> ambos seguros para retry. Blocos disparam so apos as
   # 3 tentativas se esgotarem (comportamento padrao do ActiveJob) -- sem eles
   # o job re-levanta e groups_sync_state fica preso em :syncing para sempre,

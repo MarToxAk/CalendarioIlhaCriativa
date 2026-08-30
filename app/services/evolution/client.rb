@@ -155,6 +155,16 @@ module Evolution
       rescue Faraday::TimeoutError => e
         # connect-phase (nada enviado) → Transient ; read-phase (pode ter processado) → Unknown
         raise classify_timeout(e), e.message
+      rescue Faraday::Error => e
+        # Fallback (27-REVIEW.md WR-A): qualquer outra Faraday::Error (ex.: ParsingError do
+        # middleware :json quando o Content-Type bate /\bjson$/ mas o corpo não é JSON válido —
+        # reproduzido empiricamente contra um host Evolution instável) tem que virar uma
+        # Evolution::Errors::* conhecida, senão escapa cru do #request e o SyncGroupsJob nunca
+        # roda retry_on/discard_on, deixando groups_sync_state preso em :syncing para sempre
+        # (o gate groups_sync_syncing? do WR-02 então bloqueia todo re-sync futuro, permanente).
+        # Unknown é o mapeamento seguro por padrão: NÃO reflete se a request já foi processada
+        # do lado do Evolution (mesma cautela de classify_timeout para read-phase).
+        raise Evolution::Errors::Unknown, e.message
       ensure
         ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started) * 1000).round
         Rails.logger.info("[evolution] #{method.to_s.upcase} #{path} -> #{resp ? resp.status : 'ERR'} (#{ms}ms)")
