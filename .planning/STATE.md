@@ -5,16 +5,16 @@ milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 25
 current_phase_name: Fundação — Transporte Evolution + Storage Alcançável
 status: executing
-stopped_at: "25-03-PLAN.md pausado no Task 1 (checkpoint:decision, gate=blocking) — ferramenta de deploy Docker Compose vs Kamal precisa de confirmação humana. Nenhuma task commitada (Task 1 é a primeira; Tasks 2 e 3 dependem da decisão / de input ausente). autonomous:false — não auto-aprovado."
-last_updated: "2026-08-29T20:49:00.000Z"
+stopped_at: "Completed 25-03-PLAN.md (deploy topology: docker compose + jobs worker + TZ pin + Caddy TLS; production.rb SSL/hosts/:amazon; evolution+aws credentials). INFRA-03 fechado. Próximo: 25-04."
+last_updated: "2026-08-30T01:55:06.302Z"
 last_activity: 2026-08-29
-last_activity_desc: Plano 25-03 iniciado e pausado no checkpoint:decision do Task 1 (deploy tool D-10)
-state_head: 7f319a1f93fb50bf7b7f9c0693e1dba1dcf373c6
+last_activity_desc: "Plano 25-03 executado — deploy topology docker compose (jobs worker + TZ pin + Caddy proxy), production.rb SSL/hosts/:amazon, evolution+aws em credentials.yml.enc. INFRA-03 fechado."
+state_head: af3018684a630f268ad287ef3b0f81c25280c67a
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -30,15 +30,15 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 ## Current Position
 
 Phase: 25 (Fundação — Transporte Evolution + Storage Alcançável) — EXECUTING
-Plan: 3 of 4
-Status: Planos 25-01 e 25-02 completos. 25-02: INFRA-02 fechado (solid_queue em dev + prova de restart), storage.yml MinIO e timezone_check.rb entregues; INFRA-01/SC1 deferido (MinIO não provisionado), metade "TZ no container" de INFRA-03 fica no 25-03. Próximo: 25-03 (deploy topology).
-Last activity: 2026-08-29 — Plano 25-02 executado (aws-sdk-s3 + serviço amazon/MinIO + queue_adapter :solid_queue + Procfile jobs + timezone_check no boot)
+Plan: 4 of 4
+Status: Planos 25-01, 25-02 e 25-03 completos. 25-03: ferramenta de deploy = docker compose (Task 1 checkpoint resolvido pelo operador); docker-compose.yml ganha worker `jobs` + `TZ` em web+jobs + proxy Caddy; production.rb -> :amazon + assume_ssl/force_ssl/ssl_options + config.hosts (ilhacriativa.autopyweb.com.br) + host_authorization; blocos evolution: e aws: em credentials.yml.enc (valores do operador). INFRA-03 FECHADO (TZ nos containers + boot check). INFRA-01 parcial: config + credentials prontos; round-trip presignado real de fora da LAN é o 25-04. Topologia real: MinIO externo já TLS-terminado (sem s3. proxy no Caddyfile do app — desvio Rule 2 documentado). Próximo: 25-04 (reachable media: rake de migração de blobs + prova de download externo).
+Last activity: 2026-08-29 — Plano 25-03 executado (deploy topology docker compose + production SSL/hosts/:amazon + credentials Evolution/aws)
 
 ## Progress Bar
 
 ```
-v1.7: [██░░░░░░░░░░░░░░░░░░] 8% (0/6 phases · 2/4 planos da fase 25)
-Phase 25: Fundação — Transporte Evolution + Storage Alcançável — In progress (2/4 planos)
+v1.7: [███░░░░░░░░░░░░░░░░░] 13% (0/6 phases · 3/4 planos da fase 25)
+Phase 25: Fundação — Transporte Evolution + Storage Alcançável — In progress (3/4 planos)
 Phase 26: Instância de WhatsApp por Cliente + Pareamento — Not started
 Phase 27: Grupos do Cliente — Sync, Cache e Seleção Escopada — Not started
 Phase 28: Divulgação — Agendar sem Enviar — Not started
@@ -195,6 +195,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 |------|----------|-------|-------|
 | Phase 25 P01 | 11min | 3 tasks | 9 files |
 | Phase 25 P02 | 35min | 3 tasks | 7 files |
+| Phase 25 P03 | 15min | 3 tasks | 5 files |
 
 ## Decisions
 
@@ -216,6 +217,9 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 25]: [Phase 25-02]: development.rb usa solid_queue como queue_adapter SEM connects_to — dev tem base única; tabelas solid_queue_* vivem na base primária, carregadas por bin/setup (db:schema:load:queue com fallback runner idempotente)
 - [Phase 25]: [Phase 25-02]: timezone_check.rb — raise em produção / warn (Rails.logger + $stderr) em development quando ENV['TZ'] != America/Sao_Paulo ou Time.zone != Brasilia; default_timezone = :local mantido (Out of Scope migrar p/ :utc)
 - [Phase 25]: [Phase 25-02]: INFRA-01/SC1 (round-trip presignado real MinIO) deferido como user_setup — MinIO não provisionado; config entregue (6ce3a06). Consistente com EVO-01 no 25-01
+- [Phase 25]: [Phase 25-03]: ferramenta de deploy = docker compose (estende docker-compose.yml hand-rolled; Kamal não adotado — config/deploy.yml + .kamal/ ficam como scaffolding morto). Task 1 checkpoint:decision resolvido pelo operador.
+- [Phase 25]: [Phase 25-03]: topologia real (Deviation Rule 2) — MinIO/Evolution já live e TLS-terminados em infra separada (bomcustoilhabela.com.br); app deploya em ilhacriativa.autopyweb.com.br. Caddyfile do app tem 1 site block (web:3000); MinIO alcançado via aws.endpoint externo, sem bloco s3. proxied (deixado comentado p/ forward-compat).
+- [Phase 25]: [Phase 25-03]: INFRA-03 COMPLETO — TZ=America/Sao_Paulo em web+jobs no docker-compose.yml + boot check timezone_check.rb (25-02). Boot real de produção com TZ correto passou. INFRA-01 continua parcial: config+credentials prontos, round-trip presignado real é 25-04.
 
 ## Quick Tasks Completed
 
@@ -225,16 +229,20 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-29T20:49:00.000Z
-**Stopped at:** 25-03-PLAN.md — PAUSADO no Task 1 (checkpoint:decision, gate=blocking). Decisão pendente: extender docker-compose.yml (hand-rolled, casa com D-10) OU adotar o esqueleto Kamal (config/deploy.yml). Tasks 2 e 3 são escritas contra a ferramenta escolhida. Zero tasks commitadas neste plano. Retomar com um agente novo após a seleção "docker-compose" ou "kamal".
-**Resume file:** .planning/phases/25-funda-o-transporte-evolution-storage-alcan-vel/25-03-PLAN.md
+**Last session:** 2026-08-30T01:55:05.579Z
+**Stopped at:** Completed 25-03-PLAN.md (deploy topology: docker compose + jobs worker + TZ pin + Caddy TLS; production.rb SSL/hosts/:amazon; evolution+aws credentials). INFRA-03 fechado. Próximo: 25-04.
+**Resume file:** None
 
 ### Blockers
 
-- EVO-01 / SC2: round-trip autenticado do Evolution::Client contra whatsapp.bomcustoilhabela.com.br não executado — falta EVOLUTION_BASE_URL + EVOLUTION_GLOBAL_API_KEY (user_setup 25-01, CONTEXT.md D-06). Código entregue; verificação empírica deferida.
-- INFRA-01 / SC1 (25-02 Task 1): round-trip presignado real contra o MinIO não executado — MinIO não provisionado no host e S3_ENDPOINT / aws.* indisponíveis (RESEARCH A6, user_setup). Config entregue e commitada (6ce3a06); `Aws::Errors::MissingCredentialsError` no probe. Fechamento aguarda provisionamento do MinIO (bucket calendario-livia-development privado + credenciais + S3_ENDPOINT no .env) — também requerido pelo plano 25-04.
-- INFRA-03 (25-02 Task 3): boot check `config/initializers/timezone_check.rb` entregue (7f319a1, raise prod / warn dev). A metade "TZ=America/Sao_Paulo no environment dos serviços web + jobs do docker-compose" fecha no plano 25-03. Requisito não marcado completo até lá.
+- EVO-01 / SC2: round-trip autenticado do Evolution::Client contra whatsapp.bomcustoilhabela.com.br ainda não executado. As credenciais (EVOLUTION_BASE_URL + EVOLUTION_GLOBAL_API_KEY) foram fornecidas pelo operador e escritas em config/credentials.yml.enc no 25-03 — o probe pode ser rodado agora (25-04 ou fase 26). Só falta executá-lo.
+- INFRA-01 / SC1: round-trip presignado real contra o MinIO originado de fora de 192.168.3.203 ainda não executado — é o plano 25-04 e exige o serviço MinIO acessível. Metade config pronta: storage.yml `amazon` (25-02), production.rb -> :amazon + blocos aws: em credentials.yml.enc com os valores do operador (25-03, `af30186`). S3_ENDPOINT externo (`s3.bomcustoilhabela.com.br`) já está no aws.endpoint. Requisito não marcado completo até o 25-04.
+- RECOMENDAÇÃO (não bloqueia): aws.access_key_id/secret_access_key gravados são as credenciais ROOT do MinIO. Emitir uma access key com escopo dos buckets calendario-livia-* e rotacionar o bloco aws: antes/logo após o go-live.
 
-**Resolvido nesta sessão:**
+**Resolvido nesta sessão (25-03):**
+
+- ~~INFRA-03 / SC5 (metade deploy)~~: RESOLVIDO. `TZ: America/Sao_Paulo` no `environment:` dos serviços `web` E `jobs` do docker-compose.yml (`4557abb`), somado ao boot check `config/initializers/timezone_check.rb` do 25-02 (`7f319a1`). Boot real de produção com TZ correto completou sem aviso; sem o TZ o timezone_check.rb abortaria o boot. INFRA-03 marcado COMPLETO em REQUIREMENTS.md.
+
+**Resolvido em sessão anterior (25-02):**
 
 - ~~INFRA-02 / SC4~~: RESOLVIDO. Gate de restart executado pelo orquestrador com probe job em disco contra worker bin/jobs real — job enfileirado 17:35:34-03:00, worker parado 17:35:49, reiniciado 17:36:43, job disparou 17:37:04 (21s após o restart), zero falhas. Linha durável sobreviveu em solid_queue_scheduled_executions. Timeline verbatim no 25-02-SUMMARY.md. INFRA-02 marcado completo em REQUIREMENTS.md.

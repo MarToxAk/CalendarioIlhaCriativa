@@ -128,7 +128,7 @@ Full details: [.planning/milestones/v1.6-ROADMAP.md](.planning/milestones/v1.6-R
   4. Um job agendado para daqui a alguns minutos continua executando depois de reiniciar o servidor de desenvolvimento.
   5. O horário do app é o mesmo em development e em produção (TZ fixado e verificado no boot), e o bundle tem um único adapter de fila.
 
-**Plans**: 2/4 plans executed (waves 1→2→3→4)
+**Plans**: 3/4 plans executed (waves 1→2→3→4)
 **Wave 1**
 
 - [x] 25-01-PLAN.md — Evolution transport seam: `Evolution::Client` + `Errors` + initializer, `+faraday` / `-good_job`, `:apikey`/`:hash` log filter, authenticated read round-trip (EVO-01/02/03, INFRA-05)
@@ -139,7 +139,7 @@ Full details: [.planning/milestones/v1.6-ROADMAP.md](.planning/milestones/v1.6-R
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 25-03-PLAN.md — Production deploy topology: D-10 deploy-tool checkpoint, `docker-compose.yml` jobs service + `TZ` + reverse-proxy TLS, `production.rb` SSL + hosts + `:amazon`, `.env.example` + credentials keys (INFRA-01/03)
+- [x] 25-03-PLAN.md — Production deploy topology: D-10 deploy-tool checkpoint, `docker-compose.yml` jobs service + `TZ` + reverse-proxy TLS, `production.rb` SSL + hosts + `:amazon`, `.env.example` + credentials keys (INFRA-01/03)
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
@@ -279,7 +279,7 @@ Full details: [.planning/milestones/v1.6-ROADMAP.md](.planning/milestones/v1.6-R
 | 22. Endpoints Admin | v1.6 | 4/4 | Complete ✅ | 2026-06-11 |
 | 23. Endpoints Cliente | v1.6 | 3/3 | Complete ✅ | 2026-06-12 |
 | 24. Endpoints IA + Rate Limiting | v1.6 | 4/4 | Complete ✅ | 2026-06-13 |
-| 25. Fundação — Transporte Evolution + Storage | v1.7 | 2/4 | In Progress|  |
+| 25. Fundação — Transporte Evolution + Storage | v1.7 | 3/4 | In Progress|  |
 | 26. Instância de WhatsApp + Pareamento | v1.7 | 0/? | Not started | - |
 | 27. Grupos do Cliente | v1.7 | 0/? | Not started | - |
 | 28. Divulgação — Agendar sem Enviar | v1.7 | 0/? | Not started | - |
