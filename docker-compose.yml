@@ -42,6 +42,15 @@ services:
       TZ: America/Sao_Paulo
     volumes:
       - storage:/rails/storage
+    # WR-03 / IN-07 — /up esta excluido do force-redirect (config.ssl_options, 25-03), entao
+    # responde 200 em HTTP interno; curl esta no runtime da imagem. jobs e proxy so sobem
+    # depois deste healthcheck passar. Ver 25-REVIEW.md WR-03 / IN-07.
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/up || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
     restart: unless-stopped
 
   # solid_queue worker dedicado. Sem este servico NENHUM job agendado dispara em producao
@@ -54,6 +63,10 @@ services:
     command: ["./bin/jobs"]
     depends_on:
       db:
+        condition: service_healthy
+      # WR-03 / IN-07 — jobs roda ./bin/jobs e consulta solid_queue_* na hora; so subir
+      # depois de web migrar via db:prepare no entrypoint (web e dono das migracoes).
+      web:
         condition: service_healthy
     environment:
       RAILS_ENV: production
@@ -84,7 +97,9 @@ services:
   proxy:
     image: caddy:2-alpine
     depends_on:
-      - web
+      # IN-07 — o Caddy nao devolve 502 enquanto o Rails ainda boota.
+      web:
+        condition: service_healthy
     ports:
       - "80:80"
       - "443:443"
