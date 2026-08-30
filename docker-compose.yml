@@ -30,6 +30,10 @@ services:
       CALENDARIO_LIVIA_DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
       RAILS_LOG_TO_STDOUT: "true"
       WEB_CONCURRENCY: 2
+      # CR-02 — config/application.rb faz ENV.fetch("CORS_ORIGINS") sem default em producao;
+      # a ausencia levanta KeyError e o servico entra em crash-loop (restart: unless-stopped).
+      # O valor (uma origin publica, nao segredo) vem do .env do host. Ver 25-REVIEW.md CR-02.
+      CORS_ORIGINS: ${CORS_ORIGINS}
       # INFRA-03 — timezone_check.rb aborta o boot em producao se TZ != America/Sao_Paulo
       # (config.active_record.default_timezone = :local exige TZ fixo). Ver 25-RESEARCH.md Pattern 4 / Pitfall 5.
       TZ: America/Sao_Paulo
@@ -56,6 +60,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       CALENDARIO_LIVIA_DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
       RAILS_LOG_TO_STDOUT: "true"
+      # CR-02 — mesma exigencia do web: CORS_ORIGINS sem default em producao (KeyError -> crash-loop).
+      CORS_ORIGINS: ${CORS_ORIGINS}
       # INFRA-03 — TZ tem que estar nos DOIS servicos (web + jobs) ou o timezone_check.rb
       # aborta o boot de quem faltar. Jobs agendados usam o wall-clock local (America/Sao_Paulo).
       TZ: America/Sao_Paulo
