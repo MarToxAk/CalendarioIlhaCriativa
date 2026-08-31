@@ -48,8 +48,9 @@ Status: Executing Phase 31 — ambos os planos executados, verificação de fase
   end-of-phase)
   Fases 25/26/29/30 do milestone v1.7 seguem com verification_deferred_human (ver "Deferred Verification"
   acima) — não bloqueiam a execução da fase 31.
-Last activity: 2026-08-31 — Phase 31 Plan 02 executado (3 tasks, 3 commits, ver
-  31-02-SUMMARY.md)
+Last activity: 2026-08-31 — Completed quick task 260831-nb7: select "Reutilizar conexão
+  existente" passa a listar instâncias ao vivo da Evolution API (fetch_instances), com
+  adoção via InstanceProvisioner#adopt_named quando não há irmã local
 
 ## Progress Bar
 
@@ -290,6 +291,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | 2026-08-31 | 260831-hh4-corrigir-tags-de-pagina-o-pagy-nav-escap | Corrigir pagy_nav aparecendo como HTML escapado (texto cru) no rodapé das telas de grupos do WhatsApp e aprovações — trocado <%= por <%== nos dois call-sites. | complete ✓ |
 | 2026-08-31 | 260831-hhw-gostaria-de-arrumar-o-s3-uso-o-minio-upl | Corrigir URL pública do MinIO/S3 quebrada (NoSuchKey) — storage:migrate_to_s3 marcava blobs "MISSING at source" como service_name amazon sem o arquivo existir no bucket; backfill agora escopado aos blobs confirmados no destino. | complete ✓ |
 | 2026-08-31 | 260831-i2e-n-o-esta-enviado-a-legenda-gostaria-de-q | Investigado envio de legenda no WhatsApp (comportamento já correto, caption estava vazio na Arte testada) + adicionado WhatsApp como plataforma da Arte (enum, ícone, rótulo). | complete ✓ |
+| 2026-08-31 | 260831-nb7-listar-as-inst-ncias-do-whatsapp-direto- | Select "Reutilizar conexão existente" passa a listar TODAS as instâncias que a Evolution API reporta ao vivo (fetch_instances), inclusive as sem cliente local vinculado ainda; adoção via InstanceProvisioner#adopt_named quando não há irmã local (reusa caminho da fase 26); zero I/O do #reuse preservado quando há irmã local (D-07). | complete ✓ |
 
 ## Session
 
