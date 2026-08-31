@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: WhatsApp Auto-Post + Deploy
-current_phase: 25
-current_phase_name: Fundação — Transporte Evolution + Storage Alcançável
+current_phase: 30
+current_phase_name: Acompanhamento ao Vivo + Hardening
 status: planning
-stopped_at: Phase 28 complete, ready to plan Phase 25
+stopped_at: "Fase 29 (Motor de Envio) implementada e verificada 5/5 em codigo (human_needed) — 3 planos, code review --auto convergido (CR-01 + 8 WR fixed, 4 Info deferidos), regressao 130/131 (1 pre-existente). UAT de operador: round-trip real de envio + decisao SC5 cancel-em-andamento. Autonomo pausado antes da fase 30 por limite de contexto."
 last_updated: "2026-08-31T00:26:26.802Z"
 last_activity: 2026-08-30
-last_activity_desc: Phase 28 complete, transitioned to Phase 25
+last_activity_desc: "Phase 29 execution + code review + verification complete; deferred to operator UAT (29-UAT.md, 4 items)"
 state_head: e40f2bae6cfa5d9a667401cbd194aba7e49a5e29
 progress:
   total_phases: 6
@@ -33,6 +33,7 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 |-------|-------|--------|
 | 25 | verification_deferred_human | /gsd-verify-work 25 |
 | 26 | verification_deferred_human | /gsd-verify-work 26 |
+| 29 | verification_deferred_human | /gsd-verify-work 29 |
 
 ## Current Position
 
