@@ -1,4 +1,5 @@
 require "test_helper"
+require "turbo/broadcastable/test_helper"
 
 class DivulgacaoTest < ActiveSupport::TestCase
   setup do
@@ -238,5 +239,54 @@ class DivulgacaoTest < ActiveSupport::TestCase
     end
 
     assert_equal "cancelada", d.reload.status
+  end
+
+  # --- Task 3 (ACOMP-01): broadcast_status ao vivo ------------------------
+
+  include Turbo::Broadcastable::TestHelper
+
+  test "status update dispara 2 replace no stream [client, divulgacao] (ACOMP-01)" do
+    d = @client.divulgacoes.create!(
+      arte: arte_com_arquivo, scheduled_for: 3.days.from_now,
+      divulgacao_grupos: [ grupo_dg ]
+    )
+
+    streams = capture_turbo_stream_broadcasts([ @client, d ]) do
+      d.update!(status: :em_andamento)
+    end
+
+    assert_equal 2, streams.length
+    assert streams.all? { |s| s["action"] == "replace" }
+
+    targets = streams.map { |s| s["target"] }
+    assert_includes targets, ActionView::RecordIdentifier.dom_id(d, :status_badge)
+    assert_includes targets, ActionView::RecordIdentifier.dom_id(d, :progresso)
+  end
+
+  test "cancelar! dispara 2 replace no stream [client, divulgacao] (ACOMP-01)" do
+    d = @client.divulgacoes.create!(
+      arte: arte_com_arquivo, scheduled_for: 3.days.from_now,
+      divulgacao_grupos: [ grupo_dg ]
+    )
+
+    streams = capture_turbo_stream_broadcasts([ @client, d ]) do
+      assert d.cancelar!
+    end
+
+    assert_equal 2, streams.length
+    assert streams.all? { |s| s["action"] == "replace" }
+  end
+
+  test "update sem mudar status nao dispara broadcast (ACOMP-01)" do
+    d = @client.divulgacoes.create!(
+      arte: arte_com_arquivo, scheduled_for: 3.days.from_now,
+      divulgacao_grupos: [ grupo_dg ]
+    )
+
+    streams = capture_turbo_stream_broadcasts([ @client, d ]) do
+      d.touch
+    end
+
+    assert_empty streams
   end
 end
