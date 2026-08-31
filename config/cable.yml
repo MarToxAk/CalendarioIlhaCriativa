@@ -1,9 +1,12 @@
-# Async adapter only works within the same process, so for manually triggering cable updates from a console,
-# and seeing results in the browser, you must do so from the web console (running inside the dev process),
-# not a terminal started via bin/rails console! Add "console" to any action or any ERB template view
-# to make the web console appear.
+# development usa solid_cable (nao async) desde a fase 30 (ACOMP-01): o async adapter so
+# entrega broadcasts dentro do MESMO processo, e o bin/jobs (Procfile.dev) roda em processo
+# separado do bin/rails server. Sem solid_cable, um broadcast disparado por um job (ex.
+# Whatsapp::SendToGroupJob) nunca chegaria ao navegador conectado ao processo web. Base unica
+# de dev (mesmo tratamento ja dado ao solid_queue) — sem bloco connects_to.
 development:
-  adapter: async
+  adapter: solid_cable
+  polling_interval: 0.1.seconds
+  message_retention: 1.day
 
 test:
   adapter: test

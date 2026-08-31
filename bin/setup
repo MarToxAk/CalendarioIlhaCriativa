@@ -44,6 +44,23 @@ FileUtils.chdir APP_ROOT do
     RUBY
   end
 
+  # solid_cable em development (fase 30 / ACOMP-01): a tabela solid_cable_messages precisa
+  # existir na base primária de dev (config.solid_cable so tem connects_to em production).
+  # Mesmo tratamento idempotente do bloco solid_queue acima.
+  puts "\n== Carregando o schema do cable (solid_cable) na base de development =="
+  if system("bin/rails", "db:schema:load:cable", out: File::NULL, err: File::NULL)
+    puts "   schema do cable carregado via db:schema:load:cable"
+  else
+    system!("bin/rails", "runner", <<~'RUBY'.strip)
+      if ActiveRecord::Base.connection.table_exists?(:solid_cable_messages)
+        puts "   tabela solid_cable_messages já presente — nada a fazer"
+      else
+        load Rails.root.join("db/cable_schema.rb")
+        puts "   db/cable_schema.rb carregado na base primária de development"
+      end
+    RUBY
+  end
+
   puts "\n== Removing old logs and tempfiles =="
   system! "bin/rails log:clear tmp:clear"
 
