@@ -60,6 +60,20 @@ module Evolution
       Result.new(instance: row, adopted: true, qr_base64: nil)
     end
 
+    # Quick task 260831-nb7: wrapper público fino sobre o `#adopt` privado JÁ
+    # EXISTENTE (fase 26) — mesmo caminho de adoção (set_webhook SEMPRE antes
+    # de ler connection_state, persiste via find_or_initialize_by(client:)),
+    # disparado agora por um `name` escolhido pelo admin no <select> de
+    # "Reutilizar conexão existente" em vez do nome determinístico do próprio
+    # cliente (`#call`). Não toca `#call`/`#adopt`/`#persist_new`.
+    def adopt_named(name)
+      headers = {
+        "X-Webhook-Secret" => WhatsappInstance.webhook_secret_for(name),
+        "Content-Type" => "application/json"
+      }
+      adopt(name, headers)
+    end
+
     private
 
     # 403 + frase de colisão. Qualquer outra Permanent (401 credencial, 404

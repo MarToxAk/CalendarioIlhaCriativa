@@ -54,4 +54,46 @@ class Evolution::InstanceProvisionerTest < ActiveSupport::TestCase
       Evolution::InstanceProvisioner.new(@client_b, client_api: RaisingFakeEvolutionClient).reuse(existing: @instance_a)
     end
   end
+
+  # --- #adopt_named (quick task 260831-nb7) — wrapper publico sobre #adopt ---
+  # ao contrario de #reuse, bate em fetch_instances/set_webhook/connection_state
+  # do Evolution::Client de verdade -> mesmo padrao de stub do controller test.
+
+  test "#adopt_named com nome presente no fetch_instances persiste linha nova com origin_adopted_existing? e chama set_webhook 1x" do
+    name = "livia_client_named_smoke"
+    fake_instance = { "name" => name, "hash" => "adopted-named-token", "id" => "remote-named-1" }
+    set_webhook_calls = []
+
+    result = nil
+    Evolution::Client.stub(:fetch_instances, ->(**) { [ fake_instance ] }) do
+      Evolution::Client.stub(:set_webhook, ->(n, **kwargs) { set_webhook_calls << [ n, kwargs ]; { "webhook" => { "enabled" => true } } }) do
+        Evolution::Client.stub(:connection_state, ->(*, **) { "open" }) do
+          result = Evolution::InstanceProvisioner.new(@client_b).adopt_named(name)
+        end
+      end
+    end
+
+    row = result.instance
+    assert row.persisted?
+    assert_equal @client_b, row.client
+    assert_equal name, row.instance_name
+    assert_equal "adopted-named-token", row.token
+    assert_equal "remote-named-1", row.remote_instance_id
+    assert_equal "connected", row.connection_state
+    assert row.origin_adopted_existing?
+    assert_equal 1, set_webhook_calls.size
+    assert_equal name, set_webhook_calls.first[0]
+  end
+
+  test "#adopt_named com nome ausente no fetch_instances levanta Evolution::Errors::Permanent e nao cria linha" do
+    name = "livia_client_absent_smoke"
+
+    assert_no_difference "WhatsappInstance.count" do
+      Evolution::Client.stub(:fetch_instances, ->(**) { [] }) do
+        assert_raises(Evolution::Errors::Permanent) do
+          Evolution::InstanceProvisioner.new(@client_b).adopt_named(name)
+        end
+      end
+    end
+  end
 end
