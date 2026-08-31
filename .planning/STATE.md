@@ -48,9 +48,9 @@ Status: Executing Phase 31 — ambos os planos executados, verificação de fase
   end-of-phase)
   Fases 25/26/29/30 do milestone v1.7 seguem com verification_deferred_human (ver "Deferred Verification"
   acima) — não bloqueiam a execução da fase 31.
-Last activity: 2026-08-31 — Completed quick task 260831-nb7: select "Reutilizar conexão
-  existente" passa a listar instâncias ao vivo da Evolution API (fetch_instances), com
-  adoção via InstanceProvisioner#adopt_named quando não há irmã local
+Last activity: 2026-08-31 — Completed quick task 260831-o9t: botão "Parear novamente" vira
+  "Desvincular WhatsApp" (ação #unlink desvincula localmente sem tocar Evolution; linha
+  :unpaired = "sem instância"; re-provisão idempotente)
 
 ## Progress Bar
 
@@ -292,6 +292,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | 2026-08-31 | 260831-hhw-gostaria-de-arrumar-o-s3-uso-o-minio-upl | Corrigir URL pública do MinIO/S3 quebrada (NoSuchKey) — storage:migrate_to_s3 marcava blobs "MISSING at source" como service_name amazon sem o arquivo existir no bucket; backfill agora escopado aos blobs confirmados no destino. | complete ✓ |
 | 2026-08-31 | 260831-i2e-n-o-esta-enviado-a-legenda-gostaria-de-q | Investigado envio de legenda no WhatsApp (comportamento já correto, caption estava vazio na Arte testada) + adicionado WhatsApp como plataforma da Arte (enum, ícone, rótulo). | complete ✓ |
 | 2026-08-31 | 260831-nb7-listar-as-inst-ncias-do-whatsapp-direto- | Select "Reutilizar conexão existente" passa a listar TODAS as instâncias que a Evolution API reporta ao vivo (fetch_instances), inclusive as sem cliente local vinculado ainda; adoção via InstanceProvisioner#adopt_named quando não há irmã local (reusa caminho da fase 26); zero I/O do #reuse preservado quando há irmã local (D-07). | complete ✓ |
+| 2026-08-31 | 260831-o9t-trocar-o-bot-o-parear-novamente-quando-c | Botão "Parear novamente" vira "Desvincular WhatsApp": nova ação #unlink flipa connection_state para :unpaired e soft-desativa os grupos em cache, sem tocar na sessão física do Evolution nem apagar histórico (mina de FK divulgacao_grupos evitada). Linha :unpaired conta como "sem instância"; InstanceProvisioner#persist_new/#reuse viram idempotentes (find_or_initialize_by) para re-provisionar por cima. #reconnect/"Gerar novo QR" intocados. | complete ✓ |
 
 ## Session
 
