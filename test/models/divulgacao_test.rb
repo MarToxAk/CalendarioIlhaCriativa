@@ -221,4 +221,22 @@ class DivulgacaoTest < ActiveSupport::TestCase
     assert_not d.cancelar!
     assert_equal "cancelada", d.reload.status
   end
+
+  # CR-01 (28-REVIEW): cancelar! usava `update`, que re-rodava TODAS as
+  # validações — incluindo scheduled_for_no_futuro, que rejeita qualquer
+  # scheduled_for no passado. Como o cancelamento normalmente acontece depois
+  # que scheduled_for já passou (o admin quer cancelar algo já agendado para
+  # "agora" antes da fase 29 pegar), isso quebrava o caso de uso mais comum.
+  test "cancelar! numa divulgacao cujo scheduled_for ja passou -- ainda flipa pra cancelada" do
+    d = @client.divulgacoes.create!(
+      arte: arte_com_arquivo, scheduled_for: 2.seconds.from_now,
+      divulgacao_grupos: [ DivulgacaoGrupo.new(whatsapp_group: @group, group_name: @group.display_name, remote_jid: @group.remote_jid) ]
+    )
+
+    travel_to 3.seconds.from_now do
+      assert d.cancelar!, d.errors.full_messages.inspect
+    end
+
+    assert_equal "cancelada", d.reload.status
+  end
 end

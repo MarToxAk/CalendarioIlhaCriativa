@@ -29,7 +29,12 @@ class Divulgacao < ApplicationRecord
   # (new.html.erb) tem uma unica caixa vermelha que itera errors[:base], sem
   # estilizacao por mensagem (28-UI-SPEC "Copywriting Contract").
   validate :scheduled_for_presente
-  validate :scheduled_for_no_futuro
+  # on: :create — scoped to creation only (CR-01 fix): sem isso, cancelar! /
+  # qualquer update de status apos scheduled_for ja ter passado re-valida esta
+  # regra e falha silenciosamente, deixando o registro impossivel de cancelar.
+  # Tambem protege a fase 29 de bater na mesma parede ao transicionar
+  # agendada -> em_andamento -> concluida em/apos scheduled_for.
+  validate :scheduled_for_no_futuro, on: :create
   validate :arte_deve_estar_aprovada
   validate :arte_nao_usa_link_externo
   validate :arquivo_dentro_do_teto_whatsapp
