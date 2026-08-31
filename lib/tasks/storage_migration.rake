@@ -15,6 +15,15 @@
 # Logs the blob key, byte size, and a status word only — never blob contents,
 # never a (presigned) URL. Re-count the source at run time; never gate on a
 # hardcoded blob count.
+#
+# quick/260831-hhw fix: the service_name backfill MUST be scoped to blobs
+# actually confirmed present at destination (copied this run, or already
+# there). Previously it blanket-flipped EVERY row with service_name in
+# [nil, "local"] to "amazon", including rows the loop just logged as
+# "MISSING at source" (no local Disk file, so never uploaded anywhere) —
+# those ended up claiming service_name: "amazon" for an object that does
+# not exist in the bucket, so every later read raised
+# Aws::S3::Errors::NoSuchKey (reproduced live in this fix's session).
 namespace :storage do
   desc "Copy local Disk blobs to the :amazon (MinIO) service + backfill service_name. Idempotent, copy-only."
   task migrate_to_s3: :environment do
@@ -29,17 +38,19 @@ namespace :storage do
     copied = 0
     skipped = 0
     missing = 0
+    confirmed_at_dest_ids = []
 
     ActiveStorage::Blob.find_each do |blob|
       if dest.exist?(blob.key)
         skipped += 1
+        confirmed_at_dest_ids << blob.id
         say.call("[storage:migrate] skip #{blob.key} (already at destination)")
         next
       end
 
       unless source.exist?(blob.key)
         missing += 1
-        say.call("[storage:migrate] MISSING at source: #{blob.key} (blob ##{blob.id})")
+        say.call("[storage:migrate] MISSING at source: #{blob.key} (blob ##{blob.id}) — service_name left untouched")
         next
       end
 
@@ -50,10 +61,12 @@ namespace :storage do
         content_type: blob.content_type
       )
       copied += 1
+      confirmed_at_dest_ids << blob.id
       say.call("[storage:migrate] copied #{blob.key} (#{blob.byte_size} bytes)")
     end
 
-    backfilled = ActiveStorage::Blob.where(service_name: [nil, "local"]).update_all(service_name: "amazon")
+    backfilled = ActiveStorage::Blob.where(service_name: [nil, "local"], id: confirmed_at_dest_ids)
+                                     .update_all(service_name: "amazon")
     say.call("[storage:migrate] service_name backfill — rows updated: #{backfilled}")
 
     say.call(
