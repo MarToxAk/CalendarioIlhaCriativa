@@ -141,7 +141,7 @@
   <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
     <h2 class="text-sm font-semibold text-slate-900">Divulgações</h2>
     <%= link_to "Nova divulgação", new_admin_client_divulgacao_path(@client),
-          class: "inline-flex items-center h-8 px-3 bg-[#0F7949] hover:bg-green-800 text-white text-xs font-medium rounded-lg transition-colors" %>
+          class: "inline-flex items-center h-8 px-3 bg-[#0F7949] hover:bg-[#0a5c37] text-white text-xs font-medium rounded-lg transition-colors" %>
   </div>
 
   <% if @divulgacoes.blank? %>
@@ -178,7 +178,7 @@
   <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
     <h2 class="text-sm font-semibold text-slate-900">Artes</h2>
     <%= link_to "Nova Arte", new_admin_arte_path(client_id: @client.id),
-          class: "inline-flex items-center h-8 px-3 bg-[#0F7949] hover:bg-green-800 text-white text-xs font-medium rounded-lg transition-colors" %>
+          class: "inline-flex items-center h-8 px-3 bg-[#0F7949] hover:bg-[#0a5c37] text-white text-xs font-medium rounded-lg transition-colors" %>
   </div>
 
   <% if @artes.empty? %>
