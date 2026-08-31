@@ -260,13 +260,13 @@ Plans:
   4. Arte com legenda chega ao grupo como mídia com legenda e arte só de texto chega como mensagem de texto, com a mídia baixável pelo Evolution do começo ao fim do disparo.
   5. Cancelar uma Divulgação em andamento impede os grupos ainda não atendidos de receber, e dois envios do mesmo número nunca acontecem em paralelo.
 
-**Plans**: 2/3 plans executed
+**Plans**: 3/3 plans executed
 
 Plans:
 
 - [x] 29-01-PLAN.md — Fatia vertical (tracer): `Divulgacoes::DispatchJob` (`wait_until:`), `Whatsapp::SendToGroupJob` (claim atômico, revalidação de aprovação/conexão dentro do perform, `sendText`/`sendMedia`), `Evolution::Client.send_text`/`.send_media`, enqueue no `#create` (ENVIO-01, ENVIO-06, ENVIO-07, ENVIO-08, ENVIO-10, SEG-03) — **Wave 1**
 - [x] 29-02-PLAN.md — Taxonomia de erro completa (`retry_on`/`discard_on`, mirror da fase 27) + fix do retry_on-morto-pelo-claim (reverte o claim em `Transient` antes de reenfileirar) + `limits_concurrency` por instância + prova de idempotência sob execução concorrente/duplicada (ENVIO-04, ENVIO-05, ENVIO-09) — **Wave 2**
-- [ ] 29-03-PLAN.md — Escalonamento sob N grupos, cancelamento respeitado mid-dispatch, fechamento de `divulgacoes.status` (agendada→em_andamento→concluida), fila dedicada `whatsapp_sends` em `config/queue.yml` (ENVIO-02, ENVIO-03, DIVU-08, INFRA-06) — **Wave 3**
+- [x] 29-03-PLAN.md — Escalonamento sob N grupos, cancelamento respeitado mid-dispatch, fechamento de `divulgacoes.status` (agendada→em_andamento→concluida), fila dedicada `whatsapp_sends` em `config/queue.yml` (ENVIO-02, ENVIO-03, DIVU-08, INFRA-06) — **Wave 3**
 
 **Research**: `--research-phase` — a API exata de concurrency controls no solid_queue 1.4.0 instalado (e o comportamento de `ProcessPrunedError`), mais o formato exato do erro de `sendMedia` para mapear retry vs. discard (o Evolution devolve `BadRequestException(error.toString())`, texto livre, não código estruturado).
 **Fase de maior densidade de risco do milestone** — merece code review dedicado. Cobre os pitfalls 1, 4 e 5 da pesquisa.
@@ -328,7 +328,7 @@ Plans:
 | 26. Instância de WhatsApp + Pareamento | v1.7 | 5/5 | In Progress|  |
 | 27. Grupos do Cliente | v1.7 | 3/3 | Complete    | 2026-08-30 |
 | 28. Divulgação — Agendar sem Enviar | v1.7 | 4/4 | Complete    | 2026-08-30 |
-| 29. Motor de Envio | v1.7 | 2/3 | In Progress|  |
+| 29. Motor de Envio | v1.7 | 3/3 | In Progress|  |
 | 30. Acompanhamento ao Vivo + Hardening | v1.7 | 0/? | Not started | - |
 
 ---
