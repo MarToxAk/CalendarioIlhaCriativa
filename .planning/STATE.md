@@ -45,7 +45,7 @@ Status: Code review convergiu (3 iterações, clean); verificação 3/5 (human_n
   seletiva). ACOMP-02, ACOMP-03 e SEG-04 totalmente satisfeitos e comprovados por teste.
   Milestone v1.7 (6 fases) 100% executada; lifecycle (audit → complete → cleanup) aguarda o operador
   rodar /gsd-verify-work em 25, 26, 29 e 30.
-Last activity: 2026-08-31 - Completed quick task 260831-gai: Corrigir sincronização de grupos do WhatsApp
+Last activity: 2026-08-31 - Completed quick task 260831-hh4: Corrigir tags de paginação (pagy_nav) escapadas
 
 ## Progress Bar
 
@@ -278,6 +278,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 |------|------|-------------|--------|
 | 2026-06-08 | fix-client-media-display | Corrigir visualização de media (vídeo e imagem) no portal do cliente, tratando mismatch de enums e melhorando proxying. | complete ✓ |
 | 2026-08-31 | 260831-gai-preciso-corrigir-a-quest-o-de-grupos-do- | Corrigir sincronização de grupos do WhatsApp (Evolution::Client.fetch_groups estourava timeout de 15s em instâncias reais; timeout dedicado de 60s criado). | complete ✓ |
+| 2026-08-31 | 260831-hh4-corrigir-tags-de-pagina-o-pagy-nav-escap | Corrigir pagy_nav aparecendo como HTML escapado (texto cru) no rodapé das telas de grupos do WhatsApp e aprovações — trocado <%= por <%== nos dois call-sites. | complete ✓ |
 
 ## Session
 
