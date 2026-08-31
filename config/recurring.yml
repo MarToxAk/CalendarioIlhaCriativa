@@ -22,12 +22,17 @@ production:
   # inteira -- e tambem remove o solid_queue_jobs pai, sem orfaos com
   # argumentos em texto claro.
   prune_solid_queue_failed_executions:
-    command: 'SolidQueue::FailedExecution.where(''created_at < ?'', Integer(ENV.fetch("SOLID_QUEUE_FAILED_RETENTION_DAYS", "14")).days.ago).discard_all_in_batches'
+    # WR-01 (fase 30 REVIEW): SOLID_QUEUE_FAILED_RETENTION_DAYS e validado no
+    # boot por config/initializers/solid_queue_retention.rb (fail-fast), nao
+    # inline aqui -- o `command:` de uma recurring task e avaliado com `eval`
+    # bruto TODA vez que o job roda, entao um Integer(ENV.fetch(...)) direto
+    # so estouraria as 3h da manha, silenciosamente desativando a retencao.
+    command: 'SolidQueue::FailedExecution.where(''created_at < ?'', SolidQueueRetention.failed_execution_days.days.ago).discard_all_in_batches'
     schedule: every day at 3am
 
 development:
   # INFRA-02: jobs agendados precisam sobreviver a restart em dev; a retencao
   # tambem roda em dev pelo mesmo motivo (bin/jobs precisa recarregar o schedule).
   prune_solid_queue_failed_executions:
-    command: 'SolidQueue::FailedExecution.where(''created_at < ?'', Integer(ENV.fetch("SOLID_QUEUE_FAILED_RETENTION_DAYS", "14")).days.ago).discard_all_in_batches'
+    command: 'SolidQueue::FailedExecution.where(''created_at < ?'', SolidQueueRetention.failed_execution_days.days.ago).discard_all_in_batches'
     schedule: every day at 3am
