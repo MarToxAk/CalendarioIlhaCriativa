@@ -474,4 +474,32 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
 
     assert_equal "em_andamento", divulgacao.reload.status, "o terceiro grupo ainda pendente trava a transicao"
   end
+
+  # CR-01 residual (30-REVIEW iteracao 2): reproduz o cenario empirico do
+  # reviewer -- resend de uma linha arte_nao_aprovada com a arte AINDA
+  # reprovada reabre a divulgacao pra em_andamento (fase 30, controller) e
+  # reenfileira o job. Antes do fix (arte_deve_estar_aprovada on: :create),
+  # finalize_divulgacao_if_done's `update!(status: :concluida)` re-rodava
+  # essa validacao, levantava RecordInvalid DENTRO do job (sem rescue na
+  # taxonomia discard_on/retry_on da classe), deixando a divulgacao presa pra
+  # sempre em em_andamento e sobrescrevendo o error_code preciso
+  # "arte_nao_aprovada" pelo generico "unexpected_error" do catch-all
+  # discard_on(StandardError). Roda o job de verdade (perform_now, nao so
+  # assert_enqueued_with) pra provar o caminho fim-a-fim.
+  test "CR-01 residual: resend com arte ainda reprovada finaliza a divulgacao sem travar em em_andamento e sem perder o error_code" do
+    divulgacao = @divulgacao
+    divulgacao.update!(status: :em_andamento)
+    @arte.update_column(:status, Arte.statuses[:change_requested])
+
+    Evolution::Client.stub(:send_media, ->(*) { raise "nao deveria ser chamado" }) do
+      Whatsapp::SendToGroupJob.perform_now(@group_row)
+    end
+
+    @group_row.reload
+    assert_equal "falhou", @group_row.status
+    assert_equal "arte_nao_aprovada", @group_row.error_code,
+      "error_code preciso nao pode ser sobrescrito por unexpected_error"
+    assert_equal "concluida", divulgacao.reload.status,
+      "nao pode ficar presa pra sempre em em_andamento (cancelar! so sai de agendada)"
+  end
 end

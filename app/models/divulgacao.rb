@@ -40,10 +40,25 @@ class Divulgacao < ApplicationRecord
   # Tambem protege a fase 29 de bater na mesma parede ao transicionar
   # agendada -> em_andamento -> concluida em/apos scheduled_for.
   validate :scheduled_for_no_futuro, on: :create
-  validate :arte_deve_estar_aprovada
-  validate :arte_nao_usa_link_externo
-  validate :arquivo_dentro_do_teto_whatsapp
-  validate :arte_e_grupos_do_mesmo_cliente
+  # on: :create (CR-01 residual, 30-REVIEW iteracao 2) — mesmo motivo do
+  # scheduled_for_no_futuro acima: estas quatro sao defesas de create-time
+  # (form/API stale-read entre o load e o submit), nao invariantes pro ciclo
+  # de vida inteiro do registro. Sem o :create, qualquer status-only save
+  # posterior (o reopen concluida->em_andamento do controller#resend, e o
+  # em_andamento->concluida de finalize_divulgacao_if_done na fase 29) as
+  # re-executa; se a arte tiver sido reprovada depois da criacao — o caso
+  # normal de uma linha error_code=arte_nao_aprovada sendo reenviada —
+  # finalize_divulgacao_if_done levantava ActiveRecord::RecordInvalid DENTRO
+  # do job (sem rescue na taxonomia discard_on/retry_on), deixando a
+  # divulgacao presa para sempre em em_andamento (cancelar! so sai de
+  # agendada) e sobrescrevendo o error_code preciso "arte_nao_aprovada" pelo
+  # generico "unexpected_error" do catch-all. Isso torna o
+  # save!(validate: false) do reopen no controller redundante mas inofensivo
+  # (nao removido aqui — fora do escopo deste finding).
+  validate :arte_deve_estar_aprovada, on: :create
+  validate :arte_nao_usa_link_externo, on: :create
+  validate :arquivo_dentro_do_teto_whatsapp, on: :create
+  validate :arte_e_grupos_do_mesmo_cliente, on: :create
   validate :ao_menos_um_grupo
 
   # `patch :cancel` -> aqui. So flipa agendada -> cancelada; qualquer outro
