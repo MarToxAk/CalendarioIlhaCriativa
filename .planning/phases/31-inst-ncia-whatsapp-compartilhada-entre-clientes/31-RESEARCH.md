@@ -480,28 +480,45 @@ siblings.find_each { |instance| apply_event(instance) }   # apply_connection_upd
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Fan-out do webhook `connection.update` para irmãs — dentro do escopo desta fase?**
    - What we know: `find_by(instance_name:)` atualiza 1 linha `[VERIFIED: evolution_controller.rb:15]`. As irmãs ficam com estado obsoleto; ENVIO-07 lê a linha do cliente dono da divulgação.
    - What's unclear: o CONTEXT não menciona o webhook explicitamente (foca em concorrência + sync + UI).
    - Recommendation: **incluir** — é parte de "redesenhar o limite para operar por conexão física". Fan-out barato (`where(instance_name:).find_each`), zero chamadas Evolution. Task 4, junto do D-04.
+   - **(RESOLVED)** Incorporado como recomendado: fan-out implementado em `31-02-PLAN.md`
+     Task 1 (`Webhooks::EvolutionController#create` itera `WhatsappInstance.where(instance_name:
+     ...)` em vez de `find_by`).
 
 2. **`#reuse` faz um `verify` síncrono pós-cópia?**
    - What we know: `#verify` já existe e é síncrono `[VERIFIED: whatsapp_instances_controller.rb:35-59]`. Copiar `connection_state` da irmã é o caminho de menor latência.
    - What's unclear: tolerância a uma linha nova nascer `connected` mas com a conexão física caída no intervalo página→submit.
    - Recommendation: copiar o estado literal (sem round-trip). Se o usuário quiser robustez, um `Evolution::Client.connection_state` opcional após o `create!`, com rescue silencioso (mesma postura do `adopt_qr`).
+   - **(RESOLVED)** Incorporado como recomendado: `31-01-PLAN.md` Task 1a —
+     `Evolution::InstanceProvisioner#reuse(existing:)` copia `connection_state`/`paired_at`
+     literalmente, ZERO I/O de rede, sem `verify` síncrono.
 
 3. **Como marcar "compartilhada" na `WhatsappInstance` (Claude's Discretion)?**
    - What we know: `origin` enum tem 2 valores `[VERIFIED: whatsapp_instance.rb:16]`; adicionar `reused_sibling: 2` é code-only. Uma coluna `shared:boolean` exigiria migração + backfill + manter coerente quando a última irmã sai.
    - Recommendation: **`origin: :reused_sibling`** para a linha criada por reutilização + o badge "compartilhada com N" derivado de `WhatsappInstance.where(instance_name: x).where.not(id: self.id).count` (ou `.includes(:client)` para listar nomes). Sem coluna nova. O badge fica no `_panel` (branch `present?`), quando esse count > 0.
+   - **(RESOLVED)** Incorporado como recomendado: `31-01-PLAN.md` Task 1a adiciona
+     `origin: :reused_sibling` (enum code-only) + `#siblings`/`#shared?` no model; Task 3
+     renderiza o badge "Conexão compartilhada com N cliente(s)." no branch `else` quando
+     `whatsapp_instance.shared?`.
 
 4. **`turbo_confirm` no botão "Reutilizar" (Claude's Discretion)?**
    - Recommendation: **sim** — `data: { turbo_confirm: "Isto vincula ESTE cliente ao MESMO número físico já usado por: <nomes>. A mesma sessão de WhatsApp e o mesmo limite de envio passam a ser compartilhados. Confirmar?" }`. Precedente: `turbo_submits_with` já usado no `_panel` `[VERIFIED: _panel.html.erb:59-61,68-69]`; `confirm_modal` usado em ações destrutivas do `show.html.erb`. `turbo_confirm` é suficiente para uma ação de 1 clique com `<select>`.
+   - **(RESOLVED)** Incorporado como recomendado: `31-01-PLAN.md` Task 3 — o submit do
+     `form_with` para `reuse_admin_client_whatsapp_instance_path` carrega
+     `data: { turbo_confirm: ... }`.
 
 5. **O `<select>` lista `instance_name` distintos ou uma linha por irmã?**
    - What we know: D-06 diz "instance_name distintos ... rótulo indicando quais clientes já usam cada um".
    - Recommendation: `WhatsappInstance.shareable_targets(excluding_client_id:)` agrupado por `instance_name`, `value` = `instance_name`, label = `"<instance_name> — usado por: A, B"`. Um nome amigável opcional (a agência pode querer "Marketing Principal" em vez de `livia_client_3`) fica como polish deferível — o `instance_name` cru serve.
+   - **(RESOLVED)** Incorporado como recomendado: `31-01-PLAN.md` Task 1a adiciona
+     `WhatsappInstance.shareable_targets(excluding_client_id:)` (agrupado por `instance_name`);
+     Task 1b monta `@reusable_targets` no `#show`; Task 3 renderiza o `<select>` com label
+     "usado por:" e carrega um teste de renderização que assevera essa `<option>`.
 
 ---
 
