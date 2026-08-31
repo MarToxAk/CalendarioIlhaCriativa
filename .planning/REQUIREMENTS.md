@@ -84,7 +84,7 @@
 
 - [x] **ACOMP-01**: Admin acompanha o progresso do disparo ao vivo, sem recarregar a página
 - [x] **ACOMP-02**: Admin reenvia manualmente para um grupo específico que falhou, com confirmação explícita
-- [ ] **ACOMP-03**: Admin vê o histórico de Divulgações de um cliente, com o resultado por grupo
+- [x] **ACOMP-03**: Admin vê o histórico de Divulgações de um cliente, com o resultado por grupo
 
 ---
 
@@ -190,7 +190,7 @@ Preenchido na criação do roadmap (2026-08-29). Fonte: `.planning/ROADMAP.md`.
 | SEG-04 | Phase 30 | Complete |
 | ACOMP-01 | Phase 30 | Complete |
 | ACOMP-02 | Phase 30 | Complete |
-| ACOMP-03 | Phase 30 | Pending |
+| ACOMP-03 | Phase 30 | Complete |
 
 **Cobertura por fase:**
 

@@ -5,16 +5,16 @@ milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 30
 current_phase_name: Acompanhamento ao Vivo + Hardening
 status: executing
-stopped_at: Completed 30-02-PLAN.md
-last_updated: "2026-08-31T13:26:39.866Z"
+stopped_at: Completed 30-03-PLAN.md
+last_updated: "2026-08-31T13:36:52.000Z"
 last_activity: 2026-08-31
-last_activity_desc: Phase 30 — 30-02 (ACOMP-02 reenvio manual por grupo) executado; 30-03 ainda pendente
-state_head: 0360a3cc434296588d301165a8dcafc3f789a614
+last_activity_desc: Phase 30 — 30-03 (ACOMP-03 histórico por cliente com placar) executado; todos os 4 planos da fase completos
+state_head: 0ebbedaa42ac4f4c13815bc414e3aa82c88824d6
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 24
-  completed_plans: 23
+  completed_plans: 24
   percent: 33
 ---
 
@@ -38,9 +38,9 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 ## Current Position
 
 Phase: 30 (Acompanhamento ao Vivo + Hardening) — EXECUTING
-Plans complete: 01, 02, 04 of 4 (03 pending — 04 executed out of sequence, wave 1, no dependencies)
-Status: Ready to execute (30-03)
-Last activity: 2026-08-31 — 30-02 (ACOMP-02 reenvio manual por grupo) executado
+Plans complete: 01, 02, 03, 04 of 4 (all plans executed — 04 ran out of sequence, wave 1, no dependencies)
+Status: All plans executed — ready for phase-level verification/tail
+Last activity: 2026-08-31 — 30-03 (ACOMP-03 histórico por cliente com placar) executado
 
 ## Progress Bar
 
@@ -214,6 +214,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 30 P01 | ~25min | 3 tasks | 9 files |
 | Phase 30 P04 | ~15min | 2 tasks | 3 files |
 | Phase 30 P02 | ~20min | 2 tasks | 5 files |
+| Phase 30 P03 | ~15min | 3 tasks | 8 files |
 
 ## Decisions
 
@@ -264,6 +265,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 30]: [Phase 30]: [Phase 30-04]: SEG-04 send-path test disconnects client A's OWN instance to trigger the existing instance&.connected? guard on a force-built poisoned cross-client row -- the job has no dedicated cross-client check of its own; that barrier lives only at creation time (SEG-02), proven separately by the two mutation-sensitive assert_raises(RecordNotFound) units.
 - [Phase 30]: [Phase 30]: [Phase 30-04]: INFRA-07 recurring.yml commands use YAML single-quoted scalars (doubled '' for the embedded Ruby 'created_at < ?' literal) so the raw file contains literal double-quoted ENV.fetch args, matching the plan's exact grep acceptance criteria; discard_all_in_batches confirmed scope-honoring against vendored execution.rb:30-50 and functionally proven in development (seeded old+recent FailedExecution/Job pairs, ran the real command, rolled back).
 - [Phase 30]: [Phase 30-02]: resend route uses controller: "divulgacoes" override on the nested divulgacao_grupos resource to keep #resend on Admin::DivulgacoesController
+- [Phase 30]: [Phase 30-03]: divulgacao_grupo_error_label is a pure copy-map (sentinel hash lookup or a "Motivo: " prefix) — never re-runs Phase 29's sanitize_error_code, never truncates/gsubs, never re-fetches the model (T-30-10); divulgacao_placar reads divulgacao.divulgacao_grupos.to_a (the includes-preloaded association) so it never issues its own query (T-30-11)
 
 ## Quick Tasks Completed
 
@@ -273,8 +275,8 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-31T13:26:39.305Z
-**Stopped at:** Completed 30-02-PLAN.md
+**Last session:** 2026-08-31T13:36:52.000Z
+**Stopped at:** Completed 30-03-PLAN.md
 **Resume file:** None
 
 ### Blockers

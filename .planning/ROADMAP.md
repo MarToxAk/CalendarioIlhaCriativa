@@ -287,13 +287,13 @@ Plans:
   4. A suíte de testes falha se uma arte do cliente A conseguir alcançar um grupo do cliente B.
   5. Jobs falhados — e os argumentos que eles carregam — não se acumulam indefinidamente no banco: existe política de retenção rodando.
 
-**Plans**: 3/4 plans executed
+**Plans**: 4/4 plans executed
 
 Plans:
 
 - [x] 30-01-PLAN.md — Tracer: progresso ao vivo ponta a ponta (`DivulgacaoGrupo`/`Divulgacao` `after_update_commit` broadcasts guardados, `_progresso_resumo` novo, `turbo_stream_from [@client, @divulgacao]` no `#show`, adapter `solid_cable` em dev) (ACOMP-01) — **Wave 1**
 - [x] 30-02-PLAN.md — Reenvio manual por grupo: rota aninhada + `Admin::DivulgacoesController#resend` escopado, `resend.turbo_stream.erb`, botão "Reenviar" condicional no `_grupo_row` (ACOMP-02) — **Wave 2**
-- [ ] 30-03-PLAN.md — Histórico por cliente: helpers `divulgacao_placar` / `divulgacao_grupo_error_label` / `SENTINEL_ERROR_LABELS`, placar por linha no `#index` + espelho `clients#show` sem N+1, sub-linhas `error_code`/`sent_at` no `_grupo_row`, teste de nome congelado (ACOMP-03) — **Wave 3**
+- [x] 30-03-PLAN.md — Histórico por cliente: helpers `divulgacao_placar` / `divulgacao_grupo_error_label` / `SENTINEL_ERROR_LABELS`, placar por linha no `#index` + espelho `clients#show` sem N+1, sub-linhas `error_code`/`sent_at` no `_grupo_row`, teste de nome congelado (ACOMP-03) — **Wave 3**
 - [x] 30-04-PLAN.md — Hardening: teste de integração `cross_client_isolation_test.rb` (SEG-04) + retenção `prune_solid_queue_failed_executions` em `config/recurring.yml` prod+dev (INFRA-07) — **Wave 1**
 
 **UI hint**: yes
@@ -337,7 +337,7 @@ Plans:
 | 27. Grupos do Cliente | v1.7 | 3/3 | Complete    | 2026-08-30 |
 | 28. Divulgação — Agendar sem Enviar | v1.7 | 4/4 | Complete    | 2026-08-30 |
 | 29. Motor de Envio | v1.7 | 3/3 | In Progress|  |
-| 30. Acompanhamento ao Vivo + Hardening | v1.7 | 3/4 | In Progress|  |
+| 30. Acompanhamento ao Vivo + Hardening | v1.7 | 4/4 | In Progress|  |
 
 ---
 
