@@ -167,6 +167,35 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
     assert_includes @group_row.error_code, "[url-redigida]"
   end
 
+  test "WR-03: error_code redige URL presignada SEM esquema (host+path+query) ecoada no texto do erro" do
+    leak = 'failed to download resource: bucket.s3.amazonaws.com/artes/1.jpg?X-Amz-Signature=deadbeef&X-Amz-Expires=300'
+    Evolution::Client.stub(:send_media, ->(*) { raise Evolution::Errors::Permanent, leak }) do
+      Whatsapp::SendToGroupJob.perform_now(@group_row)
+    end
+
+    @group_row.reload
+    assert_equal "falhou", @group_row.status
+    assert_not_includes @group_row.error_code, "X-Amz-Signature"
+    assert_not_includes @group_row.error_code, "amazonaws.com"
+    assert_not_includes @group_row.error_code, "deadbeef"
+    assert_includes @group_row.error_code, "[url-redigida]"
+  end
+
+  test "WR-03: error_code redige fragmento de query presignada solto (sem host, sem esquema)" do
+    leak = 'upstream rejected request signature: X-Amz-Signature=deadbeefcafe&X-Amz-Credential=AKIAEXAMPLE/20260831/us-east-1'
+    Evolution::Client.stub(:send_media, ->(*) { raise Evolution::Errors::Permanent, leak }) do
+      Whatsapp::SendToGroupJob.perform_now(@group_row)
+    end
+
+    @group_row.reload
+    assert_equal "falhou", @group_row.status
+    assert_not_includes @group_row.error_code, "X-Amz-Signature"
+    assert_not_includes @group_row.error_code, "X-Amz-Credential"
+    assert_not_includes @group_row.error_code, "deadbeefcafe"
+    assert_not_includes @group_row.error_code, "AKIAEXAMPLE"
+    assert_includes @group_row.error_code, "[url-redigida]"
+  end
+
   test "discard_on Unknown grava incerto (nunca falhou), sem reenfileirar" do
     Evolution::Client.stub(:send_media, ->(*) { raise Evolution::Errors::Unknown, "timeout de leitura" }) do
       assert_no_enqueued_jobs do

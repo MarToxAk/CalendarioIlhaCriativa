@@ -206,8 +206,26 @@ class Whatsapp::SendToGroupJob < ApplicationJob
   # real de information-disclosure. Redige qualquer substring com cara de URL
   # http(s) ANTES de truncar/persistir.
   URL_IN_TEXT = %r{https?://[^\s"'<>)\]]+}i
+  # WR-03 (re-review): o esquema `https://` nem sempre acompanha a URL no
+  # texto ecoado -- algumas libs de download logam host+path sem ele, ou
+  # ecoam só o fragmento de query presignada. Duas passadas extras, ambas
+  # conservadoras (redigem só o trecho sensível, nunca a string inteira):
+  #  (a) host terminando num domínio conhecido de bucket/CDN seguido de
+  #      path + querystring -- `bucket.s3.amazonaws.com/k/1.jpg?X-Amz-...`;
+  #  (b) qualquer parâmetro de assinatura solto -- `X-Amz-Signature=...`,
+  #      `X-Amz-Credential=...`, `X-Goog-Signature=...`, `Signature=...`.
+  SCHEMELESS_SIGNED_URL = %r{
+    [\w.-]+\.(?:amazonaws\.com|cloudfront\.net|googleapis\.com|
+    r2\.cloudflarestorage\.com|digitaloceanspaces\.com|backblazeb2\.com)
+    /[^\s"'<>)\]]*\?[^\s"'<>)\]]+
+  }ix
+  SIGNED_QUERY_PARAM = /\b(?:X-Amz-[A-Za-z-]+|X-Goog-[A-Za-z-]+|Signature|AWSAccessKeyId)=[^&\s"'<>)\]]+/i
   def self.sanitize_error_code(message)
-    message.to_s.gsub(URL_IN_TEXT, "[url-redigida]").first(ERROR_CODE_MAX_LENGTH)
+    message.to_s
+           .gsub(URL_IN_TEXT, "[url-redigida]")
+           .gsub(SCHEMELESS_SIGNED_URL, "[url-redigida]")
+           .gsub(SIGNED_QUERY_PARAM, "[url-redigida]")
+           .first(ERROR_CODE_MAX_LENGTH)
   end
 
   private
