@@ -182,6 +182,21 @@ class Admin::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     refute_includes response.body, group_b.remote_jid
   end
 
+  test "WR-01 (residual): rescue RecordNotFound preserva a arte selecionada quando so o grupo falha em resolver" do
+    assert_no_difference [ "Divulgacao.count", "DivulgacaoGrupo.count" ] do
+      post admin_client_divulgacoes_path(@client), params: {
+        divulgacao: { arte_id: @arte.id, whatsapp_group_ids: [ 999_999 ], scheduled_for: "2026-09-20T15:30" }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_match "Seleção inválida", flash[:alert]
+    # a arte, ja resolvida com sucesso antes do RecordNotFound do grupo, precisa
+    # continuar SELECIONADA no <select> re-renderizado -- nao basta listar como
+    # <option>, o admin nao deveria ter que re-escolher uma arte que ja era valida.
+    assert_select "select[name='divulgacao[arte_id]'] option[value='#{@arte.id}'][selected]"
+  end
+
   # --- Task 2: datetime-local -> Time.zone round-trip (DIVU-05) --------
 
   test "scheduled_for cru 2026-09-15T14:00 round-trips pra Time.zone.local Brasilia (-03:00)" do
