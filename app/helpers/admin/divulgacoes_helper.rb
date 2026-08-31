@@ -22,4 +22,43 @@ module Admin::DivulgacoesHelper
     hi = (n_groups * max / 60.0).ceil
     lo == hi ? "≈ #{lo} min para #{n_groups} grupos" : "≈ #{lo}–#{hi} min para #{n_groups} grupos"
   end
+
+  # ACOMP-03: copy-map pt-BR pros dois sentinel codes gravados pelo job da
+  # fase 29 (send_to_group_job.rb:141/148). Qualquer outro error_code cai no
+  # fallback "Motivo: <verbatim>" -- SEM truncar, SEM gsub, SEM re-fetch. A
+  # sanitizacao (redacao de URL/assinatura + truncamento a 500) ja aconteceu
+  # uma unica vez, na escrita, em Whatsapp::SendToGroupJob.sanitize_error_code.
+  # Repeti-la aqui na leitura seria redundante e arriscaria mascarar o texto
+  # ja seguro com uma segunda passada de regex.
+  SENTINEL_ERROR_LABELS = {
+    "arte_nao_aprovada"      => "Motivo: a aprovação da arte foi retirada antes do envio.",
+    "instancia_desconectada" => "Motivo: o número do cliente estava desconectado no momento do envio.",
+  }.freeze
+
+  def divulgacao_grupo_error_label(dg)
+    SENTINEL_ERROR_LABELS[dg.error_code] || "Motivo: #{dg.error_code}"
+  end
+
+  # Placar compacto por status, lido da associacao JA carregada via
+  # includes(:divulgacao_grupos) no controller -- group_by nunca dispara
+  # query nova. "para {n} grupos" / singular NAO e pluralizado (copy travada
+  # na fase 28, ver divulgacao_duration_estimate acima).
+  def divulgacao_placar(divulgacao)
+    grupos = divulgacao.divulgacao_grupos.to_a
+    total = grupos.size
+    return "—" if total.zero?
+
+    by = grupos.group_by(&:status)
+    enviado  = by["enviado"].to_a.size
+    falhou   = by["falhou"].to_a.size
+    incerto  = by["incerto"].to_a.size
+    pendente = by["pendente"].to_a.size
+
+    return "#{pendente} pendentes" if pendente == total
+
+    parts = [ "#{enviado} enviados", "#{falhou} falhou" ]
+    parts << "#{incerto} incerto"   if incerto.positive?
+    parts << "#{pendente} pendente" if pendente.positive?
+    parts.join(" · ")
+  end
 end
