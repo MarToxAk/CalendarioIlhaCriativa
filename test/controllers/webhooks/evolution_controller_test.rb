@@ -203,7 +203,6 @@ class Webhooks::EvolutionControllerTest < ActionDispatch::IntegrationTest
       token: "tok-irma-falha",
       connection_state: :awaiting_qr
     )
-    irma_falha.define_singleton_method(:save!) { raise ActiveRecord::RecordInvalid, self }
 
     cliente_ok = Client.create!(
       name: "Webhook Test Irmã Ok",
@@ -217,14 +216,28 @@ class Webhooks::EvolutionControllerTest < ActionDispatch::IntegrationTest
     )
     assert_operator irma_falha.id, :<, irma_ok.id
 
-    post "/webhooks/evolution",
-      params: { instance: @name, event: "connection.update", data: { state: "open" } },
-      headers: { "X-Webhook-Secret" => @secret }
+    # `siblings.find_each` (no controller) carrega instâncias NOVAS do banco --
+    # um `define_singleton_method` no objeto local `irma_falha` acima nunca
+    # tocaria essas linhas. Faz o patch no método de INSTÂNCIA da classe,
+    # condicionado ao id da irmã que deve falhar, e restaura no `ensure`.
+    failing_id = irma_falha.id
+    original_save_bang = WhatsappInstance.instance_method(:save!)
+    WhatsappInstance.define_method(:save!) do
+      raise ActiveRecord::RecordInvalid, self if id == failing_id
+      original_save_bang.bind(self).call
+    end
+
+    begin
+      post "/webhooks/evolution",
+        params: { instance: @name, event: "connection.update", data: { state: "open" } },
+        headers: { "X-Webhook-Secret" => @secret }
+    ensure
+      WhatsappInstance.define_method(:save!, original_save_bang)
+    end
     assert_response :ok
 
     # A irmã que falhou fica presa no estado antigo (o próprio save! nunca
     # commitou), mas o request como um todo não vira 500...
-    irma_falha.singleton_class.send(:remove_method, :save!)
     irma_falha.reload
     assert_equal "awaiting_qr", irma_falha.connection_state
 
