@@ -246,4 +246,40 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
 
     refute_includes serialized["arguments"].to_s, "SEGREDO-INSTANCIA"
   end
+
+  # --- 29-02: idempotencia sob execucao concorrente/duplicada (ENVIO-04) --
+
+  test "claim atomico: update_all condicional retorna 0 quando outro processo/tentativa ja tratou o item" do
+    @group_row.update!(status: :enviado)
+    claimed = DivulgacaoGrupo.where(id: @group_row.id, status: :pendente).update_all(status: :enviado)
+    assert_equal 0, claimed
+  end
+
+  test "perform_now duas vezes seguidas no mesmo grupo pendente so chama Evolution::Client uma unica vez" do
+    calls = 0
+    Evolution::Client.stub(:send_media, ->(*) { calls += 1; { "key" => { "id" => "X" } } }) do
+      2.times { Whatsapp::SendToGroupJob.perform_now(@group_row) }
+    end
+
+    assert_equal 1, calls
+  end
+
+  test "dois SendToGroupJob enfileirados para o MESMO grupo -- o segundo a rodar e sempre um no-op" do
+    calls = 0
+    Evolution::Client.stub(:send_media, ->(*) { calls += 1; { "key" => { "id" => "X" } } }) do
+      Whatsapp::SendToGroupJob.perform_later(@group_row)
+      Whatsapp::SendToGroupJob.perform_later(@group_row)
+      perform_enqueued_jobs
+    end
+
+    assert_equal 1, calls
+  end
+
+  test "um grupo ja falhou/incerto/enviado nunca e reivindicado de novo pelo claim" do
+    %w[falhou incerto enviado].each do |status|
+      @group_row.update!(status: status)
+      claimed = DivulgacaoGrupo.where(id: @group_row.id, status: :pendente).update_all(status: :enviado)
+      assert_equal 0, claimed, "esperava claim=0 para status inicial #{status}"
+    end
+  end
 end
