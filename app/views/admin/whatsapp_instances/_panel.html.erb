@@ -134,10 +134,20 @@
                   class="inline-flex items-center h-9 px-3 border border-gray-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-gray-50 transition-colors">
             Parear novamente
           </button>
+          <%# 31-REVIEW.md WR-03: o corpo do modal avisa do "blast radius" real
+              quando a conexão é compartilhada -- `reconnect` chama
+              Evolution::Client.connect(inst.instance_name), que encerra a
+              sessão FÍSICA, derrubando TODOS os clientes-irmãos que usam o
+              mesmo instance_name, não só este. Mesma lógica que o modal de
+              "Reutilizar conexão existente" (linha ~65) já aplica. %>
           <%= render "admin/clients/confirm_modal",
                 id: "reconnect-modal",
                 title: "Parear novamente",
-                body: "Parear novamente encerra a sessão atual do WhatsApp deste número. Os disparos ficam indisponíveis até um novo pareamento ser concluído.",
+                body: (whatsapp_instance.shared? ?
+                        "Parear novamente encerra a sessão atual do WhatsApp deste número. " \
+                        "Esta conexão é compartilhada com #{whatsapp_instance.siblings.where.not(id: whatsapp_instance.id).count} outro(s) cliente(s) — " \
+                        "os disparos ficam indisponíveis para TODOS eles, não só para este cliente, até um novo pareamento ser concluído." :
+                        "Parear novamente encerra a sessão atual do WhatsApp deste número. Os disparos ficam indisponíveis até um novo pareamento ser concluído."),
                 confirm_label: "Parear novamente",
                 cancel_label: "Manter conexão atual",
                 confirm_variant: "warning",
