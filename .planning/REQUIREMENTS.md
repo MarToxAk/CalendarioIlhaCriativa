@@ -20,7 +20,7 @@
 - [x] **INFRA-04**: Segredos do Evolution (`apikey`, `hash`, `token`, QR) nunca aparecem em log — `filter_parameters` corrigido, e nenhum segredo trafega como argumento de job
 - [ ] **INFRA-05**: `good_job` removido do Gemfile, restando um único adapter de fila no bundle
 - [ ] **INFRA-06**: Disparos de WhatsApp rodam em fila dedicada, sem atrasar os broadcasts de ActionCable do v1.5
-- [ ] **INFRA-07**: `failed_executions` do solid_queue tem política de retenção, evitando acúmulo de argumentos de job em texto claro
+- [x] **INFRA-07**: `failed_executions` do solid_queue tem política de retenção, evitando acúmulo de argumentos de job em texto claro
 
 ### Transporte Evolution API
 
@@ -78,7 +78,7 @@
 - [x] **SEG-01**: O identificador do grupo nunca vem cru do formulário — só chaves internas resolvidas dentro do escopo do cliente
 - [x] **SEG-02**: O sistema recusa uma Divulgação cuja arte e cujos grupos não pertençam ao mesmo cliente
 - [ ] **SEG-03**: O envio usa o token da instância daquele cliente, de forma que um erro de escopo falhe com 401 em vez de postar no cliente errado
-- [ ] **SEG-04**: Existem testes que provam que a arte do cliente A não alcança os grupos do cliente B
+- [x] **SEG-04**: Existem testes que provam que a arte do cliente A não alcança os grupos do cliente B
 
 ### Acompanhamento
 
@@ -147,7 +147,7 @@ Preenchido na criação do roadmap (2026-08-29). Fonte: `.planning/ROADMAP.md`.
 | INFRA-04 | Phase 26 | Complete |
 | INFRA-05 | Phase 25 | Gaps Found |
 | INFRA-06 | Phase 29 | Pending |
-| INFRA-07 | Phase 30 | Pending |
+| INFRA-07 | Phase 30 | Complete |
 | EVO-01 | Phase 25 | Gaps Found |
 | EVO-02 | Phase 25 | Complete |
 | EVO-03 | Phase 25 | Complete |
@@ -187,7 +187,7 @@ Preenchido na criação do roadmap (2026-08-29). Fonte: `.planning/ROADMAP.md`.
 | SEG-01 | Phase 28 | Complete |
 | SEG-02 | Phase 28 | Complete |
 | SEG-03 | Phase 29 | Pending |
-| SEG-04 | Phase 30 | Pending |
+| SEG-04 | Phase 30 | Complete |
 | ACOMP-01 | Phase 30 | Complete |
 | ACOMP-02 | Phase 30 | Pending |
 | ACOMP-03 | Phase 30 | Pending |

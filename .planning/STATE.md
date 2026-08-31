@@ -5,16 +5,16 @@ milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 30
 current_phase_name: Acompanhamento ao Vivo + Hardening
 status: executing
-stopped_at: Completed 30-01-PLAN.md
-last_updated: "2026-08-31T13:02:31.754Z"
+stopped_at: Completed 30-04-PLAN.md
+last_updated: "2026-08-31T13:13:14.674Z"
 last_activity: 2026-08-31
-last_activity_desc: Phase 30 execution started
-state_head: 42eb6eb3f31d5d70ab7d882216262a9905ed49a4
+last_activity_desc: Phase 30 — 30-04 (SEG-04 + INFRA-07) executed out of sequence (wave 1, depends_on []); 30-02 and 30-03 still pending
+state_head: eb5765c6a1e4ae3c903b1a415a539d9ecde36d92
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 24
-  completed_plans: 21
+  completed_plans: 22
   percent: 33
 ---
 
@@ -38,9 +38,9 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 ## Current Position
 
 Phase: 30 (Acompanhamento ao Vivo + Hardening) — EXECUTING
-Plan: 2 of 4
-Status: Ready to execute
-Last activity: 2026-08-31 — Phase 30 execution started
+Plans complete: 01, 04 of 4 (02, 03 pending — 04 executed out of sequence, wave 1, no dependencies)
+Status: Ready to execute (30-02, 30-03)
+Last activity: 2026-08-31 — 30-04 (SEG-04 + INFRA-07) executed
 
 ## Progress Bar
 
@@ -212,6 +212,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 26 P04 | ~10min | 2 tasks | 4 files |
 | Phase 26-inst-ncia-de-whatsapp-por-cliente-pareamento P05 | ~15min | 3 tasks | 9 files |
 | Phase 30 P01 | ~25min | 3 tasks | 9 files |
+| Phase 30 P04 | ~15min | 2 tasks | 3 files |
 
 ## Decisions
 
@@ -259,6 +260,8 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 26]: 26-04: refresh_qr é a única ação JSON do controller — sempre render json:, mesmo quando pull_fresh_qr falha silenciosamente. Rails.cache.write(key, true, unless_exist:true, expires_in:15.seconds) throttla a 1 chamada Evolution::Client.connect por instância a cada 15s.
 - [Phase 30]: [Phase 30-01]: dev ActionCable adapter async -> solid_cable (planner-surfaced) — bin/jobs is the first process to originate a broadcast; async is in-process only, would never reach the web process browser
 - [Phase 30]: [Phase 30-01]: broadcast_replace_to (turbo-rails high-level helper) used for DivulgacaoGrupo/Divulgacao live broadcasts instead of arte.rb's manual turbo_stream_tag assembly
+- [Phase 30]: [Phase 30]: [Phase 30-04]: SEG-04 send-path test disconnects client A's OWN instance to trigger the existing instance&.connected? guard on a force-built poisoned cross-client row -- the job has no dedicated cross-client check of its own; that barrier lives only at creation time (SEG-02), proven separately by the two mutation-sensitive assert_raises(RecordNotFound) units.
+- [Phase 30]: [Phase 30]: [Phase 30-04]: INFRA-07 recurring.yml commands use YAML single-quoted scalars (doubled '' for the embedded Ruby 'created_at < ?' literal) so the raw file contains literal double-quoted ENV.fetch args, matching the plan's exact grep acceptance criteria; discard_all_in_batches confirmed scope-honoring against vendored execution.rb:30-50 and functionally proven in development (seeded old+recent FailedExecution/Job pairs, ran the real command, rolled back).
 
 ## Quick Tasks Completed
 
@@ -268,8 +271,8 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-31T13:02:31.182Z
-**Stopped at:** Completed 30-01-PLAN.md
+**Last session:** 2026-08-31T13:13:14.112Z
+**Stopped at:** Completed 30-04-PLAN.md
 **Resume file:** None
 
 ### Blockers
