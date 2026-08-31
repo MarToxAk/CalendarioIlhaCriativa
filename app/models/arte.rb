@@ -20,7 +20,7 @@ class Arte < ApplicationRecord
     end
   end
 
-  enum :platform,   { instagram: 0, facebook: 1, linkedin: 2 }, prefix: :platform
+  enum :platform,   { instagram: 0, facebook: 1, linkedin: 2, whatsapp: 3 }, prefix: :platform
   enum :media_type, { image: 0, video: 1, caption_only: 2 }
   enum :status,     { pending: 0, approved: 1, change_requested: 2, revised: 3 }
 
