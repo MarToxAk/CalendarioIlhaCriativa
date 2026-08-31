@@ -825,6 +825,93 @@ class Admin::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/reenfileirado/, response.body)
   end
 
+  # --- Task 3 (30-03): sub-linhas error_code / sent_at em _grupo_row -----
+
+  test "GET show de linha enviado mostra 'Enviado em ... (BRT)'" do
+    d = build_divulgacao_agendada
+    dg = d.divulgacao_grupos.first
+    dg.update!(status: :enviado, sent_at: Time.zone.local(2025, 9, 15, 14, 0), evolution_message_id: "abc123")
+
+    get admin_client_divulgacao_path(@client, d)
+
+    assert_response :success
+    assert_includes response.body, "Enviado em 15/09/2025 14:00 (BRT)"
+  end
+
+  test "GET show de linha falhou com error_code sentinela mostra o texto pt-BR mapeado" do
+    d = build_divulgacao_agendada
+    dg = d.divulgacao_grupos.first
+    dg.update!(status: :falhou, error_code: "instancia_desconectada")
+
+    get admin_client_divulgacao_path(@client, d)
+
+    assert_response :success
+    assert_includes response.body, "Motivo: o número do cliente estava desconectado no momento do envio."
+  end
+
+  test "GET show de linha falhou com error_code ja redigido -- [url-redigida] verbatim, sem http/X-Amz cru (T-30-10)" do
+    d = build_divulgacao_agendada
+    dg = d.divulgacao_grupos.first
+    dg.update!(status: :falhou, error_code: "failed to download resource: [url-redigida]")
+
+    get admin_client_divulgacao_path(@client, d)
+
+    assert_response :success
+    assert_includes response.body, "Motivo: failed to download resource: [url-redigida]"
+    refute_includes response.body, "Motivo: failed to download resource: http"
+    refute_match(/Motivo:[^<]*X-Amz/, response.body)
+  end
+
+  test "GET show/index com linhas mistas -- so falhou/incerto mostram Motivo, so enviado mostra Enviado em, pendente nao mostra nada" do
+    g3 = @instance.whatsapp_groups.create!(remote_jid: "sub3@g.us", subject: "Grupo Sub Tres", active: true, synced_at: Time.current)
+    g4 = @instance.whatsapp_groups.create!(remote_jid: "sub4@g.us", subject: "Grupo Sub Quatro", active: true, synced_at: Time.current)
+    d = build_divulgacao_agendada(groups: [ @g1, @g2, g3, g4 ])
+    dg_pendente = d.divulgacao_grupos.find_by!(group_name: @g1.display_name)
+    dg_enviado  = d.divulgacao_grupos.find_by!(group_name: @g2.display_name)
+    dg_falhou   = d.divulgacao_grupos.find_by!(group_name: g3.display_name)
+    dg_incerto  = d.divulgacao_grupos.find_by!(group_name: g4.display_name)
+    dg_enviado.update!(status: :enviado, sent_at: Time.current, evolution_message_id: "x")
+    dg_falhou.update!(status: :falhou, error_code: "instancia_desconectada")
+    dg_incerto.update!(status: :incerto, error_code: "Unknown: timeout")
+
+    get admin_client_divulgacao_path(@client, d)
+
+    assert_response :success
+    assert_equal 1, response.body.scan("Enviado em ").size
+    assert_equal 2, response.body.scan("Motivo: ").size
+    refute_nil dg_pendente # linha pendente nao contribui pra nenhuma das duas contagens acima
+  end
+
+  # SC3: uma DivulgacaoGrupo congela group_name/remote_jid na criacao (DIVU-09).
+  # Renomear/desativar o WhatsappGroup de origem DEPOIS do envio nao pode
+  # alterar o que ja foi mostrado ao admin. Este teste falha se _grupo_row (ou
+  # o placar) trocar dg.group_name por uma live lookup em dg.whatsapp_group.
+  test "SC3: renomear/desativar o WhatsappGroup de origem nao muda o group_name congelado no show; index/placar seguem intactos" do
+    d = build_divulgacao_agendada(groups: [ @g1 ])
+    dg = d.divulgacao_grupos.first
+    nome_original = dg.group_name
+    assert_equal "Grupo Um", nome_original
+
+    @g1.update!(subject: "Novo Nome Renomeado", active: false)
+
+    # #show renderiza dg.group_name (o snapshot) via _grupo_row -- nunca uma
+    # live lookup em dg.whatsapp_group.display_name.
+    get admin_client_divulgacao_path(@client, d)
+    assert_response :success
+    assert_includes response.body, nome_original
+    refute_includes response.body, "Novo Nome Renomeado"
+
+    # index nao lista nomes de grupo (so contagem + placar) -- a garantia aqui
+    # e que a renomeacao/desativacao da origem nao quebra a pagina nem muda o
+    # placar computado a partir do snapshot congelado.
+    get admin_client_divulgacoes_path(@client)
+    assert_response :success
+    assert_includes response.body, "1 pendentes"
+    refute_includes response.body, "Novo Nome Renomeado"
+
+    assert_equal nome_original, dg.reload.group_name
+  end
+
   test "GET show de divulgacao com zero divulgacao_grupos -- Grupos (0), sem erro (backstop)" do
     d = @client.divulgacoes.new(arte: @arte, scheduled_for: 3.days.from_now)
     d.save!(validate: false) # ao_menos_um_grupo bloquearia via form -- so alcancavel via console/backstop

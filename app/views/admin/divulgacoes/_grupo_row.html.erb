@@ -4,6 +4,11 @@
 <li id="<%= dom_id(dg) %>" class="flex items-start gap-3 py-3 px-4 border-b border-gray-100 last:border-0">
   <div class="flex flex-col gap-1 min-w-0 flex-1">
     <span class="text-sm font-medium text-slate-900 truncate" title="<%= dg.group_name %>"><%= dg.group_name %></span>
+    <% if dg.status == "enviado" && dg.sent_at.present? %>
+      <span class="text-xs text-slate-500">Enviado em <%= divulgacao_datetime_label(dg.sent_at) %></span>
+    <% elsif dg.status.in?(%w[falhou incerto]) && dg.error_code.present? %>
+      <span class="text-xs text-slate-500 break-words"><%= divulgacao_grupo_error_label(dg) %></span>
+    <% end %>
   </div>
   <% case dg.status %>
   <% when "pendente" %>
