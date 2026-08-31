@@ -712,6 +712,86 @@ class Admin::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "falhou", dg_b.status
   end
 
+  # --- Task 2 (30-02): resend.turbo_stream.erb + botao Reenviar ----------
+
+  test "POST resend as turbo_stream -- dois replace nos alvos dom_id(dg)/dom_id(divulgacao,:progresso), com reenfileirado" do
+    d = build_divulgacao_agendada
+    dg = d.divulgacao_grupos.first
+    dg.update!(status: :falhou, error_code: "instancia_desconectada")
+
+    post resend_admin_client_divulgacao_divulgacao_grupo_path(@client, d, dg), as: :turbo_stream
+
+    assert_response :success
+    assert_equal 2, response.body.scan('action="replace"').size
+    assert_includes response.body, %(target="#{ActionView::RecordIdentifier.dom_id(dg)}")
+    assert_includes response.body, %(target="#{ActionView::RecordIdentifier.dom_id(d, :progresso)}")
+    assert_includes response.body, "· reenfileirado"
+    assert_includes response.body, "Pendente"
+  end
+
+  test "GET show com todas as linhas pendente -- nenhum botao Reenviar (zero-one-many: zero)" do
+    d = build_divulgacao_agendada
+
+    get admin_client_divulgacao_path(@client, d)
+
+    assert_response :success
+    assert_no_match(/Reenviar/, response.body)
+  end
+
+  test "GET show com exatamente uma linha falhou -- exatamente um botao Reenviar (zero-one-many: one)" do
+    d = build_divulgacao_agendada
+    dg = d.divulgacao_grupos.first
+    dg.update!(status: :falhou, error_code: "instancia_desconectada")
+
+    get admin_client_divulgacao_path(@client, d)
+
+    assert_response :success
+    assert_equal 1, response.body.scan(">Reenviar<").size
+    assert_includes response.body, "Reenviar esta arte para o grupo &quot;#{dg.group_name}&quot;"
+  end
+
+  test "GET show com status mistos -- Reenviar so em falhou/incerto, nunca pendente/enviado (zero-one-many: many)" do
+    g3 = @instance.whatsapp_groups.create!(remote_jid: "g3@g.us", subject: "Grupo Tres",   active: true, synced_at: Time.current)
+    g4 = @instance.whatsapp_groups.create!(remote_jid: "g4@g.us", subject: "Grupo Quatro", active: true, synced_at: Time.current)
+    d = build_divulgacao_agendada(groups: [ @g1, @g2, g3, g4 ])
+    dg_enviado = d.divulgacao_grupos.find_by!(group_name: @g2.display_name)
+    dg_falhou  = d.divulgacao_grupos.find_by!(group_name: g3.display_name)
+    dg_incerto = d.divulgacao_grupos.find_by!(group_name: g4.display_name)
+    dg_enviado.update!(status: :enviado, sent_at: Time.current, evolution_message_id: "x")
+    dg_falhou.update!(status: :falhou, error_code: "instancia_desconectada")
+    dg_incerto.update!(status: :incerto, error_code: "Unknown: timeout")
+
+    get admin_client_divulgacao_path(@client, d)
+
+    assert_response :success
+    assert_equal 2, response.body.scan(">Reenviar<").size
+    assert_includes response.body, "Reenviar esta arte para o grupo &quot;#{dg_falhou.group_name}&quot;"
+    assert_includes response.body, "Reenviar esta arte para o grupo &quot;#{dg_incerto.group_name}&quot;"
+  end
+
+  test "GET show de divulgacao cancelada com linha falhou -- nenhum botao Reenviar mesmo em linha recuperavel" do
+    d = build_divulgacao_agendada
+    dg = d.divulgacao_grupos.first
+    dg.update!(status: :falhou, error_code: "instancia_desconectada")
+    d.cancelar!
+
+    get admin_client_divulgacao_path(@client, d)
+
+    assert_response :success
+    assert_no_match(/Reenviar/, response.body)
+  end
+
+  test "_grupo_row renderiza sem o local just_resent (render normal / broadcast ao vivo nao passam)" do
+    d = build_divulgacao_agendada
+    dg = d.divulgacao_grupos.first
+    dg.update!(status: :falhou, error_code: "instancia_desconectada")
+
+    get admin_client_divulgacao_path(@client, d)
+
+    assert_response :success
+    assert_no_match(/reenfileirado/, response.body)
+  end
+
   test "GET show de divulgacao com zero divulgacao_grupos -- Grupos (0), sem erro (backstop)" do
     d = @client.divulgacoes.new(arte: @arte, scheduled_for: 3.days.from_now)
     d.save!(validate: false) # ao_menos_um_grupo bloquearia via form -- so alcancavel via console/backstop

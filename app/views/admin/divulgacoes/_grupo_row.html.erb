@@ -23,4 +23,19 @@
       <span aria-hidden="true">●</span> Incerto
     </span>
   <% end %>
+  <% if local_assigns[:just_resent] %>
+    <%# Renderizado SOMENTE pelo resend.turbo_stream.erb — nunca no render normal nem no broadcast ao vivo. %>
+    <span class="text-xs text-slate-400 shrink-0">· reenfileirado</span>
+  <% end %>
+  <% if dg.status.in?(%w[falhou incerto]) && !dg.divulgacao.status_cancelada? %>
+    <%= button_to "Reenviar",
+          resend_admin_client_divulgacao_divulgacao_grupo_path(dg.divulgacao.client, dg.divulgacao, dg),
+          method: :post,
+          form_class: "shrink-0",
+          data: { turbo_confirm: "Reenviar esta arte para o grupo \"#{dg.group_name}\"? " \
+                                 "Ela pode ser postada de novo se o envio anterior tiver saído.",
+                  turbo_submits_with: "Reenfileirando…" },
+          class: "inline-flex items-center h-8 px-3 border border-gray-200 rounded-lg " \
+                 "text-xs font-medium text-slate-700 bg-white hover:bg-gray-50 transition-colors" %>
+  <% end %>
 </li>

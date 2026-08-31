@@ -1,0 +1,9 @@
+<%# resend.turbo_stream.erb — resposta do POST #resend (ACOMP-02). %>
+<%# Mesmos alvos do broadcast ao vivo do modelo (30-01): dom_id(@dg) e %>
+<%# dom_id(@divulgacao, :progresso) — nenhum reload de pagina inteira. %>
+<%= turbo_stream.replace dom_id(@dg) do %>
+  <%= render "grupo_row", dg: @dg, just_resent: true %>
+<% end %>
+<%= turbo_stream.replace dom_id(@divulgacao, :progresso) do %>
+  <%= render "progresso_resumo", divulgacao: @divulgacao %>
+<% end %>
