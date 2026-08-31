@@ -271,6 +271,18 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
     assert_includes job.concurrency_key, @instance.id.to_s
   end
 
+  test "WR-01: sem whatsapp_instance a concurrency_key usa sentinel unico por grupo, nunca colapsa para um slot global compartilhado" do
+    job = Whatsapp::SendToGroupJob.new(@group_row)
+    client = @group_row.divulgacao.client # mesmo objeto que o lambda recebe via job.arguments.first
+
+    client.stub(:whatsapp_instance, nil) do
+      key = job.concurrency_key
+      assert_includes key, "send_to_group:no_instance:#{@group_row.id}"
+      refute_equal "Whatsapp::SendToGroupJob", key,
+        "uma chave nil colapsaria (.compact) para a string crua da classe -- um unico slot global para todo job sem instancia"
+    end
+  end
+
   test "token nunca entra no argumento serializado, mesmo com limits_concurrency declarado" do
     job = Whatsapp::SendToGroupJob.new(@group_row)
     serialized = job.serialize

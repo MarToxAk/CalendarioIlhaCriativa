@@ -39,11 +39,26 @@ class Whatsapp::SendToGroupJob < ApplicationJob
   # qual o guard `instance&.connected?` no `perform` usa safe navigation. Este
   # lambda roda SÍNCRONO no enqueue (`perform_later`), dentro do loop do
   # DispatchJob; um `NoMethodError` aqui abortaria o dispatch de todos os
-  # grupos irmãos. Com `&.id` a chave vira nil -> ActiveJob trata como "não
-  # limitado" (roda sem serialização), o que é seguro: a primeira linha do
+  # grupos irmãos -- por isso o `&.id`.
+  #
+  # Cuidado com o ramo sem instância: uma `key:` que retorna nil NÃO desliga o
+  # limite. Em solid_queue 1.4.0 (active_job/concurrency_controls.rb) a chave
+  # vira `[concurrency_group, nil].compact.join("/")` => a string crua da
+  # classe `"Whatsapp::SendToGroupJob"`, e `concurrency_limited?` continua
+  # `true` -- ou seja, TODO job sem instância, de QUALQUER cliente, disputaria
+  # um único slot global `to: 1`. Para evitar essa serialização global
+  # acidental o ramo sem instância devolve um sentinel único por grupo
+  # (`send_to_group:no_instance:<id>`), dando a cada job seu próprio slot.
+  # É latente/inalcançável hoje (nenhum caminho destrói uma WhatsappInstance
+  # sem destruir o Client e suas divulgações junto), mas mantém o fallback são
+  # se algum dia virar alcançável -- e de qualquer forma a primeira linha do
   # `perform` (`instance&.connected?`) já derruba o job para :falhou sem tocar
   # na Evolution.
-  limits_concurrency to: 1, key: ->(group) { group.divulgacao.client.whatsapp_instance&.id }
+  limits_concurrency to: 1,
+    key: ->(group) {
+      group.divulgacao.client.whatsapp_instance&.id ||
+        "send_to_group:no_instance:#{group.id}"
+    }
 
   # 27-REVIEW.md WR-A / RESEARCH Pitfall 3 (verificado contra
   # activesupport-8.1.3/lib/active_support/rescuable.rb:129):
