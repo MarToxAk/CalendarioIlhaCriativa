@@ -128,4 +128,122 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
   test "queue_as whatsapp_sends" do
     assert_equal "whatsapp_sends", Whatsapp::SendToGroupJob.new.queue_name
   end
+
+  # --- 29-02: taxonomia de erro completa ---------------------------------
+
+  test "discard_on Permanent grava falhou e error_code truncado a partir da mensagem do erro" do
+    Evolution::Client.stub(:send_media, ->(*) { raise Evolution::Errors::Permanent, "x" * 1000 }) do
+      Whatsapp::SendToGroupJob.perform_now(@group_row)
+    end
+
+    @group_row.reload
+    assert_equal "falhou", @group_row.status
+    assert_operator @group_row.error_code.length, :<=, 500
+  end
+
+  test "discard_on Unknown grava incerto (nunca falhou), sem reenfileirar" do
+    Evolution::Client.stub(:send_media, ->(*) { raise Evolution::Errors::Unknown, "timeout de leitura" }) do
+      assert_no_enqueued_jobs do
+        Whatsapp::SendToGroupJob.perform_now(@group_row)
+      end
+    end
+
+    assert_equal "incerto", @group_row.reload.status
+  end
+
+  test "discard_on NotConnected grava falhou com instancia_desconectada" do
+    Evolution::Client.stub(:send_media, ->(*) { raise Evolution::Errors::NotConnected, "connectionState != open" }) do
+      Whatsapp::SendToGroupJob.perform_now(@group_row)
+    end
+
+    @group_row.reload
+    assert_equal "falhou", @group_row.status
+    assert_equal "instancia_desconectada", @group_row.error_code
+  end
+
+  test "discard_on ConfigurationError grava falhou com a mensagem truncada" do
+    Evolution::Client.stub(:send_media, ->(*) { raise Evolution::Errors::ConfigurationError, "base_url ausente" }) do
+      Whatsapp::SendToGroupJob.perform_now(@group_row)
+    end
+
+    @group_row.reload
+    assert_equal "falhou", @group_row.status
+    assert_equal "base_url ausente", @group_row.error_code
+  end
+
+  test "discard_on StandardError (catch-all) cobre excecao fora da taxonomia Evolution::Errors e ainda assim finaliza a divulgacao se for o ultimo grupo pendente" do
+    @divulgacao.update!(status: :em_andamento) # estado real no momento em que o DispatchJob enfileira o SendToGroupJob
+
+    Evolution::Client.stub(:send_media, ->(*) { raise Faraday::ParsingError, "corpo inesperado" }) do
+      Whatsapp::SendToGroupJob.perform_now(@group_row)
+    end
+
+    @group_row.reload
+    assert_equal "falhou", @group_row.status
+    assert_equal "unexpected_error", @group_row.error_code
+    assert_equal "concluida", @divulgacao.reload.status
+  end
+
+  test "discard_on StandardError (catch-all) nao rouba Transient do retry_on mais especifico" do
+    Evolution::Client.stub(:send_media, ->(*) { raise Evolution::Errors::Transient, "connection refused" }) do
+      assert_enqueued_with(job: Whatsapp::SendToGroupJob, args: [ @group_row ]) do
+        Whatsapp::SendToGroupJob.perform_now(@group_row)
+      end
+    end
+  end
+
+  test "retry_on Transient desfaz o claim (status volta a pendente) antes de reenfileirar -- a nova tentativa realmente tenta enviar de novo, nao vira no-op" do
+    calls = 0
+    stub_impl = lambda do |*|
+      calls += 1
+      raise Evolution::Errors::Transient, "connection refused" if calls == 1
+      { "key" => { "id" => "MSG2" } }
+    end
+
+    Evolution::Client.stub(:send_media, stub_impl) do
+      assert_enqueued_with(job: Whatsapp::SendToGroupJob, args: [ @group_row ]) do
+        Whatsapp::SendToGroupJob.perform_now(@group_row)
+      end
+      assert_equal "pendente", @group_row.reload.status # claim desfeito, nao ficou preso em enviado
+
+      Whatsapp::SendToGroupJob.perform_now(@group_row) # simula o que retry_on faria de fato
+    end
+
+    @group_row.reload
+    assert_equal 2, calls
+    assert_equal "enviado", @group_row.status
+    assert_equal "MSG2", @group_row.evolution_message_id
+  end
+
+  test "retry_on Transient chama mark_falhou (error_code transient) na tentativa final (exhaustion), sem reenfileirar de novo" do
+    job = Whatsapp::SendToGroupJob.new(@group_row)
+    job.exception_executions = { "[Evolution::Errors::Transient]" => 5 }
+
+    Evolution::Client.stub(:send_media, ->(*) { raise Evolution::Errors::Transient, "connection refused" }) do
+      assert_no_enqueued_jobs do
+        job.perform_now
+      end
+    end
+
+    @group_row.reload
+    assert_equal "falhou", @group_row.status
+    assert_equal "transient", @group_row.error_code
+  end
+
+  test "limits_concurrency configurado para 1 por instancia" do
+    assert_equal 1, Whatsapp::SendToGroupJob.concurrency_limit
+    assert_equal :block, Whatsapp::SendToGroupJob.concurrency_on_conflict
+  end
+
+  test "concurrency_key resolve para o whatsapp_instance_id do grupo (regressao do fix da Task 1 do plano 29-01)" do
+    job = Whatsapp::SendToGroupJob.new(@group_row)
+    assert_includes job.concurrency_key, @instance.id.to_s
+  end
+
+  test "token nunca entra no argumento serializado, mesmo com limits_concurrency declarado" do
+    job = Whatsapp::SendToGroupJob.new(@group_row)
+    serialized = job.serialize
+
+    refute_includes serialized["arguments"].to_s, "SEGREDO-INSTANCIA"
+  end
 end
