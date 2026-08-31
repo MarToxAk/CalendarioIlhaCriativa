@@ -19,7 +19,7 @@ class AdminWhatsappGroupsControllerTest < ActionDispatch::IntegrationTest
   end
 
   teardown do
-    Rails.cache.delete("wa_groups_sync_#{@instance&.id}")
+    Rails.cache.delete("wa_groups_sync_#{@instance&.instance_name}")
   end
 
   # --- #index (CR-01: paginacao do picker) --------------------------------
@@ -86,7 +86,7 @@ class AdminWhatsappGroupsControllerTest < ActionDispatch::IntegrationTest
       instance_name: WhatsappInstance.evolution_name_for(@client),
       connection_state: :connected
     )
-    Rails.cache.delete("wa_groups_sync_#{@instance.id}")
+    Rails.cache.delete("wa_groups_sync_#{@instance.instance_name}")
 
     assert_enqueued_with(job: Whatsapp::SyncGroupsJob, args: [ @instance ]) do
       post sync_admin_client_whatsapp_groups_path(@client)
@@ -110,7 +110,7 @@ class AdminWhatsappGroupsControllerTest < ActionDispatch::IntegrationTest
     )
     # cache TTL de 15s ja expirado -- exatamente a janela que o WR-02 fechou: sem o gate em
     # groups_sync_syncing?, o guard de cache sozinho deixaria passar um 2o job aqui.
-    Rails.cache.delete("wa_groups_sync_#{@instance.id}")
+    Rails.cache.delete("wa_groups_sync_#{@instance.instance_name}")
 
     assert_no_enqueued_jobs do
       post sync_admin_client_whatsapp_groups_path(@client)
@@ -119,6 +119,53 @@ class AdminWhatsappGroupsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_client_whatsapp_groups_path(@client)
     assert_equal "Sincronização já em andamento.", flash[:notice]
     assert @instance.reload.groups_sync_syncing?
+  end
+
+  # 31-REVIEW.md WR-02: com instância compartilhada, o guard tem que bloquear o
+  # #sync de um cliente-IRMÃO enquanto OUTRO irmão (mesmo instance_name, linha
+  # id diferente) já está com groups_sync_state=syncing -- sem isso, os dois
+  # clientes cada um passa pelo próprio guard (id diferente) e disparam dois
+  # Whatsapp::SyncGroupsJob concorrentes para a MESMA conexão física, correndo
+  # com batch_started_at diferentes na passada de desativação do
+  # GroupSynchronizer (a race que este finding fecha). Sem o `.siblings.
+  # groups_sync_syncing.exists?`, reverter para `@instance.groups_sync_syncing?`
+  # passaria zero testes vermelhos aqui.
+  test "sync bloqueia quando uma IRMÃ (mesmo instance_name) já está syncing, mesmo com o cache expirado" do
+    nome_compartilhado = WhatsappInstance.evolution_name_for(@client)
+    @instance = @client.create_whatsapp_instance!(
+      instance_name: nome_compartilhado,
+      connection_state: :connected,
+      groups_sync_state: :idle
+    )
+
+    cliente_irmao = Client.create!(
+      name: "WA Groups Controller Test Irmão",
+      password: "senha1234",
+      password_confirmation: "senha1234"
+    )
+    irma_syncing = cliente_irmao.create_whatsapp_instance!(
+      instance_name: nome_compartilhado,
+      connection_state: :connected,
+      groups_sync_state: :syncing
+    )
+
+    # Cache TTL já expirado -- sem o gate por-irmã, o guard de cache sozinho
+    # deixaria passar (chave `wa_groups_sync_#{instance_name}` também já foi
+    # liberada, então SÓ o gate `groups_sync_syncing?` protege esta janela).
+    Rails.cache.delete("wa_groups_sync_#{nome_compartilhado}")
+
+    assert_no_enqueued_jobs do
+      post sync_admin_client_whatsapp_groups_path(@client)
+    end
+
+    assert_redirected_to admin_client_whatsapp_groups_path(@client)
+    assert_equal "Sincronização já em andamento.", flash[:notice]
+    # A linha do cliente atual continua idle -- foi a irmã que estava syncing,
+    # a prova de que o guard olhou para o conjunto de irmãs, não só self.
+    assert @instance.reload.groups_sync_idle?
+    assert irma_syncing.reload.groups_sync_syncing?
+  ensure
+    Rails.cache.delete("wa_groups_sync_#{nome_compartilhado}")
   end
 
   # --- #sync_status ------------------------------------------------------
@@ -185,8 +232,8 @@ class AdminWhatsappGroupsControllerTest < ActionDispatch::IntegrationTest
     body = JSON.parse(response.body)
     assert_equal 2, body["count"]
   ensure
-    Rails.cache.delete("wa_groups_sync_#{instance_a&.id}")
-    Rails.cache.delete("wa_groups_sync_#{instance_b&.id}")
+    Rails.cache.delete("wa_groups_sync_#{instance_a&.instance_name}")
+    Rails.cache.delete("wa_groups_sync_#{instance_b&.instance_name}")
   end
 
   # --- #show — teste canônico A×B (GRUPO-03/SC5) --------------------------
@@ -218,8 +265,8 @@ class AdminWhatsappGroupsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Grupo do A"
   ensure
-    Rails.cache.delete("wa_groups_sync_#{instance_a&.id}")
-    Rails.cache.delete("wa_groups_sync_#{instance_b&.id}")
+    Rails.cache.delete("wa_groups_sync_#{instance_a&.instance_name}")
+    Rails.cache.delete("wa_groups_sync_#{instance_b&.instance_name}")
   end
 
   test "show com id inexistente -- RecordNotFound, mesmo redirect genérico" do

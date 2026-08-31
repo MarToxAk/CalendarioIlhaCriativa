@@ -32,12 +32,24 @@ class Admin::WhatsappGroupsController < Admin::BaseController
              alert: "A instância está desconectada. Reconecte o número antes de sincronizar os grupos."
     end
 
-    if @instance.groups_sync_syncing?
+    # 31-REVIEW.md WR-02: o guard tem que enxergar TODAS as linhas-irmãs
+    # (mesmo instance_name/conexão física), não só a linha do cliente atual --
+    # com instância compartilhada, cada irmã tem seu próprio id e seu próprio
+    # groups_sync_state, então checar só `@instance.groups_sync_syncing?`
+    # deixaria cada cliente passar pelo guard independentemente e disparar seu
+    # próprio Whatsapp::SyncGroupsJob para a MESMA conexão física ao mesmo
+    # tempo -- correndo com batch_started_at diferentes na passada de
+    # desativação do GroupSynchronizer. `siblings` inclui `@instance` (D-05),
+    # então continua cobrindo o caso "esta própria linha está syncing".
+    if @instance.siblings.groups_sync_syncing.exists?
       return redirect_to admin_client_whatsapp_groups_path(@client), notice: "Sincronização já em andamento."
     end
 
+    # Mesma razão acima para o cache key: `instance_name` (não `id`) garante
+    # que o guard de 15s também barra um segundo clique vindo do painel de
+    # OUTRO cliente-irmão, não só re-cliques do mesmo cliente.
     return redirect_to(admin_client_whatsapp_groups_path(@client), notice: "Sincronização já em andamento.") \
-      unless Rails.cache.write("wa_groups_sync_#{@instance.id}", true, unless_exist: true, expires_in: 15.seconds)
+      unless Rails.cache.write("wa_groups_sync_#{@instance.instance_name}", true, unless_exist: true, expires_in: 15.seconds)
 
     @instance.update!(groups_sync_state: :syncing, groups_sync_error: nil)
     Whatsapp::SyncGroupsJob.perform_later(@instance)
