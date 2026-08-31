@@ -549,6 +549,39 @@ class Admin::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     [ d1, d2 ].each { |d| assert_includes response.body, admin_client_divulgacao_path(@client, d) }
   end
 
+  # --- Task 2 (30-03): placar por grupo na historia, sem N+1 -------------
+
+  test "GET index mostra o placar por grupo de cada divulgacao (ACOMP-03)" do
+    d = build_divulgacao_agendada(groups: [ @g1, @g2 ])
+    dg_enviado = d.divulgacao_grupos.find_by!(group_name: @g1.display_name)
+    dg_falhou  = d.divulgacao_grupos.find_by!(group_name: @g2.display_name)
+    dg_enviado.update!(status: :enviado, sent_at: Time.current, evolution_message_id: "x")
+    dg_falhou.update!(status: :falhou, error_code: "instancia_desconectada")
+
+    get admin_client_divulgacoes_path(@client)
+
+    assert_response :success
+    assert_includes response.body, "1 enviados · 1 falhou"
+  end
+
+  test "GET index nao dispara query extra por linha pra montar o placar (T-30-11, sem N+1)" do
+    3.times do |i|
+      g = @instance.whatsapp_groups.create!(remote_jid: "n1-#{i}@g.us", subject: "Grupo N#{i}", active: true, synced_at: Time.current)
+      build_divulgacao_agendada(groups: [ g ])
+    end
+
+    queries = []
+    subscriber = ->(_name, _started, _finished, _unique_id, payload) { queries << payload[:sql].to_s }
+    ActiveSupport::Notifications.subscribed(subscriber, "sql.active_record") do
+      get admin_client_divulgacoes_path(@client)
+    end
+    assert_response :success
+
+    dg_queries = queries.select { |q| q.match?(/FROM\s+"?divulgacao_grupos"?/i) }
+    assert_equal 1, dg_queries.size,
+      "esperava exatamente 1 query em divulgacao_grupos (o preload via includes), achou #{dg_queries.size}: #{dg_queries.inspect}"
+  end
+
   # --- Task 2: #show + #cancel + Divulgacao#cancelar! ---------------------
 
   def build_divulgacao_agendada(client: @client, arte: @arte, groups: [ @g1, @g2 ])

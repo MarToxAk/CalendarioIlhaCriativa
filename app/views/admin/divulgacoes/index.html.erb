@@ -44,7 +44,10 @@
               <%= d.arte.title.presence || "Arte sem título" %>
             </td>
             <td class="py-3 px-4 text-sm text-slate-700"><%= divulgacao_datetime_label(d.scheduled_for) %></td>
-            <td class="py-3 px-4 text-sm text-slate-700"><%= d.divulgacao_grupos.size %></td>
+            <td class="py-3 px-4 text-sm text-slate-700">
+              <%= d.divulgacao_grupos.size %>
+              <span class="block text-xs text-slate-500"><%= divulgacao_placar(d) %></span>
+            </td>
             <td class="py-3 px-4"><%= render "status_badge", divulgacao: d %></td>
             <td class="py-3 px-4 text-right">
               <%= link_to "Ver", admin_client_divulgacao_path(@client, d), class: "text-xs text-[#0F7949] hover:underline" %>
@@ -68,7 +71,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
           </svg>
         </div>
-        <p class="text-xs text-slate-500 mt-1"><%= divulgacao_datetime_label(d.scheduled_for) %> · <%= d.divulgacao_grupos.size %> grupo(s)</p>
+        <p class="text-xs text-slate-500 mt-1"><%= divulgacao_datetime_label(d.scheduled_for) %> · <%= d.divulgacao_grupos.size %> grupo(s) · <%= divulgacao_placar(d) %></p>
       <% end %>
     <% end %>
   </div>

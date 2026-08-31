@@ -4,7 +4,7 @@ class Admin::DivulgacoesController < Admin::BaseController
 
   def index
     @pagy, @divulgacoes = pagy(
-      @client.divulgacoes.includes(:arte).order(scheduled_for: :desc),
+      @client.divulgacoes.includes(:arte, :divulgacao_grupos).order(scheduled_for: :desc),
       limit: 25
     )
   end

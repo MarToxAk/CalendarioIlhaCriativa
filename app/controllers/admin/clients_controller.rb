@@ -13,7 +13,7 @@ class Admin::ClientsController < Admin::BaseController
                                     .includes(:approval_responses)
                                     .distinct
                                     .order(scheduled_on: :desc)
-    @divulgacoes = @client.divulgacoes.includes(:arte).order(scheduled_for: :desc)
+    @divulgacoes = @client.divulgacoes.includes(:arte, :divulgacao_grupos).order(scheduled_for: :desc)
   end
 
   def new
