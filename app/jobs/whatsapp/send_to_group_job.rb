@@ -97,14 +97,18 @@ class Whatsapp::SendToGroupJob < ApplicationJob
 
     arte = divulgacao.arte.reload
     unless arte.approved?
-      group.update!(status: :falhou, error_code: "arte_nao_aprovada") # ENVIO-06
+      # CR-01: o claim atômico acima setou `sent_at` como parte do flip para
+      # :enviado; aqui a Evolution NUNCA foi chamada, então `sent_at` tem que
+      # voltar a nil -- uma linha `falhou` nunca pode carregar timestamp de envio.
+      group.update!(status: :falhou, sent_at: nil, error_code: "arte_nao_aprovada") # ENVIO-06
       self.class.finalize_divulgacao_if_done(divulgacao)
       return
     end
 
     instance = divulgacao.client.whatsapp_instance
     unless instance&.connected?
-      group.update!(status: :falhou, error_code: "instancia_desconectada") # ENVIO-07
+      # CR-01: idem -- Evolution nunca chamada neste guard, limpa o `sent_at` do claim.
+      group.update!(status: :falhou, sent_at: nil, error_code: "instancia_desconectada") # ENVIO-07
       self.class.finalize_divulgacao_if_done(divulgacao)
       return
     end
@@ -135,12 +139,20 @@ class Whatsapp::SendToGroupJob < ApplicationJob
 
   def self.mark_falhou(job, message)
     group = job.arguments.first
-    group.update!(status: :falhou, error_code: message.to_s.first(ERROR_CODE_MAX_LENGTH))
+    # CR-01: espelha o revert de `sent_at` do rescue Transient no `perform`. O
+    # claim atômico seta `sent_at` ao flipar para :enviado; toda saída que NÃO
+    # termina em :enviado tem que zerar de novo, senão uma linha :falhou fica
+    # com timestamp de "envio" que nunca aconteceu (audit trail enganoso para
+    # as telas de histórico da fase 30, que leem `divulgacao_grupos.sent_at`).
+    group.update!(status: :falhou, sent_at: nil, error_code: message.to_s.first(ERROR_CODE_MAX_LENGTH))
     finalize_divulgacao_if_done(group.divulgacao.reload)
   end
 
   def self.mark_incerto(job, err)
     group = job.arguments.first
+    # CR-01: `incerto` = read-timeout, a mensagem PODE ter sido entregue de
+    # fato -- por isso `sent_at` é DELIBERADAMENTE preservado aqui (ao
+    # contrário de :falhou), sinalizando "tentamos, resultado incerto".
     group.update!(status: :incerto, error_code: err.message.to_s.first(ERROR_CODE_MAX_LENGTH))
     finalize_divulgacao_if_done(group.divulgacao.reload)
   end

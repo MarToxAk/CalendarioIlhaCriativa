@@ -84,6 +84,7 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
     @group_row.reload
     assert_equal "falhou", @group_row.status
     assert_equal "arte_nao_aprovada", @group_row.error_code
+    assert_nil @group_row.sent_at, "CR-01: linha :falhou nunca pode carregar sent_at do claim (Evolution nem foi chamada)"
   end
 
   test "revalidacao: instancia desconectada nunca chama Evolution" do
@@ -96,6 +97,7 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
     @group_row.reload
     assert_equal "falhou", @group_row.status
     assert_equal "instancia_desconectada", @group_row.error_code
+    assert_nil @group_row.sent_at, "CR-01: linha :falhou nunca pode carregar sent_at do claim (Evolution nem foi chamada)"
   end
 
   test "cancelamento: divulgacao cancelada faz perform virar no-op silencioso, item continua pendente" do
@@ -139,6 +141,7 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
     @group_row.reload
     assert_equal "falhou", @group_row.status
     assert_operator @group_row.error_code.length, :<=, 500
+    assert_nil @group_row.sent_at, "CR-01: :falhou (Permanent) nunca pode carregar sent_at do claim"
   end
 
   test "discard_on Unknown grava incerto (nunca falhou), sem reenfileirar" do
@@ -149,6 +152,7 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
     end
 
     assert_equal "incerto", @group_row.reload.status
+    assert_not_nil @group_row.reload.sent_at, "CR-01: :incerto PRESERVA sent_at de proposito -- read-timeout pode ter entregue"
   end
 
   test "discard_on NotConnected grava falhou com instancia_desconectada" do
@@ -159,6 +163,7 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
     @group_row.reload
     assert_equal "falhou", @group_row.status
     assert_equal "instancia_desconectada", @group_row.error_code
+    assert_nil @group_row.sent_at, "CR-01: :falhou (NotConnected) nunca pode carregar sent_at do claim"
   end
 
   test "discard_on ConfigurationError grava falhou com a mensagem truncada" do
@@ -169,6 +174,7 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
     @group_row.reload
     assert_equal "falhou", @group_row.status
     assert_equal "base_url ausente", @group_row.error_code
+    assert_nil @group_row.sent_at, "CR-01: :falhou (ConfigurationError) nunca pode carregar sent_at do claim"
   end
 
   test "discard_on StandardError (catch-all) cobre excecao fora da taxonomia Evolution::Errors e ainda assim finaliza a divulgacao se for o ultimo grupo pendente" do
@@ -181,6 +187,7 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
     @group_row.reload
     assert_equal "falhou", @group_row.status
     assert_equal "unexpected_error", @group_row.error_code
+    assert_nil @group_row.sent_at, "CR-01: :falhou (catch-all StandardError) nunca pode carregar sent_at do claim"
     assert_equal "concluida", @divulgacao.reload.status
   end
 
@@ -228,6 +235,7 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
     @group_row.reload
     assert_equal "falhou", @group_row.status
     assert_equal "transient", @group_row.error_code
+    assert_nil @group_row.sent_at, "CR-01: :falhou (Transient exaustao) nunca pode carregar sent_at do claim"
   end
 
   test "limits_concurrency configurado para 1 por instancia" do
