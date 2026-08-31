@@ -4,17 +4,17 @@ milestone: v1.7
 milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 31
 current_phase_name: Instância WhatsApp Compartilhada entre Clientes
-status: planning
-stopped_at: Phase 31 context gathered
-last_updated: "2026-08-31T18:52:07.120Z"
+status: executing
+stopped_at: Completed 31-01-PLAN.md
+last_updated: "2026-08-31T19:07:25.543Z"
 last_activity: 2026-08-31
-last_activity_desc: Phase 30 execution + code review (converged) + verification complete; deferred to operator UAT (30-UAT.md, 3 items)
-state_head: 0b881c512e1d40fc056dc61de53dd9fae6d431a9
+last_activity_desc: Phase 31 Plan 01 executed (reutilização de conexão WhatsApp — D-03/D-04/D-06/D-07)
+state_head: 1f9a5a43fd9a69eb76db98bd789978d4322ccc2c
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 26
-  completed_plans: 24
+  completed_plans: 25
   percent: 29
 ---
 
@@ -25,7 +25,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-29)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 30 — Acompanhamento ao Vivo + Hardening
+**Current focus:** Phase 31 — Instância WhatsApp Compartilhada entre Clientes
 
 ## Deferred Verification
 
@@ -38,14 +38,17 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 
 ## Current Position
 
-Phase: 31 (Instância WhatsApp Compartilhada entre Clientes) — READY TO EXECUTE
-Plans complete: 01, 02, 03, 04 of 4 (all plans executed — 04 ran out of sequence, wave 1, no dependencies)
-Status: Code review convergiu (3 iterações, clean); verificação 3/5 (human_needed) — 30-UAT.md com 3 itens
-  pendentes (SC1 progresso ao vivo cross-processo, SC2 confirmação visual do reenvio, SC5 retenção
-  seletiva). ACOMP-02, ACOMP-03 e SEG-04 totalmente satisfeitos e comprovados por teste.
-  Milestone v1.7 (6 fases) 100% executada; lifecycle (audit → complete → cleanup) aguarda o operador
-  rodar /gsd-verify-work em 25, 26, 29 e 30.
-Last activity: 2026-08-31 - Completed quick task 260831-i2e: WhatsApp como plataforma da Arte
+Phase: 31 (Instância WhatsApp Compartilhada entre Clientes) — EXECUTING
+Plans complete: 01 of 2 (31-01 done — migração + InstanceProvisioner#reuse + controller/rota #reuse +
+  concorrência por instance_name + toggle Stimulus; 31-02 pendente — fan-out do webhook connection.update
+
+  + GroupSynchronizer para instâncias-irmãs, D-05)
+
+Status: Executing Phase 31
+  Fases 25/26/29/30 do milestone v1.7 seguem com verification_deferred_human (ver "Deferred Verification"
+  acima) — não bloqueiam a execução da fase 31.
+Last activity: 2026-08-31 — Phase 31 Plan 01 executado (4 tasks, 4 commits, ver
+  31-01-SUMMARY.md)
 
 ## Progress Bar
 
@@ -221,6 +224,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 30 P04 | ~15min | 2 tasks | 3 files |
 | Phase 30 P02 | ~20min | 2 tasks | 5 files |
 | Phase 30 P03 | ~15min | 3 tasks | 8 files |
+| Phase 31-inst-ncia-whatsapp-compartilhada-entre-clientes P01 | ~50min | 4 tasks | 16 files |
 
 ## Decisions
 
@@ -272,6 +276,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 30]: [Phase 30]: [Phase 30-04]: INFRA-07 recurring.yml commands use YAML single-quoted scalars (doubled '' for the embedded Ruby 'created_at < ?' literal) so the raw file contains literal double-quoted ENV.fetch args, matching the plan's exact grep acceptance criteria; discard_all_in_batches confirmed scope-honoring against vendored execution.rb:30-50 and functionally proven in development (seeded old+recent FailedExecution/Job pairs, ran the real command, rolled back).
 - [Phase 30]: [Phase 30-02]: resend route uses controller: "divulgacoes" override on the nested divulgacao_grupos resource to keep #resend on Admin::DivulgacoesController
 - [Phase 30]: [Phase 30-03]: divulgacao_grupo_error_label is a pure copy-map (sentinel hash lookup or a "Motivo: " prefix) — never re-runs Phase 29's sanitize_error_code, never truncates/gsubs, never re-fetches the model (T-30-10); divulgacao_placar reads divulgacao.divulgacao_grupos.to_a (the includes-preloaded association) so it never issues its own query (T-30-11)
+- [Phase 31]: [Phase 31-01]: instância deuniqueificada + InstanceProvisioner#reuse copia irmã já conectada sem I/O; SendToGroupJob serializa por instance_name (D-04); toggle Stimulus dedicado no painel (D-06/D-07)
 
 ## Quick Tasks Completed
 
@@ -285,9 +290,9 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-31T17:50:51.791Z
-**Stopped at:** Phase 31 context gathered
-**Resume file:** .planning/phases/31-inst-ncia-whatsapp-compartilhada-entre-clientes/31-CONTEXT.md
+**Last session:** 2026-08-31T19:07:24.852Z
+**Stopped at:** Completed 31-01-PLAN.md
+**Resume file:** .planning/phases/31-inst-ncia-whatsapp-compartilhada-entre-clientes/31-02-PLAN.md
 
 ### Blockers
 

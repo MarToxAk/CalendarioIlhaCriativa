@@ -351,11 +351,11 @@ sem reabrir a possibilidade de uma arte do Cliente A alcançar um grupo do
 Cliente B.
 **Requirements**: TBD (fase aditiva — sem REQ-ID novo; entrega as decisões D-01..D-07 do 31-CONTEXT.md e preserva PAIR-*/GRUPO-*/SEG-*/ENVIO-* intactos)
 **Depends on:** Phase 30
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 **Wave 1**
 
-- [ ] 31-01-PLAN.md — Tracer: fatia vertical da reutilização (migração de-uniqueify do índice `instance_name`, `origin` enum `reused_sibling`, `InstanceProvisioner#reuse`, rota/controller `#reuse` escopado, `@reusable_targets` no `#show`) + trava de concorrência do `SendToGroupJob` por `instance_name` (D-04) + toggle Stimulus "Novo número (QR)" vs "Reutilizar conexão existente" (D-01, D-03, D-04, D-06, D-07)
+- [x] 31-01-PLAN.md — Tracer: fatia vertical da reutilização (migração de-uniqueify do índice `instance_name`, `origin` enum `reused_sibling`, `InstanceProvisioner#reuse`, rota/controller `#reuse` escopado, `@reusable_targets` no `#show`) + trava de concorrência do `SendToGroupJob` por `instance_name` (D-04) + toggle Stimulus "Novo número (QR)" vs "Reutilizar conexão existente" (D-01, D-03, D-04, D-06, D-07)
 
 **Wave 2** *(bloqueado no 31-01)*
 
