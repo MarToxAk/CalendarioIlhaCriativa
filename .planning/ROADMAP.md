@@ -339,6 +339,24 @@ Plans:
 | 29. Motor de Envio | v1.7 | 3/3 | In Progress|  |
 | 30. Acompanhamento ao Vivo + Hardening | v1.7 | 4/4 | In Progress|  |
 
+### Phase 31: Instância WhatsApp Compartilhada entre Clientes
+
+**Goal:** Permitir que uma instância Evolution já conectada (um número de WhatsApp
+da agência) seja reutilizada para atender múltiplos clientes, sem exigir o
+pareamento de um número novo por cliente. Hoje `Client has_one :whatsapp_instance`
+é uma relação 1-para-1 usada como fronteira de isolamento de segurança
+(SEG-02/03/04, `test/integration/cross_client_isolation_test.rb`) — este fase
+precisa redesenhar esse limite para operar por grupo (não mais por instância),
+sem reabrir a possibilidade de uma arte do Cliente A alcançar um grupo do
+Cliente B.
+**Requirements**: TBD
+**Depends on:** Phase 30
+**Plans:** 0 plans
+
+Plans:
+
+- [ ] TBD (run /gsd-plan-phase 31 to break down)
+
 ---
 
 ## Cobertura de Requisitos — v1.7

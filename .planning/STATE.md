@@ -5,17 +5,17 @@ milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 30
 current_phase_name: Acompanhamento ao Vivo + Hardening
 status: planning
-stopped_at: "Fase 30 executada (4/4 planos), code review convergiu em 3 iterações (2 Critical + 2 Warning corrigidos), verificação 3/5 (human_needed) — persistida em 30-UAT.md. Milestone v1.7 com todas as 6 fases executadas/code-verificadas, 4 aguardando UAT do operador (25, 26, 29, 30)."
-last_updated: "2026-08-31T14:35:00.000Z"
+stopped_at: Phase 31 context gathered
+last_updated: "2026-08-31T17:50:53.391Z"
 last_activity: 2026-08-31
-last_activity_desc: "Phase 30 execution + code review (converged) + verification complete; deferred to operator UAT (30-UAT.md, 3 items)"
-state_head: e91a7ac
+last_activity_desc: Phase 30 execution + code review (converged) + verification complete; deferred to operator UAT (30-UAT.md, 3 items)
+state_head: d49d9575d0180fc3aee228494199b0177a3fd714
 progress:
-  total_phases: 6
+  total_phases: 7
   completed_phases: 2
-  total_plans: 28
-  completed_plans: 28
-  percent: 33
+  total_plans: 24
+  completed_plans: 24
+  percent: 29
 ---
 
 # Project State
@@ -159,6 +159,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - v1.3 roadmap defined 2026-06-03: Phase 10 (form polish) + Phase 11 (index polish) + Phase 12 (show + dashboard)
 - v1.4 roadmap defined 2026-06-04: Phase 13 (aprovações) + Phase 14 (calendário admin) + Phase 15 (configurações) + Phase 16 (feriados brasileiros)
 - v1.5 roadmap defined 2026-06-05: Phase 17 (cable foundation + badge + toast) + Phase 18 (approval broadcasts) + Phase 19 (client real-time) + Phase 20 (admin calendar chips)
+- Phase 31 added 2026-08-31: Instância WhatsApp Compartilhada entre Clientes (permitir reuso de uma instância Evolution já pareada entre múltiplos clientes; requer redesenhar isolamento de segurança de por-instância para por-grupo)
 
 ### v1.5 Context
 
@@ -284,9 +285,9 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-31T13:36:52.000Z
-**Stopped at:** Completed 30-03-PLAN.md
-**Resume file:** None
+**Last session:** 2026-08-31T17:50:51.791Z
+**Stopped at:** Phase 31 context gathered
+**Resume file:** .planning/phases/31-inst-ncia-whatsapp-compartilhada-entre-clientes/31-CONTEXT.md
 
 ### Blockers
 
