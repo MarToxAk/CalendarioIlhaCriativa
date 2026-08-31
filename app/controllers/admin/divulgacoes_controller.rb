@@ -35,6 +35,20 @@ class Admin::DivulgacoesController < Admin::BaseController
       return
     end
 
+    # CR-02 (30-REVIEW): a view so renderiza o botao "Reenviar" quando
+    # dg.status esta em falhou/incerto (_grupo_row.html.erb) -- isso e so uma
+    # dica de UI, nao um guard. Sem checar aqui tambem, um POST direto (aba
+    # obsoleta, curl, replay) contra uma linha ja enviado apagaria sent_at/
+    # evolution_message_id e reenfileiraria o job, que manda uma SEGUNDA
+    # mensagem duplicada pro grupo -- a claim atomica do job (fase 29) so
+    # protege contra reprocessamento CONCORRENTE de uma linha ja pendente,
+    # nao contra reabrir uma linha que ja foi enviada com sucesso.
+    unless @dg.status.in?(%w[falhou incerto])
+      redirect_to admin_client_divulgacao_path(@client, @divulgacao),
+                  alert: "Só é possível reenviar um grupo que falhou ou ficou incerto."
+      return
+    end
+
     @dg.update!(status: :pendente, error_code: nil, sent_at: nil, evolution_message_id: nil)
     # O reopen concluida -> em_andamento vive AQUI, no controller — nao no job
     # da fase 29 (30-CONTEXT). finalize_divulgacao_if_done fecha de novo

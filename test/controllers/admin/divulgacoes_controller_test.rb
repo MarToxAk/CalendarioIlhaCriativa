@@ -741,6 +741,24 @@ class Admin::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "instancia_desconectada", dg.error_code
   end
 
+  test "POST resend numa linha ja enviado -- recusa, nao apaga sent_at/evolution_message_id, sem enqueue (CR-02)" do
+    d = build_divulgacao_agendada
+    dg = d.divulgacao_grupos.first
+    sent_at = 1.hour.ago
+    dg.update!(status: :enviado, sent_at: sent_at, evolution_message_id: "msg-already-sent")
+
+    assert_no_enqueued_jobs do
+      post resend_admin_client_divulgacao_divulgacao_grupo_path(@client, d, dg)
+    end
+
+    assert_redirected_to admin_client_divulgacao_path(@client, d)
+    assert_equal "Só é possível reenviar um grupo que falhou ou ficou incerto.", flash[:alert]
+    dg.reload
+    assert_equal "enviado", dg.status
+    assert_equal "msg-already-sent", dg.evolution_message_id
+    assert_in_delta sent_at, dg.sent_at, 1
+  end
+
   test "POST resend com divulgacao_id ou id de grupo de OUTRO cliente -- 404, nada vaza, sem enqueue" do
     _client_b, group_b, arte_b = build_client_b
     d_b = build_divulgacao_agendada(client: _client_b, arte: arte_b, groups: [ group_b ])
