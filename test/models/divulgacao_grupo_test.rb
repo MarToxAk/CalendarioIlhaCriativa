@@ -1,4 +1,5 @@
 require "test_helper"
+require "turbo/broadcastable/test_helper"
 
 class DivulgacaoGrupoTest < ActiveSupport::TestCase
   setup do
@@ -45,5 +46,41 @@ class DivulgacaoGrupoTest < ActiveSupport::TestCase
     dg = DivulgacaoGrupo.new(divulgacao: @divulgacao, whatsapp_group: @group, group_name: "x", remote_jid: nil)
     assert_not dg.valid?
     assert_includes dg.errors[:remote_jid], "não pode ficar em branco"
+  end
+
+  # --- Task 2 (ACOMP-01): broadcast_progresso ao vivo ------------------
+
+  include Turbo::Broadcastable::TestHelper
+
+  test "flip de status dispara 2 replace no stream [client, divulgacao] (ACOMP-01)" do
+    dg = @divulgacao.divulgacao_grupos.first
+
+    streams = capture_turbo_stream_broadcasts([ @client, @divulgacao ]) do
+      dg.update!(status: :enviado)
+    end
+
+    assert_equal 2, streams.length
+    assert streams.all? { |s| s["action"] == "replace" }
+
+    targets = streams.map { |s| s["target"] }
+    assert_includes targets, ActionView::RecordIdentifier.dom_id(dg)
+    assert_includes targets, ActionView::RecordIdentifier.dom_id(@divulgacao, :progresso)
+
+    progresso_stream = streams.find { |s| s["target"] == ActionView::RecordIdentifier.dom_id(@divulgacao, :progresso) }
+    texto = progresso_stream.text
+    assert_match(/enviados/, texto)
+    assert_match(/falhou/, texto)
+    assert_match(/pendente/, texto)
+    assert_match(/incerto/, texto)
+  end
+
+  test "update sem mudar status nao dispara broadcast (ACOMP-01)" do
+    dg = @divulgacao.divulgacao_grupos.first
+
+    streams = capture_turbo_stream_broadcasts([ @client, @divulgacao ]) do
+      dg.touch
+    end
+
+    assert_empty streams
   end
 end
