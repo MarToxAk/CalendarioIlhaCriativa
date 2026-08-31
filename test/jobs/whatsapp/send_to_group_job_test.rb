@@ -144,6 +144,19 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
     assert_nil @group_row.sent_at, "CR-01: :falhou (Permanent) nunca pode carregar sent_at do claim"
   end
 
+  test "WR-03: error_code redige URLs presignadas ecoadas no texto livre do erro Evolution" do
+    leak = 'BadRequest: failed to download resource: https://bucket.s3.amazonaws.com/artes/1.jpg?X-Amz-Signature=deadbeef&X-Amz-Expires=300'
+    Evolution::Client.stub(:send_media, ->(*) { raise Evolution::Errors::Permanent, leak }) do
+      Whatsapp::SendToGroupJob.perform_now(@group_row)
+    end
+
+    @group_row.reload
+    assert_equal "falhou", @group_row.status
+    assert_not_includes @group_row.error_code, "https://"
+    assert_not_includes @group_row.error_code, "X-Amz-Signature"
+    assert_includes @group_row.error_code, "[url-redigida]"
+  end
+
   test "discard_on Unknown grava incerto (nunca falhou), sem reenfileirar" do
     Evolution::Client.stub(:send_media, ->(*) { raise Evolution::Errors::Unknown, "timeout de leitura" }) do
       assert_no_enqueued_jobs do

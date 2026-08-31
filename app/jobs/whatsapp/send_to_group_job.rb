@@ -164,7 +164,7 @@ class Whatsapp::SendToGroupJob < ApplicationJob
     # termina em :enviado tem que zerar de novo, senão uma linha :falhou fica
     # com timestamp de "envio" que nunca aconteceu (audit trail enganoso para
     # as telas de histórico da fase 30, que leem `divulgacao_grupos.sent_at`).
-    group.update!(status: :falhou, sent_at: nil, error_code: message.to_s.first(ERROR_CODE_MAX_LENGTH))
+    group.update!(status: :falhou, sent_at: nil, error_code: sanitize_error_code(message))
     finalize_divulgacao_if_done(group.divulgacao.reload)
   end
 
@@ -173,8 +173,21 @@ class Whatsapp::SendToGroupJob < ApplicationJob
     # CR-01: `incerto` = read-timeout, a mensagem PODE ter sido entregue de
     # fato -- por isso `sent_at` é DELIBERADAMENTE preservado aqui (ao
     # contrário de :falhou), sinalizando "tentamos, resultado incerto".
-    group.update!(status: :incerto, error_code: err.message.to_s.first(ERROR_CODE_MAX_LENGTH))
+    group.update!(status: :incerto, error_code: sanitize_error_code(err.message))
     finalize_divulgacao_if_done(group.divulgacao.reload)
+  end
+
+  # WR-03: o texto do erro 4xx do Evolution é FREE TEXT
+  # (`BadRequestException(error.toString())`, evolution-contract.md, PENDENTE
+  # de UAT) e pode ecoar de volta a URL presignada de mídia que recebeu
+  # ("failed to download resource: <url>"). `error_code` é armazenamento
+  # durável que a fase 30 renderiza a admins -- uma URL GET presignada (ainda
+  # que expire em MEDIA_URL_TTL) visível num campo de erro é uma superfície
+  # real de information-disclosure. Redige qualquer substring com cara de URL
+  # http(s) ANTES de truncar/persistir.
+  URL_IN_TEXT = %r{https?://[^\s"'<>)\]]+}i
+  def self.sanitize_error_code(message)
+    message.to_s.gsub(URL_IN_TEXT, "[url-redigida]").first(ERROR_CODE_MAX_LENGTH)
   end
 
   private
