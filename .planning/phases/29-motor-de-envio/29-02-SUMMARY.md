@@ -206,6 +206,15 @@ None - nenhuma configuração de serviço externo nova.
 
 Nenhum stub -- toda a taxonomia de erro e a configuração de concorrência são funcionais ponta a ponta (transporte HTTP real stubado apenas nos testes, nunca no código de produção).
 
+## Self-Check: PASSED
+
+- `app/jobs/whatsapp/send_to_group_job.rb` — FOUND
+- `test/jobs/whatsapp/send_to_group_job_test.rb` — FOUND
+- `.planning/phases/29-motor-de-envio/29-02-SUMMARY.md` — FOUND
+- Commit `6218955` (Task 1: feat) — FOUND in git log
+- Commit `e033994` (Task 2: test) — FOUND in git log
+- Full plan test scope: `POSTGRES_HOST=/var/run/postgresql TZ=America/Sao_Paulo bin/rails test test/jobs/whatsapp/send_to_group_job_test.rb` — 23 runs, 58 assertions, 0 failures, 0 errors
+
 ---
 *Phase: 29-motor-de-envio*
 *Completed: 2026-08-31*
