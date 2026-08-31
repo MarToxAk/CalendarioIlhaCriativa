@@ -160,6 +160,28 @@ class Admin::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     assert_match "Seleção inválida", flash[:alert]
   end
 
+  # --- WR-01 (28-REVIEW): rescue RecordNotFound preserva o que ja resolvia ----
+
+  test "WR-01: rescue RecordNotFound preserva scheduled_for bruto e os grupos que ainda resolvem" do
+    _client_b, group_b, _arte_b = build_client_b
+
+    assert_no_difference [ "Divulgacao.count", "DivulgacaoGrupo.count" ] do
+      post admin_client_divulgacoes_path(@client), params: {
+        divulgacao: { arte_id: @arte.id, whatsapp_group_ids: [ @g1.id, group_b.id ], scheduled_for: "2026-09-20T15:30" }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_match "Seleção inválida", flash[:alert]
+    # scheduled_for bruto sobrevive ao re-render (antes do fix: form em branco)
+    assert_includes response.body, "2026-09-20T15:30"
+    # @g1 (valido, do proprio cliente) continua marcado; group_b (de outro
+    # cliente, causou o RecordNotFound) nao aparece de jeito nenhum na resposta.
+    assert_select "input[type=checkbox][name='divulgacao[whatsapp_group_ids][]'][value='#{@g1.id}'][checked]"
+    refute_includes response.body, group_b.subject
+    refute_includes response.body, group_b.remote_jid
+  end
+
   # --- Task 2: datetime-local -> Time.zone round-trip (DIVU-05) --------
 
   test "scheduled_for cru 2026-09-15T14:00 round-trips pra Time.zone.local Brasilia (-03:00)" do

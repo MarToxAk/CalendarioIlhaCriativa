@@ -70,7 +70,18 @@ class Admin::DivulgacoesController < Admin::BaseController
     # SEG-01/SEG-02: um id forasteiro/inativo (ou um grupo desativado por um sync
     # da fase 27 entre o load do form e o submit) cai aqui em vez de 404 — re-render
     # com mensagem acionavel e generica (nao revela de quem e o id). Zero linhas gravadas.
-    @divulgacao ||= @client.divulgacoes.new
+    # WR-01: preserva o que ja era resolvivel (scheduled_for bruto + grupos que
+    # realmente existem/pertencem ao cliente) em vez de devolver o form em branco —
+    # um id forasteiro/desativado nao deveria forcar o admin a redigitar tudo.
+    @divulgacao ||= @client.divulgacoes.new(scheduled_for: divulgacao_params[:scheduled_for])
+    resolved_gids = Array(divulgacao_params[:whatsapp_group_ids]).map(&:to_i).uniq.reject(&:zero?)
+    scoped_active_groups.where(id: resolved_gids).each do |g|
+      @divulgacao.divulgacao_grupos.build(
+        whatsapp_group: g,
+        group_name:     g.display_name,
+        remote_jid:     g.remote_jid
+      )
+    end
     load_form_collections
     flash.now[:alert] = "Seleção inválida: uma arte ou um grupo escolhido não pertence a este cliente ou foi desativado. Revise a seleção e tente de novo."
     render :new, status: :unprocessable_entity
