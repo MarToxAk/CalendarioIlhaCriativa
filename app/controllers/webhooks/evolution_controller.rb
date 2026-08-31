@@ -22,11 +22,29 @@ class Webhooks::EvolutionController < ActionController::API
     siblings = WhatsappInstance.where(instance_name: params[:instance].to_s)
     return head(:no_content) if siblings.empty?
 
-    siblings.find_each { |instance| apply_event(instance) }
+    # WR-01 (31-REVIEW.md): cada irmã é isolada com seu próprio rescue — uma
+    # falha de save!/update! numa linha (ex: violação de validação/constraint)
+    # nunca deve abortar o find_each e deixar as irmãs seguintes presas no
+    # connection_state obsoleto. Sem transação envolvendo o loop inteiro (as
+    # irmãs já processadas ficam com o novo estado mesmo se uma posterior
+    # falhar) — all-or-nothing entre irmãs não é a semântica desejada aqui,
+    # cada linha é idempotente e independente. Sempre :ok pro Evolution mesmo
+    # que uma irmã falhe, para nunca disparar um retry de webhook desnecessário
+    # do lado deles por causa de uma falha de gravação local.
+    siblings.find_each { |instance| apply_event_safely(instance) }
     head :ok
   end
 
   private
+
+  def apply_event_safely(instance)
+    apply_event(instance)
+  rescue StandardError => e
+    Rails.logger.error(
+      "[Webhooks::EvolutionController] falha ao aplicar evento na linha-irmã " \
+      "id=#{instance.id}: #{e.class}: #{e.message}"
+    )
+  end
 
   # Hashea OS DOIS lados (SHA256) antes de secure_compare — Pitfall 5. Comparar
   # os valores crus pode levantar ArgumentError quando os comprimentos diferem,

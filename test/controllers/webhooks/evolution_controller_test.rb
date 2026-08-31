@@ -184,6 +184,57 @@ class Webhooks::EvolutionControllerTest < ActionDispatch::IntegrationTest
     assert irma.last_checked_at.present?
   end
 
+  # 31-REVIEW.md WR-01: uma falha de save!/update! numa linha-irmã (ex: violação
+  # de validação/constraint) NUNCA pode abortar o find_each e deixar as irmãs
+  # seguintes presas no connection_state obsoleto -- sem este teste, reverter o
+  # rescue por-irmã (apply_event_safely) passaria zero testes vermelhos.
+  test "falha ao aplicar evento numa irmã não aborta o fan-out das demais e ainda responde 200" do
+    cliente_falha = Client.create!(
+      name: "Webhook Test Irmã Falha",
+      password: "senha1234",
+      password_confirmation: "senha1234"
+    )
+    # Criada ANTES da irmã "ok" abaixo -- id menor, então find_each (ordem
+    # ascendente de id) chega nela primeiro. Sem o rescue por-irmã, sua falha
+    # abortaria o loop e a irmã "ok" (id maior, processada depois) nunca seria
+    # alcançada -- exatamente o cenário que este teste prova fechado.
+    irma_falha = cliente_falha.create_whatsapp_instance!(
+      instance_name: @name,
+      token: "tok-irma-falha",
+      connection_state: :awaiting_qr
+    )
+    irma_falha.define_singleton_method(:save!) { raise ActiveRecord::RecordInvalid, self }
+
+    cliente_ok = Client.create!(
+      name: "Webhook Test Irmã Ok",
+      password: "senha1234",
+      password_confirmation: "senha1234"
+    )
+    irma_ok = cliente_ok.create_whatsapp_instance!(
+      instance_name: @name,
+      token: "tok-irma-ok",
+      connection_state: :awaiting_qr
+    )
+    assert_operator irma_falha.id, :<, irma_ok.id
+
+    post "/webhooks/evolution",
+      params: { instance: @name, event: "connection.update", data: { state: "open" } },
+      headers: { "X-Webhook-Secret" => @secret }
+    assert_response :ok
+
+    # A irmã que falhou fica presa no estado antigo (o próprio save! nunca
+    # commitou), mas o request como um todo não vira 500...
+    irma_falha.singleton_class.send(:remove_method, :save!)
+    irma_falha.reload
+    assert_equal "awaiting_qr", irma_falha.connection_state
+
+    # ...e a irmã processada DEPOIS da que falhou ainda recebe o novo estado --
+    # a prova de que o loop não abortou no meio.
+    irma_ok.reload
+    assert_equal "connected", irma_ok.connection_state
+    assert irma_ok.paired_at.present?
+  end
+
   # --- eventos não tratados (messages.*, fase 29) ---------------------------
 
   test "evento não tratado (ex: messages.upsert) é um no-op, responde 200" do
