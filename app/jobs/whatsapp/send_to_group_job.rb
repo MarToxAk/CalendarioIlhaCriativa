@@ -107,19 +107,17 @@ class Whatsapp::SendToGroupJob < ApplicationJob
   # inclui segredo.
   discard_on(Evolution::Errors::ConfigurationError) { |job, err| mark_falhou(job, err.message) }
 
-  # WR-02: grupo/divulgação apagados entre enqueue e execução. Este era o
-  # ÚNICO caminho terminal que não chamava `finalize_divulgacao_if_done` --
-  # se o grupo apagado fosse o último pendente, a divulgação ficava presa em
-  # :em_andamento para sempre. Tenta finalizar o lado ainda resolvível; se
-  # ambos os lados sumiram, é genuinamente no-op.
-  discard_on(ActiveJob::DeserializationError) do |job, _err|
-    begin
-      group = job.arguments.first
-      finalize_divulgacao_if_done(group.divulgacao.reload)
-    rescue ActiveRecord::RecordNotFound, ActiveJob::DeserializationError
-      # grupo e/ou divulgação já não existem -- nada a finalizar
-    end
-  end
+  # WR-02: `DeserializationError` aqui só ocorre se o `DivulgacaoGrupo` (o
+  # único argumento do job) sumiu entre enqueue e execução. Isso NÃO deixa
+  # uma divulgação órfã presa em :em_andamento: `divulgacao_grupos` só é
+  # apagado em cascata por `Divulgacao#destroy` (que por sua vez só dispara
+  # via `Client#destroy`), e nesse caso a própria Divulgacao é destruída
+  # junto -- não sobra nada para `finalize_divulgacao_if_done`. Um bloco que
+  # tentasse resolver a divulgação aqui seria código morto de qualquer forma:
+  # `job.arguments` re-dispara a mesma `DeserializationError` (activejob 8.1
+  # não limpa `@serialized_arguments` quando a desserialização falha).
+  # Descarte simples e honesto.
+  discard_on(ActiveJob::DeserializationError)
 
   def perform(group)
     group.reload

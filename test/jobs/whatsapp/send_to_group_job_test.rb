@@ -200,6 +200,24 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
     assert_nil @group_row.sent_at, "CR-01: :falhou (ConfigurationError) nunca pode carregar sent_at do claim"
   end
 
+  test "WR-02: DivulgacaoGrupo apagado entre enqueue e execucao -- job e descartado sem levantar (nada a finalizar: cascade leva a Divulgacao junto)" do
+    job = Whatsapp::SendToGroupJob.new(@group_row)
+    serialized = job.serialize
+    @group_row.destroy!
+
+    revived = Whatsapp::SendToGroupJob.new
+    revived.deserialize(serialized)
+
+    # discard_on(DeserializationError) engole o erro (perform_now nunca
+    # re-levanta) e o job e descartado, nao reenfileirado -- nao ha lado
+    # resolvivel para finalizar (a Divulgacao foi no cascade junto).
+    assert_nothing_raised do
+      assert_no_enqueued_jobs do
+        revived.perform_now
+      end
+    end
+  end
+
   test "discard_on StandardError (catch-all) cobre excecao fora da taxonomia Evolution::Errors e ainda assim finaliza a divulgacao se for o ultimo grupo pendente" do
     @divulgacao.update!(status: :em_andamento) # estado real no momento em que o DispatchJob enfileira o SendToGroupJob
 
