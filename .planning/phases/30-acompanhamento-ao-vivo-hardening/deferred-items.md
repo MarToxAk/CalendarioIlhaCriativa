@@ -55,3 +55,13 @@ divulgacoes controller test file itself is green in isolation (48/48) and in the
   `f78a155`). Same class of symptom as the other entries above (shared, non-ephemeral Postgres
   test DB — likely a stale/expired API token or leftover auth state from an earlier full-suite
   run). Out of scope per the executor's scope boundary rule — logged here, not fixed.
+
+## Regression gate (phase 30 tail) — 2026-08-31
+
+- `RackAttackTest#test_60_primeiras_requisições_ao_namespace_AI_não_retornam_429` failed once
+  more during the phase-30 regression gate (277 prior-phase tests re-run). Re-confirmed in
+  isolation (single-process, non-parallel) — same failure, same class of symptom already logged
+  above by the 30-02/30-03 executors (shared rate-limit cache state across `bin/rails test`
+  invocations against the sandbox's non-ephemeral Postgres test DB). `test/integration/rack_attack_test.rb`
+  is not in any Phase 30 commit (`git log --oneline -- test/integration/rack_attack_test.rb` shows
+  no phase-30 touch). Not a regression introduced by this phase — continuing to phase-goal verification.
