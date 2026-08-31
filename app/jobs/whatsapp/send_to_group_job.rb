@@ -92,7 +92,19 @@ class Whatsapp::SendToGroupJob < ApplicationJob
   # inclui segredo.
   discard_on(Evolution::Errors::ConfigurationError) { |job, err| mark_falhou(job, err.message) }
 
-  discard_on(ActiveJob::DeserializationError) # grupo/divulgação apagados mid-flight -- sem efeito colateral
+  # WR-02: grupo/divulgação apagados entre enqueue e execução. Este era o
+  # ÚNICO caminho terminal que não chamava `finalize_divulgacao_if_done` --
+  # se o grupo apagado fosse o último pendente, a divulgação ficava presa em
+  # :em_andamento para sempre. Tenta finalizar o lado ainda resolvível; se
+  # ambos os lados sumiram, é genuinamente no-op.
+  discard_on(ActiveJob::DeserializationError) do |job, _err|
+    begin
+      group = job.arguments.first
+      finalize_divulgacao_if_done(group.divulgacao.reload)
+    rescue ActiveRecord::RecordNotFound, ActiveJob::DeserializationError
+      # grupo e/ou divulgação já não existem -- nada a finalizar
+    end
+  end
 
   def perform(group)
     group.reload
