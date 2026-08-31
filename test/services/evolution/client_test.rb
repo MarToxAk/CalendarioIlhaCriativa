@@ -197,6 +197,77 @@ class Evolution::ClientTest < ActiveSupport::TestCase
     Evolution::Client.instance_variable_set(:@connection, nil)
   end
 
+  # --- send_text / send_media (fase 29-01, ENVIO-10) -----------------------
+  test "send_text returns the response body on a 2xx with a Hash" do
+    body = { "key" => { "id" => "MSG1" }, "status" => "PENDING" }.to_json
+    Evolution::Client.instance_variable_set(
+      :@connection, stubbed_post_connection(201, body, path: "/message/sendText/livia_client_1")
+    )
+
+    resp = Evolution::Client.send_text(
+      "livia_client_1", number: "123@g.us", text: "Bom dia a todos!", api_key: "test-api-key"
+    )
+
+    assert_equal "MSG1", resp.dig("key", "id")
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
+
+  test "send_media returns the response body on a 2xx with a Hash" do
+    body = { "key" => { "id" => "MSG2" }, "status" => "PENDING" }.to_json
+    Evolution::Client.instance_variable_set(
+      :@connection, stubbed_post_connection(201, body, path: "/message/sendMedia/livia_client_1")
+    )
+
+    resp = Evolution::Client.send_media(
+      "livia_client_1", number: "123@g.us", mediatype: "image", media: "https://example.com/x.jpg",
+      api_key: "test-api-key", caption: "Legenda"
+    )
+
+    assert_equal "MSG2", resp.dig("key", "id")
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
+
+  test "send_text raises Unknown when the 2xx body is not a Hash" do
+    Evolution::Client.instance_variable_set(
+      :@connection, stubbed_post_connection(200, "[]", path: "/message/sendText/livia_client_1")
+    )
+
+    assert_raises(Evolution::Errors::Unknown) do
+      Evolution::Client.send_text("livia_client_1", number: "123@g.us", text: "Oi", api_key: "test-api-key")
+    end
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
+
+  test "send_media raises Unknown when the 2xx body is not a Hash" do
+    Evolution::Client.instance_variable_set(
+      :@connection, stubbed_post_connection(200, "[]", path: "/message/sendMedia/livia_client_1")
+    )
+
+    assert_raises(Evolution::Errors::Unknown) do
+      Evolution::Client.send_media("livia_client_1", number: "123@g.us", mediatype: "image",
+                                    media: "https://example.com/x.jpg", api_key: "test-api-key")
+    end
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
+
+  test "send_media propagates a 400 (free-text sendMedia error) as Permanent, no new parser written" do
+    body = { "status" => 400, "error" => "Bad Request", "response" => { "message" => "Group announce-only, cannot send" } }.to_json
+    Evolution::Client.instance_variable_set(
+      :@connection, stubbed_post_connection(400, body, path: "/message/sendMedia/livia_client_1")
+    )
+
+    assert_raises(Evolution::Errors::Permanent) do
+      Evolution::Client.send_media("livia_client_1", number: "123@g.us", mediatype: "image",
+                                    media: "https://example.com/x.jpg", api_key: "test-api-key")
+    end
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
+
   # --- connect / set_webhook (PAIR-02, 26-02) ------------------------------
   test "connect returns a normalized Hash on a 2xx with a valid QR" do
     body = { "base64" => "data:image/png;base64,qr", "code" => "2@abc", "pairingCode" => "ABCD1234", "count" => 1 }.to_json

@@ -60,6 +60,8 @@ class Admin::DivulgacoesController < Admin::BaseController
     end
 
     if @divulgacao.save
+      # ENVIO-01: agenda pelo horario exato via wait_until:, nunca por scan periodico (fase 29-01)
+      Divulgacoes::DispatchJob.set(wait_until: @divulgacao.scheduled_for).perform_later(@divulgacao)
       redirect_to admin_client_divulgacao_path(@client, @divulgacao),
                   notice: "Divulgação agendada para #{helpers.divulgacao_datetime_label(@divulgacao.scheduled_for)}."
     else

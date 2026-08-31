@@ -60,6 +60,23 @@ class Admin::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "g1@g.us", "g2@g.us" ], divulgacao.divulgacao_grupos.pluck(:remote_jid).sort
   end
 
+  # --- motor de envio (fase 29-01, ENVIO-01) ----------------------------
+
+  test "POST create enfileira Divulgacoes::DispatchJob agendado para scheduled_for" do
+    param     = 3.days.from_now.strftime("%Y-%m-%dT%H:%M")
+    scheduled = Time.zone.parse(param)
+
+    assert_enqueued_with(job: Divulgacoes::DispatchJob, at: scheduled) do
+      post admin_client_divulgacoes_path(@client), params: {
+        divulgacao: {
+          arte_id:            @arte.id,
+          whatsapp_group_ids: [ @g1.id ],
+          scheduled_for:      param
+        }
+      }
+    end
+  end
+
   # --- cross-client isolation A×B (Task 3 / SEG-01, SEG-02) -------------
 
   # Constroi o cliente B com sua propria instancia + grupo + arte aprovada. O

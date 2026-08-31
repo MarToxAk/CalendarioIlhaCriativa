@@ -133,6 +133,36 @@ module Evolution
         body
       end
 
+      # POST /message/sendText/{instance} — envio de texto puro (fase 29,
+      # ENVIO-10). Usado quando `arte.caption_only?`. Nenhuma lógica de parsing
+      # de erro nova — `raise_for_status!` já existente cobre o 4xx (texto
+      # livre do Evolution, EVO-03). Mesmo guard WR-07 de todo método de
+      # leitura: um 2xx não-Hash nunca deve propagar um NoMethodError cru para
+      # o chamador que tentar `.dig`/`[]` no corpo.
+      def send_text(instance_name, number:, text:, api_key:)
+        body = { number: number, text: text }
+        resp = request(:post, "/message/sendText/#{instance_name}", api_key: api_key, body: body)
+        raise Evolution::Errors::Unknown, "resposta 2xx com corpo não-JSON do host Evolution" unless resp.body.is_a?(Hash)
+
+        resp.body
+      end
+
+      # POST /message/sendMedia/{instance} — envio de mídia com legenda opcional
+      # (fase 29, ENVIO-10). `caption:` só entra no corpo quando presente —
+      # nunca uma chave vazia. Formato exato do erro 4xx do Evolution é texto
+      # livre (evolution-contract.md, PENDENTE de UAT) — por isso nenhum parser
+      # novo é escrito aqui: a classificação retry/discard é 100% por status
+      # HTTP via `raise_for_status!`, nunca por conteúdo da mensagem. Mesmo
+      # guard WR-07 de fetch_groups/fetch_instances/send_text.
+      def send_media(instance_name, number:, mediatype:, media:, api_key:, caption: nil)
+        body = { number: number, mediatype: mediatype, media: media }
+        body[:caption] = caption if caption.present?
+        resp = request(:post, "/message/sendMedia/#{instance_name}", api_key: api_key, body: body)
+        raise Evolution::Errors::Unknown, "resposta 2xx com corpo não-JSON do host Evolution" unless resp.body.is_a?(Hash)
+
+        resp.body
+      end
+
       private
 
       def request(method, path, api_key:, body: nil, read_timeout: nil, query: nil)
