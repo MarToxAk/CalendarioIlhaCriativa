@@ -282,4 +282,93 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
       assert_equal 0, claimed, "esperava claim=0 para status inicial #{status}"
     end
   end
+
+  # --- 29-03: cancelamento mid-dispatch + fechamento de divulgacoes.status (DIVU-08) --
+
+  # Divulgacao dedicada com N grupos pendentes (remote_jid unico por chamada
+  # para nao colidir com o indice unico whatsapp_instance_id+remote_jid).
+  def build_divulgacao_with_groups(n)
+    groups = n.times.map do |i|
+      @instance.whatsapp_groups.create!(
+        remote_jid: "mg-#{SecureRandom.hex(4)}-#{i}@g.us", subject: "Grupo Multi #{i}", active: true, synced_at: Time.current
+      )
+    end
+    @client.divulgacoes.create!(
+      arte: @arte, scheduled_for: 3.days.from_now,
+      divulgacao_grupos: groups.map { |g| DivulgacaoGrupo.new(whatsapp_group: g, group_name: g.display_name, remote_jid: g.remote_jid) }
+    )
+  end
+
+  test "cancelamento ANTES do DispatchJob rodar: perform_now direto numa divulgacao cancelada e no-op, item continua pendente, Evolution nunca chamado" do
+    divulgacao = build_divulgacao_with_groups(2)
+    divulgacao.update!(status: :cancelada)
+    group1 = divulgacao.divulgacao_grupos.first
+
+    Evolution::Client.stub(:send_media, ->(*) { raise "nao deveria ser chamado" }) do
+      Whatsapp::SendToGroupJob.perform_now(group1)
+    end
+
+    assert_equal "pendente", group1.reload.status
+  end
+
+  test "cancelamento DEPOIS do DispatchJob ja ter enfileirado -- o SendToGroupJob cujo offset ainda nao decorreu vira no-op quando roda" do
+    divulgacao = build_divulgacao_with_groups(2)
+    calls = 0
+
+    Evolution::Client.stub(:send_media, ->(*) { calls += 1; { "key" => { "id" => "X" } } }) do
+      Divulgacoes::DispatchJob.perform_now(divulgacao) # enfileira N SendToGroupJob
+      divulgacao.update!(status: :cancelada) # admin clica cancelar enquanto os jobs esperam o offset
+      perform_enqueued_jobs
+    end
+
+    assert_equal 0, calls, "Evolution::Client nunca deveria ser chamado apos o cancelamento"
+    assert divulgacao.divulgacao_grupos.reload.all? { |g| g.status == "pendente" }, "nenhum divulgacao_grupo deveria ter mudado de pendente"
+  end
+
+  test "cancelamento no meio de um lote -- o grupo JA enviado antes do cancel permanece enviado; os que ainda nao rodaram viram no-op" do
+    divulgacao = build_divulgacao_with_groups(2)
+    group1, group2 = divulgacao.divulgacao_grupos.order(:id).to_a
+
+    Evolution::Client.stub(:send_media, ->(*) { { "key" => { "id" => "OK1" } } }) do
+      Whatsapp::SendToGroupJob.perform_now(group1)
+    end
+
+    divulgacao.update!(status: :cancelada)
+
+    Evolution::Client.stub(:send_media, ->(*) { raise "nao deveria ser chamado" }) do
+      Whatsapp::SendToGroupJob.perform_now(group2)
+    end
+
+    assert_equal "enviado", group1.reload.status, "cancelamento nao reverte o que ja foi enviado"
+    assert_equal "pendente", group2.reload.status, "grupo posterior ao cancelamento nunca foi tentado"
+  end
+
+  test "fechamento de divulgacoes.status: o ULTIMO grupo pendente saindo (por qualquer caminho) marca a divulgacao concluida" do
+    divulgacao = build_divulgacao_with_groups(2)
+    divulgacao.update!(status: :em_andamento)
+    group1, group2 = divulgacao.divulgacao_grupos.order(:id).to_a
+
+    Evolution::Client.stub(:send_media, ->(*) { { "key" => { "id" => "OK1" } } }) do
+      Whatsapp::SendToGroupJob.perform_now(group1)
+    end
+    assert_equal "em_andamento", divulgacao.reload.status, "ainda tem 1 pendente"
+
+    Evolution::Client.stub(:send_media, ->(*) { raise Evolution::Errors::Permanent, "erro simulado" }) do
+      Whatsapp::SendToGroupJob.perform_now(group2)
+    end
+    assert_equal "concluida", divulgacao.reload.status, "zero pendentes, mesmo com uma falha no meio"
+  end
+
+  test "uma divulgacao com pendentes restantes NUNCA vira concluida antes da hora" do
+    divulgacao = build_divulgacao_with_groups(3)
+    divulgacao.update!(status: :em_andamento)
+    group1, group2, _group3 = divulgacao.divulgacao_grupos.order(:id).to_a
+
+    Evolution::Client.stub(:send_media, ->(*) { { "key" => { "id" => "OK" } } }) do
+      Whatsapp::SendToGroupJob.perform_now(group1)
+      Whatsapp::SendToGroupJob.perform_now(group2)
+    end
+
+    assert_equal "em_andamento", divulgacao.reload.status, "o terceiro grupo ainda pendente trava a transicao"
+  end
 end
