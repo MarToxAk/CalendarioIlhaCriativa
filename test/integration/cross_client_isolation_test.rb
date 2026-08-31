@@ -158,12 +158,60 @@ class CrossClientIsolationTest < ActionDispatch::IntegrationTest
     assert_equal "MSG-BELT", group_row.evolution_message_id
   end
 
+  # --- Test 4: isolamento sobrevive a instance_name compartilhado (fase 31) --
+
+  test "isolamento cross-client sobrevive com um par de clientes-irmãos compartilhando instance_name (D-02, SEG-04)" do
+    shared_instance_name = "livia_client_sibling_pair_#{SecureRandom.hex(4)}"
+    client_c = build_client_with_whatsapp!(
+      name: "Cliente C (irmão de A)", password: "senhaC123", token: "SEGREDO-INSTANCIA-C",
+      instance_name: shared_instance_name
+    )
+    client_d = build_client_with_whatsapp!(
+      name: "Cliente D (irmão de A)", password: "senhaD123", token: "SEGREDO-INSTANCIA-D",
+      instance_name: shared_instance_name
+    )
+    assert_equal client_c.whatsapp_instance.instance_name, client_d.whatsapp_instance.instance_name
+    assert client_c.whatsapp_instance.shared?
+    assert client_d.whatsapp_instance.shared?
+
+    group_c = client_c.whatsapp_instance.whatsapp_groups.create!(remote_jid: "grupo-c@g.us", subject: "Grupo do C", active: true, synced_at: Time.current)
+    group_d = client_d.whatsapp_instance.whatsapp_groups.create!(remote_jid: "grupo-d@g.us", subject: "Grupo do D", active: true, synced_at: Time.current)
+    arte_c = approved_arte_for!(client_c, "Arte Aprovada do C")
+    arte_d = approved_arte_for!(client_d, "Arte Aprovada do D")
+
+    divulgacao_d = client_d.divulgacoes.create!(
+      arte: arte_d, scheduled_for: 3.days.from_now,
+      divulgacao_grupos: [ DivulgacaoGrupo.new(whatsapp_group: group_d, group_name: group_d.display_name, remote_jid: group_d.remote_jid) ]
+    )
+
+    # O isolamento é ancorado no id da LINHA whatsapp_instance (client_c.whatsapp_instance.id
+    # != client_d.whatsapp_instance.id), NUNCA no instance_name — mesmo os dois compartilhando
+    # a mesma conexão física, o grupo de D pertence à linha de D.
+    assert_raises(ActiveRecord::RecordNotFound) do
+      client_c.whatsapp_instance.whatsapp_groups.where(active: true).find([ group_d.id ])
+    end
+
+    assert_raises(ActiveRecord::RecordNotFound) do
+      client_c.divulgacoes.find(divulgacao_d.id)
+    end
+
+    # Backstop de model: continua rejeitando arte-de-C + grupo-de-D mesmo com
+    # instance_name compartilhado entre as linhas.
+    divulgacao = client_c.divulgacoes.new(
+      arte: arte_c,
+      scheduled_for: 3.days.from_now,
+      divulgacao_grupos: [ DivulgacaoGrupo.new(whatsapp_group: group_d, group_name: group_d.display_name, remote_jid: group_d.remote_jid) ]
+    )
+    assert divulgacao.invalid?
+    assert_includes divulgacao.errors[:base], "Um ou mais grupos selecionados não pertencem a este cliente."
+  end
+
   private
 
-  def build_client_with_whatsapp!(name:, password:, token:)
+  def build_client_with_whatsapp!(name:, password:, token:, instance_name: nil)
     client = Client.create!(name: name, password: password, password_confirmation: password)
     client.create_whatsapp_instance!(
-      instance_name: WhatsappInstance.evolution_name_for(client),
+      instance_name: instance_name || WhatsappInstance.evolution_name_for(client),
       connection_state: :connected,
       token: token,
       groups_synced_at: Time.current
