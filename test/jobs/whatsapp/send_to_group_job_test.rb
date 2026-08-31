@@ -342,13 +342,24 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
     assert_equal "pendente", group1.reload.status
   end
 
-  test "cancelamento DEPOIS do DispatchJob ja ter enfileirado -- o SendToGroupJob cujo offset ainda nao decorreu vira no-op quando roda" do
+  # WR-04: este teste prova o guard de JOB (`return if divulgacao.status_cancelada?`
+  # no topo do perform) DADA uma linha :cancelada -- NAO prova que a fase 29
+  # permita cancelar mid-dispatch pela UI. `Divulgacao#cancelar!` tem
+  # `return false unless status_agendada?`, e `DispatchJob#perform` flipa
+  # agendada -> em_andamento sincronamente no seu proprio topo, entao do
+  # instante em que o dispatch comeca o `cancelar!` sempre retorna false. O
+  # `update!(status: :cancelada)` direto abaixo SIMULA um mecanismo de
+  # cancelamento mid-dispatch que a fase 30 ainda precisa expor -- nao e o
+  # caminho `cancelar!` atual, que hoje nenhum operador consegue acionar
+  # nessa janela. Ver 29-REVIEW.md WR-04 e 29-03-PLAN.md <read_first>.
+  test "guard de job: um SendToGroupJob cujo offset ainda nao decorreu vira no-op quando a divulgacao ja esta :cancelada (mid-dispatch simulado via update! direto -- fase 30 ainda precisa expor isso na UI)" do
     divulgacao = build_divulgacao_with_groups(2)
     calls = 0
 
     Evolution::Client.stub(:send_media, ->(*) { calls += 1; { "key" => { "id" => "X" } } }) do
       Divulgacoes::DispatchJob.perform_now(divulgacao) # enfileira N SendToGroupJob
-      divulgacao.update!(status: :cancelada) # admin clica cancelar enquanto os jobs esperam o offset
+      # BYPASS DELIBERADO de `cancelar!`s guard status_agendada? -- ver comentario WR-04 acima.
+      divulgacao.update!(status: :cancelada)
       perform_enqueued_jobs
     end
 
@@ -364,6 +375,8 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
       Whatsapp::SendToGroupJob.perform_now(group1)
     end
 
+    # WR-04: BYPASS DELIBERADO do guard status_agendada? de `cancelar!` --
+    # simula o cancelamento mid-dispatch que a fase 30 ainda vai expor na UI.
     divulgacao.update!(status: :cancelada)
 
     Evolution::Client.stub(:send_media, ->(*) { raise "nao deveria ser chamado" }) do
