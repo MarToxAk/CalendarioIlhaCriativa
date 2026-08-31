@@ -22,6 +22,35 @@ class Admin::DivulgacoesController < Admin::BaseController
     end
   end
 
+  # ACOMP-02: recupera uma linha falhou/incerto sem sair da tela. Os dois ids
+  # sao SEMPRE re-resolvidos pela associacao do cliente — um id forasteiro cai
+  # em RecordNotFound -> Rails 404 (sem rescue aqui, ao contrario do #create).
+  def resend
+    @divulgacao = @client.divulgacoes.find(params[:divulgacao_id])
+    @dg = @divulgacao.divulgacao_grupos.find(params[:id])
+
+    if @divulgacao.status_cancelada?
+      redirect_to admin_client_divulgacao_path(@client, @divulgacao),
+                  alert: "Não é possível reenviar: esta divulgação foi cancelada."
+      return
+    end
+
+    @dg.update!(status: :pendente, error_code: nil, sent_at: nil, evolution_message_id: nil)
+    # O reopen concluida -> em_andamento vive AQUI, no controller — nao no job
+    # da fase 29 (30-CONTEXT). finalize_divulgacao_if_done fecha de novo
+    # quando esta linha sair de pendente.
+    @divulgacao.update!(status: :em_andamento) if @divulgacao.status_concluida?
+    Whatsapp::SendToGroupJob.perform_later(@dg) # verbatim fase 29 — nenhum envio sincrono aqui
+
+    respond_to do |format|
+      format.turbo_stream # resend.turbo_stream.erb
+      format.html do
+        redirect_back fallback_location: admin_client_divulgacao_path(@client, @divulgacao),
+                      notice: "Reenvio para o grupo \"#{@dg.group_name}\" reenfileirado."
+      end
+    end
+  end
+
   def new
     @instance = @client.whatsapp_instance
     @divulgacao = @client.divulgacoes.new

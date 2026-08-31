@@ -24,6 +24,9 @@ Rails.application.routes.draw do
       end
       resources :divulgacoes, only: [ :index, :new, :create, :show ] do
         member { patch :cancel }
+        resources :divulgacao_grupos, only: [], controller: "divulgacoes" do
+          member { post :resend }
+        end
       end
     end
     resources :artes do

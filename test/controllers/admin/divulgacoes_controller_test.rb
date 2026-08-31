@@ -633,6 +633,85 @@ class Admin::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "agendada", d_b.status
   end
 
+  # --- Task 1 (30-02): #resend (ACOMP-02) -------------------------------
+
+  test "POST resend numa linha falhou -- reseta pra pendente, reenfileira o job, reabre concluida->em_andamento" do
+    d = build_divulgacao_agendada
+    dg = d.divulgacao_grupos.first
+    dg.update!(status: :falhou, error_code: "instancia_desconectada", sent_at: Time.current, evolution_message_id: "abc123")
+    d.update!(status: :concluida)
+
+    assert_enqueued_with(job: Whatsapp::SendToGroupJob, args: [ dg ]) do
+      post resend_admin_client_divulgacao_divulgacao_grupo_path(@client, d, dg)
+    end
+
+    dg.reload
+    assert_equal "pendente", dg.status
+    assert_nil dg.error_code
+    assert_nil dg.sent_at
+    assert_nil dg.evolution_message_id
+    assert_equal "em_andamento", d.reload.status
+  end
+
+  test "POST resend numa linha incerto com divulgacao ainda em_andamento -- reseta e reenfileira, sem mexer no status da divulgacao" do
+    d = build_divulgacao_agendada
+    dg = d.divulgacao_grupos.first
+    dg.update!(status: :incerto, error_code: "Unknown: timeout")
+    d.update!(status: :em_andamento)
+
+    assert_enqueued_with(job: Whatsapp::SendToGroupJob, args: [ dg ]) do
+      post resend_admin_client_divulgacao_divulgacao_grupo_path(@client, d, dg)
+    end
+
+    assert_equal "pendente", dg.reload.status
+    assert_equal "em_andamento", d.reload.status
+  end
+
+  test "POST resend numa divulgacao cancelada -- recusa, sem mutacao, sem enqueue, flash alert" do
+    d = build_divulgacao_agendada
+    dg = d.divulgacao_grupos.first
+    dg.update!(status: :falhou, error_code: "instancia_desconectada")
+    d.cancelar!
+
+    assert_no_enqueued_jobs do
+      post resend_admin_client_divulgacao_divulgacao_grupo_path(@client, d, dg)
+    end
+
+    assert_redirected_to admin_client_divulgacao_path(@client, d)
+    assert_equal "Não é possível reenviar: esta divulgação foi cancelada.", flash[:alert]
+    dg.reload
+    assert_equal "falhou", dg.status
+    assert_equal "instancia_desconectada", dg.error_code
+  end
+
+  test "POST resend com divulgacao_id ou id de grupo de OUTRO cliente -- 404, nada vaza, sem enqueue" do
+    _client_b, group_b, arte_b = build_client_b
+    d_b = build_divulgacao_agendada(client: _client_b, arte: arte_b, groups: [ group_b ])
+    dg_b = d_b.divulgacao_grupos.first
+    dg_b.update!(status: :falhou, error_code: "instancia_desconectada")
+
+    d_a = build_divulgacao_agendada
+    dg_a = d_a.divulgacao_grupos.first
+    dg_a.update!(status: :falhou)
+
+    # divulgacao_id de B pela URL de A
+    assert_no_enqueued_jobs do
+      post resend_admin_client_divulgacao_divulgacao_grupo_path(@client, d_b, dg_b)
+    end
+    assert_response :not_found
+    refute_includes response.body, group_b.subject
+    refute_includes response.body, group_b.remote_jid
+
+    # divulgacao de A, mas id de grupo pertence a B -- 2o hop tem que 404 tambem
+    assert_no_enqueued_jobs do
+      post resend_admin_client_divulgacao_divulgacao_grupo_path(@client, d_a, dg_b)
+    end
+    assert_response :not_found
+
+    dg_b.reload
+    assert_equal "falhou", dg_b.status
+  end
+
   test "GET show de divulgacao com zero divulgacao_grupos -- Grupos (0), sem erro (backstop)" do
     d = @client.divulgacoes.new(arte: @arte, scheduled_for: 3.days.from_now)
     d.save!(validate: false) # ao_menos_um_grupo bloquearia via form -- so alcancavel via console/backstop
