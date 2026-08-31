@@ -204,6 +204,13 @@ class Whatsapp::SendToGroupJob < ApplicationJob
     end
 
     # RESEARCH Assumption A1: shape exato do sucesso PENDENTE de UAT real — ler os dois formatos possíveis.
-    group.update!(evolution_message_id: resp["key"]&.dig("id") || resp["id"])
+    # WR-05: `&.` só protege contra `resp["key"]` nil, não contra ele ser
+    # present-but-not-a-Hash (string/bool num shape futuro/observado). Sem o
+    # `is_a?(Hash)` um `.dig` cru levantaria NoMethodError DEPOIS do envio já
+    # confirmado -> o catch-all `discard_on(StandardError)` marcaria :falhou
+    # uma mensagem que de fato foi entregue.
+    key = resp["key"]
+    message_id = (key.is_a?(Hash) ? key["id"] : nil) || resp["id"]
+    group.update!(evolution_message_id: message_id)
   end
 end

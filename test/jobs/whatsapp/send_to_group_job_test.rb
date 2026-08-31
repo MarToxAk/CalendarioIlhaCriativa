@@ -55,6 +55,16 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
     assert_equal "MSG1", @group_row.evolution_message_id
   end
 
+  test "WR-05: shape de sucesso com 'key' non-Hash cai no fallback resp['id'] sem virar :falhou" do
+    Evolution::Client.stub(:send_media, ->(*) { { "key" => "MSG-FLAT", "id" => "MSGX" } }) do
+      Whatsapp::SendToGroupJob.perform_now(@group_row)
+    end
+
+    @group_row.reload
+    assert_equal "enviado", @group_row.status, "mensagem foi entregue -- parsing do shape nunca deve virar :falhou"
+    assert_equal "MSGX", @group_row.evolution_message_id
+  end
+
   test "perform via sendText quando arte.caption_only?" do
     @arte.media_file.purge
     @arte.update_columns(media_type: Arte.media_types[:caption_only], caption: "Bom dia a todos!")
