@@ -35,7 +35,15 @@ class Whatsapp::SendToGroupJob < ApplicationJob
   # existe justamente para pegar isso. `on_conflict:` fica no default do gem
   # (`:block`) -- NUNCA `:discard`, que perderia o envio silenciosamente; um
   # job sem slot só fica em `solid_queue_blocked_executions` até liberar.
-  limits_concurrency to: 1, key: ->(group) { group.divulgacao.client.whatsapp_instance.id }
+  # WR-01: `whatsapp_instance` é `has_one` e PODE ser nil -- a mesma razão pela
+  # qual o guard `instance&.connected?` no `perform` usa safe navigation. Este
+  # lambda roda SÍNCRONO no enqueue (`perform_later`), dentro do loop do
+  # DispatchJob; um `NoMethodError` aqui abortaria o dispatch de todos os
+  # grupos irmãos. Com `&.id` a chave vira nil -> ActiveJob trata como "não
+  # limitado" (roda sem serialização), o que é seguro: a primeira linha do
+  # `perform` (`instance&.connected?`) já derruba o job para :falhou sem tocar
+  # na Evolution.
+  limits_concurrency to: 1, key: ->(group) { group.divulgacao.client.whatsapp_instance&.id }
 
   # 27-REVIEW.md WR-A / RESEARCH Pitfall 3 (verificado contra
   # activesupport-8.1.3/lib/active_support/rescuable.rb:129):
