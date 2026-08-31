@@ -1,8 +1,8 @@
 ---
 phase: 30-acompanhamento-ao-vivo-hardening
-reviewed: 2026-08-31T13:47:32Z
+reviewed: 2026-08-31T14:35:00Z
 depth: standard
-files_reviewed: 20
+files_reviewed: 24
 files_reviewed_list:
   - app/controllers/admin/clients_controller.rb
   - app/controllers/admin/divulgacoes_controller.rb
@@ -25,129 +25,48 @@ files_reviewed_list:
   - test/integration/cross_client_isolation_test.rb
   - test/models/divulgacao_grupo_test.rb
   - test/models/divulgacao_test.rb
+  - config/initializers/solid_queue_retention.rb
+  - test/lib/solid_queue_retention_test.rb
+  - app/jobs/whatsapp/send_to_group_job.rb
+  - test/jobs/whatsapp/send_to_group_job_test.rb
 findings:
-  critical: 2
-  warning: 2
-  info: 2
-  total: 6
-status: issues_found
+  critical: 0
+  warning: 0
+  info: 0
+  total: 0
+status: clean
 ---
 
-# Phase 30: Code Review Report
+# Phase 30: Code Review Report (iteration 3 — final re-review)
 
-**Reviewed:** 2026-08-31T13:47:32Z
+**Reviewed:** 2026-08-31T14:35:00Z
 **Depth:** standard
-**Files Reviewed:** 20
-**Status:** issues_found
+**Files Reviewed:** 24
+**Status:** clean
 
 ## Summary
 
-Cross-client scoping in `Admin::DivulgacoesController` (`create`, `show`/`cancel` via `set_divulgacao`, and the new `resend`) is done correctly throughout — every id is re-resolved through `@client`'s association chain, never a bare `.find`, and this is proven by mutation-sensitive tests in `cross_client_isolation_test.rb` and the controller test suite. The broadcast callbacks on `Divulgacao`/`DivulgacaoGrupo` are correctly guarded by `saved_change_to_status?` and target only the specific `<li>`/summary nodes, never the whole list. `error_code` rendering in the helper correctly passes the already-sanitized string through verbatim with no re-`gsub`. The `recurring.yml` retention command was verified against the vendored `solid_queue-1.4.0` source: `discard_all_in_batches` called on a scoped relation honors that scope for `count`, the batched `pluck(:job_id)`, and the final `delete_all`, so only rows older than the retention window are pruned and the parent `solid_queue_jobs` row is removed with them (no orphans, no argument logging).
+This is the third and final pass of the review→fix→re-review loop. Scope was narrowed per the task to re-deriving whether commit `cb9f823` actually closes the CR-01 residual gap identified in iteration 2, and to checking that scoping four `Divulgacao` validations to `on: :create` doesn't quietly remove a defense that something else still depends on post-create. CR-02, WR-01, WR-02 were already confirmed fixed in iteration 2 and were not re-derived (nothing in `cb9f823` touches their call sites). IN-01/IN-02 remain accepted/deferred and are not re-flagged.
 
-The one area that did not hold up under adversarial tracing is `Admin::DivulgacoesController#resend`: it has no server-side guard on the *current* status of the row being resent, and reopening a `concluida` divulgação calls `@divulgacao.update!(status: :em_andamento)`, which re-runs the *entire* validation suite on the model — including a validation that can legitimately be false at that exact moment (`arte_deve_estar_aprovada`), turning a normal recovery action into an unhandled 500. Both issues below are exercised by control flow the codebase itself documents as reachable (the `arte_nao_aprovada` sentinel, and the "resend" button rendered only in the view, not enforced in the controller).
+**CR-01 (residual) is now genuinely fixed.** Traced the full mechanism rather than trusting the commit message:
 
-## Critical Issues
+- `app/models/divulgacao.rb:58-61` now declares `arte_deve_estar_aprovada`, `arte_nao_usa_link_externo`, `arquivo_dentro_do_teto_whatsapp`, and `arte_e_grupos_do_mesmo_cliente` with `on: :create`, mirroring the pre-existing `scheduled_for_no_futuro, on: :create` pattern from iteration 1.
+- With this scoping, `Whatsapp::SendToGroupJob.finalize_divulgacao_if_done`'s `divulgacao.update!(status: :concluida)` (`app/jobs/whatsapp/send_to_group_job.rb:174-177`) is a pure status-only save with no `:create` context, so `arte_deve_estar_aprovada` no longer re-runs. Confirmed by tracing Rails' validation-context semantics (`on: :create` only fires when `new_record?`) — this is stock ActiveRecord behavior, not something the codebase reimplements, so there is no edge case where the scoping "sometimes" still fires on update.
+- Ran the new regression test (`test/jobs/whatsapp/send_to_group_job_test.rb:489-504`, "CR-01 residual: resend com arte ainda reprovada finaliza a divulgacao sem travar em em_andamento e sem perder o error_code") together with the full `send_to_group_job_test.rb` suite (35 tests, 112 assertions) — all green. The test genuinely drives `perform_now` end-to-end (not just `assert_enqueued_with`), reproducing the exact iteration-2 empirical repro (divulgação `em_andamento`, arte flipped to `change_requested`, group resent) and asserting both that `error_code` stays `"arte_nao_aprovada"` (not overwritten by the `unexpected_error` catch-all) and that the divulgação reaches `concluida` (not stuck).
+- Manually reasoned through why the old bug is actually gone rather than just re-routed: previously `divulgacao.update!(status: :concluida)` raised `RecordInvalid` inside the job, which fell through to the class's `discard_on(StandardError)` catch-all; that handler's `mark_falhou` call then invoked `finalize_divulgacao_if_done` a second time, raising the same `RecordInvalid` again uncaught. With the validation now scoped off this call path, the first `update!` succeeds outright — the catch-all is never entered for this scenario, so there is no second raise to worry about either.
+- Also ran `test/models/divulgacao_test.rb`, `test/models/divulgacao_grupo_test.rb`, `test/jobs/divulgacoes/dispatch_job_test.rb`, `test/controllers/admin/divulgacoes_controller_test.rb`, and `test/integration/cross_client_isolation_test.rb` (99 tests, 525 assertions) — all green, confirming the scoping change didn't regress creation-time enforcement (an unapproved arte, an externally-linked arte, an oversized file, or a cross-client arte/group still correctly blocks `Divulgacao#create` — these are exercised by the existing, unchanged tests in `divulgacao_test.rb`).
 
-### CR-01: `resend` can raise `ActiveRecord::RecordInvalid` (500) when reopening a `concluida` divulgação whose arte lost approval
+**Checked specifically for the "silently defanged defense-in-depth" risk the task asked about, i.e. whether any other code path expects these four validations to still guard a *later* mutation of an existing `Divulgacao`:**
 
-**File:** `app/controllers/admin/divulgacoes_controller.rb:38-43`
-**Issue:**
-```ruby
-@dg.update!(status: :pendente, error_code: nil, sent_at: nil, evolution_message_id: nil)
-@divulgacao.update!(status: :em_andamento) if @divulgacao.status_concluida?
-Whatsapp::SendToGroupJob.perform_later(@dg)
-```
-`Divulgacao#update!` re-runs *all* of the model's validations (only `scheduled_for_no_futuro` is scoped `on: :create` — see `app/models/divulgacao.rb:36-47`). `arte_deve_estar_aprovada` (`app/models/divulgacao.rb:84-87`), `arte_nao_usa_link_externo`, `arquivo_dentro_do_teto_whatsapp`, and `arte_e_grupos_do_mesmo_cliente` all run unconditionally on every save.
+- `arte_e_grupos_do_mesmo_cliente` (SEG-02 backstop): grepped the whole `app/` tree for any place that reassigns `divulgacao.arte`, `arte_id`, `client_id`, or adds to `divulgacao_grupos` outside of the initial `.new(...)`/`.build(...)` calls in `Admin::DivulgacoesController#create` (`app/controllers/admin/divulgacoes_controller.rb:107-117` and the `rescue` branch at `139-150`, both pre-`.save`). No such call exists anywhere else in the codebase — the arte/client/group relationship is immutable after creation by construction, so this check genuinely only ever mattered at create time. No regression.
+- `app/jobs/divulgacoes/dispatch_job.rb:18` (`divulgacao.update!(status: :em_andamento) if divulgacao.status_agendada?`) is another status-only `update!` on `Divulgacao` that runs at `scheduled_for` time, previously also exposed to the same unscoped-validation crash pattern (e.g., if an arte were somehow unapproved by dispatch time, this call would have raised `RecordInvalid` uncaught by `Divulgacoes::DispatchJob`, which defines no `discard_on`/`retry_on` at all, permanently stalling the dispatch). This scoping fix incidentally closes that pre-existing latent bug too, at no cost — `SendToGroupJob#perform` already independently re-validates `arte.approved?`/`instance.connected?` per group (ENVIO-06/07) regardless of what `Divulgacao`-level validations do, so no defense is actually lost by not re-checking at the `em_andamento` transition.
+- `Divulgacao#cancelar!` (`app/models/divulgacao.rb:68-71`) calls plain `update(status: :cancelada)` (non-bang). Before this fix, if an admin tried to cancel an `agendada` divulgação whose arte had since become unapproved, this call would have silently returned `false` (validation failure swallowed by non-bang `update`), leaving the record forever stuck as `agendada` with a misleading "Só é possível cancelar uma divulgação ainda agendada" flash. This is now also fixed as a side effect of the same scoping change. Not a regression; an incidental additional fix.
+- `arquivo_dentro_do_teto_whatsapp` / `arte_nao_usa_link_externo` were never enforced at actual send time even before this commit — `Whatsapp::SendToGroupJob#send_via_evolution` never calls `divulgacao.valid?`, so these two checks only ever fired as a side effect of a status-only `update!` racing with a coincidental live edit to the arte between creation and dispatch/finalize. The admin UI's `check_editable` before_action (`app/controllers/admin/artes_controller.rb:93-96`) already blocks editing an arte's `media_file`/`external_url` while it is `approved`, so this window was already narrow before the fix and remains exactly as narrow after it — no change in exposure.
 
-This is directly reachable through the exact recovery flow this feature exists for: `Whatsapp::SendToGroupJob` (fase 29, `app/jobs/whatsapp/send_to_group_job.rb:139-144`) sets a group to `falhou` with `error_code: "arte_nao_aprovada"` when the arte's approval was revoked between scheduling and send time, then calls `finalize_divulgacao_if_done`, which can flip the divulgação to `concluida`. `divulgacao_grupo_error_label` (`app/helpers/admin/divulgacoes_helper.rb:34`) even has a dedicated pt-BR label for this sentinel, confirming it's an expected, user-facing scenario. If the admin clicks "Reenviar" on that failed row while the arte is *still* unapproved (the normal case — nothing in this flow re-approves the arte), `@divulgacao.update!(status: :em_andamento)` re-validates `arte_deve_estar_aprovada`, which fails, and `update!` raises `ActiveRecord::RecordInvalid`. Neither `Admin::BaseController` nor `ApplicationController` has a `rescue_from` for this, so the request 500s. Neither the controller test suite nor the model test suite exercises this path — every `resend` test resets `error_code` to `"instancia_desconectada"` or `"Unknown: timeout"`, never `"arte_nao_aprovada"` on a `concluida` divulgação.
-
-Secondary effect: because `@dg.update!` (which is *not* validated against this) already ran before the raise, a real request would leave `@dg` reset to `pendente` while `@divulgacao` stays stuck on `concluida` — an inconsistent, half-applied state (the enqueued job would still run and send, but `finalize_divulgacao_if_done`'s `if divulgacao.status_em_andamento?` guard would then never flip it back).
-
-**Fix:** Don't let the reopen crash the whole action; either revalidate only what's needed or skip validations entirely for this state-only transition, and guard the case where the arte truly isn't resendable:
-```ruby
-if @divulgacao.status_cancelada?
-  redirect_to admin_client_divulgacao_path(@client, @divulgacao),
-              alert: "Não é possível reenviar: esta divulgação foi cancelada."
-  return
-end
-
-if @divulgacao.status_concluida?
-  @divulgacao.update_column(:status, Divulgacao.statuses[:em_andamento]) # bypass validations for pure status reopen
-end
-
-@dg.update!(status: :pendente, error_code: nil, sent_at: nil, evolution_message_id: nil)
-Whatsapp::SendToGroupJob.perform_later(@dg)
-```
-(or add a `rescue ActiveRecord::RecordInvalid` around the reopen specifically and surface an actionable alert, e.g. "Não é possível reabrir: a arte não está mais aprovada."). Either way, this needs an explicit test with `error_code: "arte_nao_aprovada"` on a `concluida` divulgação whose arte is currently unapproved.
-
-### CR-02: `resend` has no server-side guard on `@dg.status` — can re-send to a group that already received the message
-
-**File:** `app/controllers/admin/divulgacoes_controller.rb:28-43`
-**Issue:** The only state check in `resend` is `@divulgacao.status_cancelada?`. Nothing checks `@dg.status.in?(%w[falhou incerto])` before resetting the row and re-enqueueing. That check exists only client-side, as a rendering condition in the view:
-```erb
-<% if dg.status.in?(%w[falhou incerto]) && !dg.divulgacao.status_cancelada? %>
-  <%= button_to "Reenviar", resend_admin_client_divulgacao_divulgacao_grupo_path(...) %>
-<% end %>
-```
-(`app/views/admin/divulgacoes/_grupo_row.html.erb:35-45`). A direct POST to the `resend` route (stale tab with an old render, curl, replayed request, or simply an admin re-clicking a page that hasn't received its live-update yet) with the `id` of an `enviado` row will:
-1. Wipe the audit trail (`sent_at`, `evolution_message_id` set back to `nil`) of a message that was already confirmed delivered.
-2. Flip status back to `pendente`.
-3. Re-enqueue `Whatsapp::SendToGroupJob`, whose atomic claim (`app/jobs/whatsapp/send_to_group_job.rb:135-137`) only protects against *concurrent* re-processing of the same still-`pendente` row — it does **not** know the row was previously `enviado`. The claim succeeds (status is `pendente` again) and the job proceeds to call `send_via_evolution`, sending a second, duplicate message to the WhatsApp group.
-
-This directly contradicts the "must never call Evolution synchronously and must re-enqueue verbatim" guarantee's implicit precondition — the resend contract only makes sense for `falhou`/`incerto` rows; nothing stops it from firing on `enviado` (or even `pendente`, which would race a job that's already claimed/in-flight, though that case at least self-resolves via the atomic claim).
-
-**Fix:**
-```ruby
-def resend
-  @divulgacao = @client.divulgacoes.find(params[:divulgacao_id])
-  @dg = @divulgacao.divulgacao_grupos.find(params[:id])
-
-  if @divulgacao.status_cancelada?
-    redirect_to admin_client_divulgacao_path(@client, @divulgacao),
-                alert: "Não é possível reenviar: esta divulgação foi cancelada."
-    return
-  end
-
-  unless @dg.status.in?(%w[falhou incerto])
-    redirect_to admin_client_divulgacao_path(@client, @divulgacao),
-                alert: "Só é possível reenviar um grupo que falhou ou ficou incerto."
-    return
-  end
-  # ... existing update!/perform_later
-end
-```
-Add a controller test posting `resend` against a `dg` with `status: :enviado` and asserting `assert_no_enqueued_jobs` + no mutation, mirroring the existing "divulgacao cancelada" guard test.
-
-## Warnings
-
-### WR-01: `Divulgacao::SEND_DELAY_MIN/MAX`-style `Integer(ENV.fetch(...))` pattern reused in a scheduled command with no failure isolation
-
-**File:** `config/recurring.yml:25,32`
-**Issue:** `Integer(ENV.fetch("SOLID_QUEUE_FAILED_RETENTION_DAYS", "14"))` raises `ArgumentError` if the env var is ever set to a non-integer value (e.g. `"14d"`, `""`, a stray whitespace from a `.env` copy/paste). Unlike `Divulgacao::SEND_DELAY_MIN/MAX` (`app/models/divulgacao.rb:17-18`), which fails fast once at boot and is caught immediately by any smoke test, this expression is re-evaluated by solid_queue's recurring-task runner on every scheduled invocation (daily, both `production:` and `development:`). A bad value silently breaks the retention job every day going forward — `solid_queue_failed_executions` (which the code itself documents as holding job arguments "em texto claro") would then never get pruned, quietly defeating the exact hardening goal INFRA-07 exists for, with no visible failure short of digging through solid_queue's own failed-execution records for the recurring task's own job.
-**Fix:** Validate the env var once during initialization the same way `Divulgacao::SEND_DELAY_MIN/MAX` do (fail fast at boot instead of daily at 3am in prod), e.g. an initializer that reads/validates `SOLID_QUEUE_FAILED_RETENTION_DAYS` and exposes a small constant/method that `recurring.yml`'s `command:` calls into, so a misconfiguration surfaces immediately instead of silently disabling the retention job.
-
-### WR-02: Misleading comment on `divulgacao_placar`
-
-**File:** `app/helpers/admin/divulgacoes_helper.rb:42-45`
-**Issue:** The comment above `divulgacao_placar` says `"para {n} grupos" / singular NAO e pluralizado (copy travada na fase 28, ver divulgacao_duration_estimate acima)` — but `divulgacao_placar`'s actual output format (`"N enviados · N falhou · N pendente · N incerto"`) never contains the string `"para {n} grupos"` at all; that phrase belongs only to `divulgacao_duration_estimate` just above it. The comment appears to have been copy-pasted from the wrong helper and misdescribes what's being guarded here (the real non-pluralization is `"1 pendente"` vs `"1 pendentes"`, tested at `test/helpers/admin/divulgacoes_helper_test.rb:133-136`, which is itself a slightly odd contract — `"pendentes"` is used for the "all rows pending" branch but singular `"pendente"` in the mixed-status join).
-**Fix:** Correct the comment to describe `divulgacao_placar`'s own pluralization behavior, or remove the cross-reference if it's not needed.
-
-## Info
-
-### IN-01: `bin/setup`'s solid_cable block duplicates the solid_queue block verbatim (structure, not values)
-
-**File:** `bin/setup:47-62`
-**Issue:** The newly added solid_cable schema-load block is a line-for-line structural duplicate of the solid_queue block immediately above it (`bin/setup:28-45`) — same `system(...) || system!("bin/rails", "runner", <<~RUBY)` shape, same idempotency check pattern. This is consistent with the existing style (the comment even says "Mesmo tratamento idempotente do bloco solid_queue acima"), so it's a deliberate consistency choice rather than an oversight, but it's still worth flagging as a candidate for extraction into a small helper (`load_schema_if_missing(table:, task:, schema_file:)`) if a third schema (or a change to the retry logic) is ever added.
-**Fix:** Optional: extract a shared local method/lambda inside the `FileUtils.chdir` block taking `table:`, `task:`, `schema_file:` to remove the duplication.
-
-### IN-02: `_progresso_resumo.html.erb` recomputes counts via a live SQL query while `divulgacao_placar` reads the same data from an already-preloaded Ruby array
-
-**File:** `app/views/admin/divulgacoes/_progresso_resumo.html.erb:5` vs `app/helpers/admin/divulgacoes_helper.rb:46-63`
-**Issue:** `_progresso_resumo` does `divulgacao.divulgacao_grupos.group(:status).count`, issuing a fresh `GROUP BY` query, while `divulgacao_placar` (used on `index`/`clients#show`) does `divulgacao.divulgacao_grupos.to_a` and counts in Ruby to leverage the already-`includes`d association and stay N+1-safe. Both partial usages here are single-record contexts (broadcast callbacks, `show.html.erb`) so this isn't an N+1 in practice today, but the two helpers compute the same four-way breakdown two different ways with no shared source of truth — a future call site that renders `_progresso_resumo` inside a list (the natural next step for this UI) would silently reintroduce the N+1 that `divulgacao_placar` was specifically hardened against (see `T-30-11` test at `test/controllers/admin/divulgacoes_controller_test.rb:567-583`).
-**Fix:** Consider having `_progresso_resumo` use `divulgacao.divulgacao_grupos.to_a.group_by(&:status)`-style counting (matching `divulgacao_placar`'s approach) so both partials share one N+1-safe counting strategy, or extract a shared `divulgacao_status_counts(divulgacao)` helper used by both.
+No new findings. Status is `clean`: this iteration's fix is verified correct, closes the residual gap it targets, and does not regress or defang any other validation-dependent code path found in this codebase.
 
 ---
 
-_Reviewed: 2026-08-31T13:47:32Z_
+_Reviewed: 2026-08-31T14:35:00Z_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
