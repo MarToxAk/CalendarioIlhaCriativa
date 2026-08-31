@@ -298,4 +298,84 @@ class AdminWhatsappInstancesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Não foi possível atualizar o QR Code. Clique em \"Gerar novo QR\" para tentar outra vez.", flash[:alert]
     assert_equal "connected", wi.reload.connection_state
   end
+
+  # --- #reuse — reutilizar conexão existente (fase 31, D-03/D-06, SEG-01/T-31-01) ---
+
+  test "reuse com irma conectada de outro cliente cria a linha com origin_reused_sibling? e notice" do
+    sibling_client = Client.create!(name: "WA Reuse Sibling", password: "senha1234", password_confirmation: "senha1234")
+    sibling = sibling_client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(sibling_client),
+      token: "token-irma-reuse",
+      connection_state: :connected,
+      paired_at: 1.day.ago,
+      remote_instance_id: "remote-irma-reuse"
+    )
+
+    assert_difference "WhatsappInstance.count", 1 do
+      post reuse_admin_client_whatsapp_instance_path(@client), params: { source_instance_name: sibling.instance_name }
+    end
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "Conexão reutilizada. Sincronize os grupos deste cliente para popular a lista.", flash[:notice]
+
+    wi = @client.reload.whatsapp_instance
+    assert_equal sibling.instance_name, wi.instance_name
+    assert_equal sibling.token, wi.token
+    assert_equal "connected", wi.connection_state
+    assert wi.origin_reused_sibling?
+  end
+
+  test "reuse com instance_name inexistente nao cria linha e redireciona com alert generico" do
+    assert_no_difference "WhatsappInstance.count" do
+      post reuse_admin_client_whatsapp_instance_path(@client), params: { source_instance_name: "nao-existe-livia_client_999" }
+    end
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "Conexão indisponível para reutilização. Atualize a página e tente de novo.", flash[:alert]
+  end
+
+  test "reuse com alvo NAO conectado (awaiting_qr) nao cria linha (T-31-01)" do
+    sibling_client = Client.create!(name: "WA Reuse Not Connected", password: "senha1234", password_confirmation: "senha1234")
+    not_connected = sibling_client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(sibling_client),
+      connection_state: :awaiting_qr
+    )
+
+    assert_no_difference "WhatsappInstance.count" do
+      post reuse_admin_client_whatsapp_instance_path(@client), params: { source_instance_name: not_connected.instance_name }
+    end
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "Conexão indisponível para reutilização. Atualize a página e tente de novo.", flash[:alert]
+  end
+
+  test "reuse com instance_name da PROPRIA instancia do cliente (self-target) nao cria linha (T-31-01)" do
+    own = @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :connected
+    )
+
+    assert_no_difference "WhatsappInstance.count" do
+      post reuse_admin_client_whatsapp_instance_path(@client), params: { source_instance_name: own.instance_name }
+    end
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "Conexão indisponível para reutilização. Atualize a página e tente de novo.", flash[:alert]
+  end
+
+  test "reuse duas vezes para o mesmo cliente levanta RecordNotUnique e mostra alert de duplicata" do
+    sibling_client = Client.create!(name: "WA Reuse Dup Sibling", password: "senha1234", password_confirmation: "senha1234")
+    sibling = sibling_client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(sibling_client),
+      connection_state: :connected
+    )
+    post reuse_admin_client_whatsapp_instance_path(@client), params: { source_instance_name: sibling.instance_name }
+
+    assert_no_difference "WhatsappInstance.count" do
+      post reuse_admin_client_whatsapp_instance_path(@client), params: { source_instance_name: sibling.instance_name }
+    end
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "Este cliente já possui uma instância de WhatsApp.", flash[:alert]
+  end
 end

@@ -146,4 +146,35 @@ class AdminClientsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Arte com Resposta"
     assert_includes response.body, "Histórico de aprovações"
   end
+
+  # ── @reusable_targets (fase 31, D-06) ──────────────────────────────────────
+
+  test "show de cliente sem instancia com irma conectada em outro cliente monta @reusable_targets com 1 entrada" do
+    sibling_client = Client.create!(name: "Reusable Sibling", password: "senha1234", password_confirmation: "senha1234")
+    sibling = sibling_client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(sibling_client),
+      connection_state: :connected
+    )
+
+    get admin_client_path(@client)
+
+    assert_response :success
+    assert_nil assigns(:whatsapp_instance)
+    targets = assigns(:reusable_targets)
+    assert_equal 1, targets.size
+    assert_equal sibling.instance_name, targets.first[:instance_name]
+    assert_includes targets.first[:client_names], sibling_client.name
+  end
+
+  test "show de cliente COM instancia nao monta @reusable_targets" do
+    @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :connected
+    )
+
+    get admin_client_path(@client)
+
+    assert_response :success
+    assert_nil assigns(:reusable_targets)
+  end
 end

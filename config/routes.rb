@@ -15,6 +15,7 @@ Rails.application.routes.draw do
         post :verify
         post :adopt
         post :reconnect
+        post :reuse
       end
       resources :whatsapp_groups, only: [ :index, :show ], controller: "whatsapp_groups" do
         collection do

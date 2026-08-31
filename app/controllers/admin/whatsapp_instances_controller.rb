@@ -87,6 +87,30 @@ class Admin::WhatsappInstancesController < Admin::BaseController
       alert: "Não foi possível atualizar o QR Code. Clique em \"Gerar novo QR\" para tentar outra vez."
   end
 
+  # Fase 31 (D-03/D-06, T-31-01). "Reutilizar conexão existente" — vincula ESTE
+  # cliente a uma instância-irmã JÁ CONECTADA de outro cliente, sem QR e sem
+  # chamada ao Evolution. SEG-01: a irmã é resolvida por uma cadeia escopada
+  # (connected + client_id diferente + find_by instance_name), NUNCA por um id
+  # cru de params — evita que um source_instance_name forjado alcance uma
+  # instância de qualquer outro cliente fora da lista exibida.
+  def reuse
+    target = WhatsappInstance.connected
+                             .where.not(client_id: @client.id)
+                             .find_by(instance_name: params.require(:source_instance_name))
+    return redirect_to(admin_client_path(@client),
+      alert: "Conexão indisponível para reutilização. Atualize a página e tente de novo.") if target.nil?
+
+    Evolution::InstanceProvisioner.new(@client).reuse(existing: target)
+    redirect_to admin_client_path(@client),
+      notice: "Conexão reutilizada. Sincronize os grupos deste cliente para popular a lista."
+  rescue ActiveRecord::RecordNotUnique
+    redirect_to admin_client_path(@client), alert: "Este cliente já possui uma instância de WhatsApp."
+  rescue Evolution::Errors::ConfigurationError, Evolution::Errors::Permanent, Evolution::Errors::Transient, Evolution::Errors::Unknown => e
+    Rails.logger.warn("[whatsapp_instances] reuse falhou client=#{@client.id}: #{e.class}")
+    redirect_to admin_client_path(@client),
+      alert: "Não foi possível reutilizar a conexão agora. Tente de novo em instantes."
+  end
+
   private
 
   # Escopo SEMPRE por client_id (resource nested singular) — nunca buscar a
