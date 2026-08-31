@@ -122,12 +122,14 @@ module Evolution
       # grupos da instância (fase 27, GRUPO-01). `getParticipants` é OBRIGATÓRIO
       # como string (senão 400 -> Evolution::Errors::Permanent). Usa o TOKEN DA
       # INSTÂNCIA (api_key: whatsapp_instance.token), não a apikey global. Espelha
-      # fetch_instances, inclusive o guard WR-07.
+      # o guard WR-07 de fetch_instances, mas o timeout NÃO espelha mais
+      # fetch_instances/connection_state: fetchAllGroups não é uma leitura rápida
+      # para contas com muitos grupos (ver Evolution::READ_TIMEOUT_GROUPS).
       def fetch_groups(instance_name, api_key:)
         body = request(:get, "/group/fetchAllGroups/#{instance_name}",
                        api_key: api_key,
                        query: { "getParticipants" => "false" },
-                       read_timeout: Evolution::READ_TIMEOUT_FAST).body
+                       read_timeout: Evolution::READ_TIMEOUT_GROUPS).body
         raise Evolution::Errors::Unknown, "resposta 2xx com corpo não-JSON do host Evolution" unless body.is_a?(Array)
 
         body

@@ -57,5 +57,16 @@ module Evolution
   OPEN_TIMEOUT       = Integer(ENV.fetch("EVOLUTION_OPEN_TIMEOUT", "5"))
   WRITE_TIMEOUT      = Integer(ENV.fetch("EVOLUTION_WRITE_TIMEOUT", "10"))
   READ_TIMEOUT       = Integer(ENV.fetch("EVOLUTION_READ_TIMEOUT", "30"))
-  READ_TIMEOUT_FAST  = 15 # connectionState / fetchInstances / fetchAllGroups
+  READ_TIMEOUT_FAST  = 15 # connectionState / fetchInstances
+
+  # fetchAllGroups NÃO é uma leitura rápida como as demais: o próprio Evolution
+  # API 2.3.7 faz uma chamada profilePicture(group.id) por grupo, DENTRO do
+  # loop do servidor (.planning/research/FEATURES.md:243), então o tempo de
+  # resposta escala com o número de grupos da instância. Medido empiricamente
+  # nesta sessão de correção contra a instância real de produção
+  # `livia_client_31` (64 grupos): com READ_TIMEOUT_FAST (15s) a chamada
+  # estourava em Net::ReadTimeout; repetindo com 90s o host respondeu em
+  # ~40s. 60s dá margem folgada sem se aproximar do teto de ~100s do
+  # Cloudflare já documentado no cabeçalho deste arquivo.
+  READ_TIMEOUT_GROUPS = Integer(ENV.fetch("EVOLUTION_READ_TIMEOUT_GROUPS", "60"))
 end
