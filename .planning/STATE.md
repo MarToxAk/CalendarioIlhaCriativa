@@ -4,17 +4,17 @@ milestone: v1.7
 milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 30
 current_phase_name: Acompanhamento ao Vivo + Hardening
-status: executing
-stopped_at: Completed 30-03-PLAN.md
-last_updated: "2026-08-31T13:36:52.000Z"
+status: planning
+stopped_at: "Fase 30 executada (4/4 planos), code review convergiu em 3 iterações (2 Critical + 2 Warning corrigidos), verificação 3/5 (human_needed) — persistida em 30-UAT.md. Milestone v1.7 com todas as 6 fases executadas/code-verificadas, 4 aguardando UAT do operador (25, 26, 29, 30)."
+last_updated: "2026-08-31T14:35:00.000Z"
 last_activity: 2026-08-31
-last_activity_desc: Phase 30 — 30-03 (ACOMP-03 histórico por cliente com placar) executado; todos os 4 planos da fase completos
-state_head: 0ebbedaa42ac4f4c13815bc414e3aa82c88824d6
+last_activity_desc: "Phase 30 execution + code review (converged) + verification complete; deferred to operator UAT (30-UAT.md, 3 items)"
+state_head: e91a7ac
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 24
-  completed_plans: 24
+  total_plans: 28
+  completed_plans: 28
   percent: 33
 ---
 
@@ -34,13 +34,18 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 | 25 | verification_deferred_human | /gsd-verify-work 25 |
 | 26 | verification_deferred_human | /gsd-verify-work 26 |
 | 29 | verification_deferred_human | /gsd-verify-work 29 |
+| 30 | verification_deferred_human | /gsd-verify-work 30 |
 
 ## Current Position
 
-Phase: 30 (Acompanhamento ao Vivo + Hardening) — EXECUTING
+Phase: 30 (Acompanhamento ao Vivo + Hardening) — EXECUTED, aguardando UAT do operador
 Plans complete: 01, 02, 03, 04 of 4 (all plans executed — 04 ran out of sequence, wave 1, no dependencies)
-Status: All plans executed — ready for phase-level verification/tail
-Last activity: 2026-08-31 — 30-03 (ACOMP-03 histórico por cliente com placar) executado
+Status: Code review convergiu (3 iterações, clean); verificação 3/5 (human_needed) — 30-UAT.md com 3 itens
+  pendentes (SC1 progresso ao vivo cross-processo, SC2 confirmação visual do reenvio, SC5 retenção
+  seletiva). ACOMP-02, ACOMP-03 e SEG-04 totalmente satisfeitos e comprovados por teste.
+  Milestone v1.7 (6 fases) 100% executada; lifecycle (audit → complete → cleanup) aguarda o operador
+  rodar /gsd-verify-work em 25, 26, 29 e 30.
+Last activity: 2026-08-31 — Phase 30 verification complete (human_needed), deferred to operator UAT
 
 ## Progress Bar
 
