@@ -2,6 +2,8 @@
 <%# @client.divulgacoes.find (set_divulgacao) — cross-client id -> 404. %>
 <% content_for(:page_title) { "Divulgação" } %>
 
+<%= turbo_stream_from [ @client, @divulgacao ] %>
+
 <div class="mb-4">
   <%= link_to admin_client_divulgacoes_path(@client),
         class: "inline-block text-sm text-slate-600 hover:text-slate-900 truncate max-w-[280px] sm:max-w-md" do %>
@@ -39,7 +41,7 @@
     </div>
     <div class="flex items-center gap-4">
       <dt class="text-sm font-medium text-slate-500 w-36">Status</dt>
-      <dd><%= render "status_badge", divulgacao: @divulgacao %></dd>
+      <dd><span id="<%= dom_id(@divulgacao, :status_badge) %>"><%= render "status_badge", divulgacao: @divulgacao %></span></dd>
     </div>
   </dl>
 
@@ -56,6 +58,7 @@
 <div class="bg-white rounded-xl border border-gray-200 shadow-card p-6 max-w-2xl mt-4">
   <h2 class="text-sm font-semibold text-slate-900 border-b border-gray-100 pb-3 mb-4">Grupos (<%= @divulgacao.divulgacao_grupos.size %>)</h2>
   <% if @divulgacao.divulgacao_grupos.any? %>
+    <%= render "progresso_resumo", divulgacao: @divulgacao %>
     <ul>
       <% @divulgacao.divulgacao_grupos.order(:group_name).each do |dg| %>
         <%= render "grupo_row", dg: dg %>

@@ -1,8 +1,10 @@
 <%# Partial _grupo_row.html.erb %>
 <%# Locals: dg: — uma DivulgacaoGrupo. group_name/remote_jid sao o snapshot %>
 <%# congelado na criacao (DIVU-09) — nunca uma live lookup no WhatsappGroup. %>
-<li class="flex items-center gap-3 py-3 px-4 border-b border-gray-100 last:border-0">
-  <span class="text-sm font-medium text-slate-900 min-w-0 flex-1 truncate" title="<%= dg.group_name %>"><%= dg.group_name %></span>
+<li id="<%= dom_id(dg) %>" class="flex items-start gap-3 py-3 px-4 border-b border-gray-100 last:border-0">
+  <div class="flex flex-col gap-1 min-w-0 flex-1">
+    <span class="text-sm font-medium text-slate-900 truncate" title="<%= dg.group_name %>"><%= dg.group_name %></span>
+  </div>
   <% case dg.status %>
   <% when "pendente" %>
     <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-slate-100 text-slate-600 border-slate-200 shrink-0">

@@ -1,0 +1,18 @@
+<%# Partial _progresso_resumo.html.erb %>
+<%# Locals: divulgacao: — linha-resumo agregada por status (ACOMP-01, fase 30). %>
+<%# Alvo de replace ao vivo (broadcast_progresso / broadcast_status). Sempre as %>
+<%# quatro contagens, zeros incluidos. %>
+<% counts = divulgacao.divulgacao_grupos.group(:status).count %>
+<p id="<%= dom_id(divulgacao, :progresso) %>" class="text-sm text-slate-600 mb-4">
+  <span class="font-medium text-slate-900"><%= counts["enviado"].to_i %></span>
+  <span class="text-slate-500">enviados</span>
+  <span class="text-slate-300">·</span>
+  <span class="font-medium text-slate-900"><%= counts["falhou"].to_i %></span>
+  <span class="text-slate-500">falhou</span>
+  <span class="text-slate-300">·</span>
+  <span class="font-medium text-slate-900"><%= counts["pendente"].to_i %></span>
+  <span class="text-slate-500">pendente</span>
+  <span class="text-slate-300">·</span>
+  <span class="font-medium text-slate-900"><%= counts["incerto"].to_i %></span>
+  <span class="text-slate-500">incerto</span>
+</p>
