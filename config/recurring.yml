@@ -13,3 +13,21 @@ production:
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
+  # INFRA-07 (fase 30): solid_queue_failed_executions guarda os argumentos do
+  # job (referencias de grupo/divulgacao) em texto claro. O metodo de discard
+  # em lote abaixo (verificado contra vendor/.../solid_queue-1.4.0/app/models/
+  # solid_queue/execution.rb:30-50) opera sobre o relation escopado -- count e
+  # o pluck de ids abaixo rodam em `self` -- entao aplicado ao where(created_at
+  # < cutoff) poda SOMENTE as linhas mais velhas que a janela, nunca a tabela
+  # inteira -- e tambem remove o solid_queue_jobs pai, sem orfaos com
+  # argumentos em texto claro.
+  prune_solid_queue_failed_executions:
+    command: 'SolidQueue::FailedExecution.where(''created_at < ?'', Integer(ENV.fetch("SOLID_QUEUE_FAILED_RETENTION_DAYS", "14")).days.ago).discard_all_in_batches'
+    schedule: every day at 3am
+
+development:
+  # INFRA-02: jobs agendados precisam sobreviver a restart em dev; a retencao
+  # tambem roda em dev pelo mesmo motivo (bin/jobs precisa recarregar o schedule).
+  prune_solid_queue_failed_executions:
+    command: 'SolidQueue::FailedExecution.where(''created_at < ?'', Integer(ENV.fetch("SOLID_QUEUE_FAILED_RETENTION_DAYS", "14")).days.ago).discard_all_in_batches'
+    schedule: every day at 3am
