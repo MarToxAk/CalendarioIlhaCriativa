@@ -93,6 +93,20 @@ na tela, reenvio manual por grupo, histórico consolidado por cliente (tudo fase
   (validação já roda na criação, fase 28). Se o UAT revelar um teto diferente, só a
   constante muda, não a lógica.
 
+### Pergunta em aberto da pesquisa — RESOLVIDA
+
+- **Janela residual entre claim e envio (RESEARCH Pitfall 1):** o claim atômico
+  (`update_all(status: :enviado)`) commita ANTES da chamada HTTP ao Evolution — se o worker
+  morrer exatamente nessa janela, o item fica marcado `enviado` sem confirmação real e sem
+  retry automático (`ProcessPrunedError` do solid_queue não re-enfileira, confirmado na
+  pesquisa). **Aceito como risco documentado, não uma falha de design:** nenhum outbox
+  pattern / transação distribuída é viável aqui sem reescrever a arquitetura que o CONTEXT já
+  travou, e a janela é uma única chamada HTTP (curta). Mitigação: o reenvio manual por grupo
+  da fase 30 (ACOMP-02) é o remédio operacional para esse caso raro — o operador vê o item
+  como "enviado" mas o grupo não recebeu, e reenvia manualmente. Não bloqueia esta fase.
+- **`concurrency_maintenance_interval`:** manter o default (600s) — Claude's Discretion,
+  ajuste fino de performance fora do escopo funcional desta fase.
+
 ### Claude's Discretion
 
 - Nome exato dos métodos/classes além dos já nomeados acima (`Divulgacoes::DispatchJob`,
