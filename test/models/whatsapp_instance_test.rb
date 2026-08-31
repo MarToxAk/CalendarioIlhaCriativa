@@ -107,4 +107,81 @@ class WhatsappInstanceTest < ActiveSupport::TestCase
     assert_not_nil raw
     assert_equal plaintext, wi.reload.token
   end
+
+  # --- Fase 31 (D-03): indice de instance_name deuniqueificado -------------
+  test "indice nao-unico de instance_name permite 2a linha com o mesmo nome para outro cliente" do
+    other = Client.create!(name: "Sibling Client", password: "senha1234", password_confirmation: "senha1234")
+    shared_name = "livia_client_shared_smoke"
+
+    @client.create_whatsapp_instance!(instance_name: shared_name, connection_state: :connected)
+
+    assert_nothing_raised do
+      other.create_whatsapp_instance!(instance_name: shared_name, connection_state: :connected)
+    end
+    assert_equal 2, WhatsappInstance.where(instance_name: shared_name).count
+  end
+
+  test "indice UNIQUE de client_id ainda levanta RecordNotUnique na 2a instancia do mesmo cliente" do
+    @client.create_whatsapp_instance!(instance_name: WhatsappInstance.evolution_name_for(@client))
+
+    assert_raises(ActiveRecord::RecordNotUnique) do
+      WhatsappInstance.create!(client: @client, instance_name: "outro-nome")
+    end
+  end
+
+  test "origin_reused_sibling? responde ao novo valor do enum" do
+    wi = @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      origin: :reused_sibling
+    )
+    assert wi.origin_reused_sibling?
+    refute wi.origin_created_by_app?
+    refute wi.origin_adopted_existing?
+  end
+
+  # --- siblings / shared? / shareable_targets (D-03/D-06) -------------------
+  test "siblings inclui self e qualquer outra linha com o mesmo instance_name" do
+    shared_name = "livia_client_siblings_smoke"
+    wi_a = @client.create_whatsapp_instance!(instance_name: shared_name, connection_state: :connected)
+    other = Client.create!(name: "Sibling B", password: "senha1234", password_confirmation: "senha1234")
+    wi_b = other.create_whatsapp_instance!(instance_name: shared_name, connection_state: :connected)
+
+    assert_equal [ wi_a, wi_b ].sort_by(&:id), wi_a.siblings.sort_by(&:id)
+  end
+
+  test "shared? e falso sem irma e verdadeiro com irma do mesmo instance_name" do
+    wi = @client.create_whatsapp_instance!(instance_name: WhatsappInstance.evolution_name_for(@client))
+    refute wi.shared?
+
+    other = Client.create!(name: "Sibling C", password: "senha1234", password_confirmation: "senha1234")
+    other.create_whatsapp_instance!(instance_name: wi.instance_name)
+
+    assert wi.reload.shared?
+  end
+
+  test "shareable_targets agrupa por instance_name conectado e lista os nomes dos clientes, excluindo o cliente informado" do
+    shared_name = "livia_client_targets_smoke"
+    owner = Client.create!(name: "Dono da Conexao", password: "senha1234", password_confirmation: "senha1234")
+    sibling_client = Client.create!(name: "Cliente Irmao", password: "senha1234", password_confirmation: "senha1234")
+    owner.create_whatsapp_instance!(instance_name: shared_name, connection_state: :connected)
+    sibling_client.create_whatsapp_instance!(instance_name: shared_name, connection_state: :connected)
+
+    excluded = Client.create!(name: "Excluido", password: "senha1234", password_confirmation: "senha1234")
+    targets = WhatsappInstance.shareable_targets(excluding_client_id: excluded.id)
+
+    entry = targets.find { |t| t[:instance_name] == shared_name }
+    assert entry.present?
+    assert_equal [ owner.name, sibling_client.name ].sort, entry[:client_names].sort
+  end
+
+  test "shareable_targets nao lista instancias nao conectadas nem do proprio cliente" do
+    @client.create_whatsapp_instance!(instance_name: WhatsappInstance.evolution_name_for(@client), connection_state: :connected)
+    unconnected_owner = Client.create!(name: "Nao Conectado", password: "senha1234", password_confirmation: "senha1234")
+    unconnected_owner.create_whatsapp_instance!(instance_name: "livia_client_unconnected_smoke", connection_state: :awaiting_qr)
+
+    targets = WhatsappInstance.shareable_targets(excluding_client_id: @client.id)
+
+    refute targets.any? { |t| t[:instance_name] == @client.whatsapp_instance.instance_name }
+    refute targets.any? { |t| t[:instance_name] == "livia_client_unconnected_smoke" }
+  end
 end

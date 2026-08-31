@@ -42,6 +42,24 @@ module Evolution
       adopt(name, headers)
     end
 
+    # Fase 31 (D-03/D-06/D-07): reutiliza uma instância-irmã JÁ CONECTADA para um
+    # cliente novo. ZERO I/O de rede — não chama create_instance/connect/set_webhook
+    # (a conexão física já está pareada e o webhook já aponta pra este sistema).
+    # Público, ao lado de #call — NÃO modifica #call/#adopt/#persist_new (D-07).
+    def reuse(existing:)
+      row = WhatsappInstance.create!(
+        client: @client,
+        instance_name: existing.instance_name,      # CÓPIA — aponta pra mesma conexão física
+        token: existing.token,                      # CÓPIA — encrypts transparente (whatsapp_instance.rb:12)
+        remote_instance_id: existing.remote_instance_id,
+        origin: :reused_sibling,
+        connection_state: existing.connection_state, # espera-se :connected
+        paired_at: existing.paired_at,
+        last_checked_at: Time.current
+      )
+      Result.new(instance: row, adopted: true, qr_base64: nil)
+    end
+
     private
 
     # 403 + frase de colisão. Qualquer outra Permanent (401 credencial, 404

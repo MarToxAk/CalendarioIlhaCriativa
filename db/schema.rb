@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_30_190002) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_185638) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -117,6 +117,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_190002) do
     t.string "user_agent"
     t.bigint "user_id", null: false
     t.index ["user_id"], name: "index_sessions_on_user_id"
+  end
+
+  create_table "solid_cable_messages", force: :cascade do |t|
+    t.binary "channel", null: false
+    t.bigint "channel_hash", null: false
+    t.datetime "created_at", null: false
+    t.binary "payload", null: false
+    t.index ["channel"], name: "index_solid_cable_messages_on_channel"
+    t.index ["channel_hash"], name: "index_solid_cable_messages_on_channel_hash"
+    t.index ["created_at"], name: "index_solid_cable_messages_on_created_at"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
@@ -281,7 +291,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_190002) do
     t.text "token"
     t.datetime "updated_at", null: false
     t.index ["client_id"], name: "index_whatsapp_instances_on_client_id", unique: true
-    t.index ["instance_name"], name: "index_whatsapp_instances_on_instance_name", unique: true
+    t.index ["instance_name"], name: "index_whatsapp_instances_on_instance_name"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"

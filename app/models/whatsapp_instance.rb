@@ -13,7 +13,10 @@ class WhatsappInstance < ApplicationRecord
   has_many :whatsapp_groups, dependent: :destroy
 
   enum :connection_state, { unpaired: 0, awaiting_qr: 1, connected: 2, disconnected: 3 }
-  enum :origin,           { created_by_app: 0, adopted_existing: 1 }, prefix: :origin
+  # reused_sibling (fase 31, D-03): linha criada por Evolution::InstanceProvisioner#reuse
+  # copiando instance_name/token/connection_state/paired_at de uma instância-irmã já
+  # conectada — valor code-only, sem migração (enum inteiro).
+  enum :origin,           { created_by_app: 0, adopted_existing: 1, reused_sibling: 2 }, prefix: :origin
   # WR-03 (code review fase 27): valor renomeado de `error` para `sync_error`
   # -- com prefix: :groups_sync, `error:` geraria `groups_sync_error?`, que
   # colide com o método de presença auto-gerado pelo Rails para a coluna
@@ -26,6 +29,28 @@ class WhatsappInstance < ApplicationRecord
   # (ao contrário de access_token), então a adoção de instância existente pode
   # confiar neste nome sem I/O extra.
   def self.evolution_name_for(client) = "livia_client_#{client.id}"
+
+  # Fase 31 (D-03): índice de instance_name deixou de ser UNIQUE — N linhas podem
+  # apontar para a MESMA conexão física (mesmo instance_name/token), uma por
+  # cliente que a compartilha. `connected` é a base do <select> de D-06 (só
+  # conexões já pareadas são reutilizáveis).
+  scope :connected, -> { where(connection_state: :connected) }
+
+  # Linhas-irmãs que compartilham esta conexão física (inclui self).
+  def siblings = self.class.where(instance_name: instance_name)
+
+  # true quando existe pelo menos outra linha (id diferente) com o mesmo instance_name.
+  def shared? = self.class.where(instance_name: instance_name).where.not(id: id).exists?
+
+  # Alvos reutilizáveis para o <select> de D-06 — uma entrada por instance_name
+  # distinto CONECTADO em outro cliente, com os nomes dos clientes que já o usam.
+  # GROUP BY fica aqui (fora do ERB) — Claude's Discretion / 31-RESEARCH.md Q3.
+  def self.shareable_targets(excluding_client_id:)
+    connected.where.not(client_id: excluding_client_id)
+             .includes(:client)
+             .group_by(&:instance_name)
+             .map { |name, rows| { instance_name: name, client_names: rows.map { |r| r.client.name } } }
+  end
 
   # HMAC-SHA256(instance_name, chave global) — determinístico e não persistido
   # (PAIR-06). O receiver de webhook recalcula com o mesmo método e compara via
