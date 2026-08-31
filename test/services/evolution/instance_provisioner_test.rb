@@ -47,6 +47,25 @@ class Evolution::InstanceProvisionerTest < ActiveSupport::TestCase
     end
   end
 
+  test "#reuse sobre uma linha :unpaired do proprio cliente sobrescreve sem RecordNotUnique e sem I/O" do
+    @client_b.create_whatsapp_instance!(
+      instance_name: "livia_client_stale_old",
+      connection_state: :unpaired
+    )
+
+    result = nil
+    assert_no_difference "WhatsappInstance.count" do
+      result = Evolution::InstanceProvisioner.new(@client_b, client_api: RaisingFakeEvolutionClient).reuse(existing: @instance_a)
+    end
+
+    row = @client_b.reload.whatsapp_instance
+    assert_equal result.instance.id, row.id
+    assert_equal @instance_a.instance_name, row.instance_name
+    assert_equal @instance_a.token, row.token
+    assert row.origin_reused_sibling?
+    assert_equal "connected", row.connection_state
+  end
+
   test "#reuse para um cliente que ja tem instancia levanta RecordNotUnique (indice UNIQUE de client_id preservado)" do
     Evolution::InstanceProvisioner.new(@client_b, client_api: RaisingFakeEvolutionClient).reuse(existing: @instance_a)
 

@@ -231,6 +231,43 @@ class AdminClientsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Nenhuma conexão conectada disponível para reutilizar."
   end
 
+  # ── linha :unpaired = "sem instância" (quick task 260831-o9t) ─────────────
+
+  test "show de cliente com instancia :unpaired trata como sem instancia (empty-state + select de reutilizacao)" do
+    sibling_client = Client.create!(name: "Unpaired Sibling", password: "senha1234", password_confirmation: "senha1234")
+    sibling = sibling_client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(sibling_client),
+      connection_state: :connected
+    )
+    @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :unpaired
+    )
+
+    Evolution::Client.stub(:fetch_instances, ->(**) { [ { "name" => sibling.instance_name, "connectionStatus" => "open" } ] }) do
+      get admin_client_path(@client)
+    end
+
+    assert_response :success
+    assert_select "label", text: "Novo número (QR)"
+    assert_select "select#source_instance_name", count: 1
+  end
+
+  test "show de cliente com instancia :unpaired NAO renderiza o ramo conectado" do
+    @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :unpaired
+    )
+
+    Evolution::Client.stub(:fetch_instances, ->(**) { [] }) do
+      get admin_client_path(@client)
+    end
+
+    assert_response :success
+    assert_select "button", text: "Desvincular WhatsApp", count: 0
+    assert_select "#unlink-modal-desc", count: 0
+  end
+
   # ── copy do modal "Desvincular WhatsApp" (quick task 260831-o9t) ──────────
 
   test "show de cliente com conexao COMPARTILHADA descreve as irmas no modal Desvincular WhatsApp" do

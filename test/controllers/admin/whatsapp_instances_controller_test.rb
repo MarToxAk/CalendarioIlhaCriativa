@@ -501,4 +501,56 @@ class AdminWhatsappInstancesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_client_path(@client)
     assert_equal "Este cliente já possui uma instância de WhatsApp.", flash[:alert]
   end
+
+  # --- re-provisão depois de #unlink (quick task 260831-o9t) ---------------
+
+  test "reuse depois de unlink re-vincula sobrescrevendo a linha unpaired" do
+    sibling_client = Client.create!(name: "WA Relink Sibling", password: "senha1234", password_confirmation: "senha1234")
+    sibling = sibling_client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(sibling_client),
+      connection_state: :connected
+    )
+
+    @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :connected
+    )
+    post unlink_admin_client_whatsapp_instance_path(@client)
+    assert @client.reload.whatsapp_instance.unpaired?
+
+    assert_no_difference "WhatsappInstance.count" do
+      post reuse_admin_client_whatsapp_instance_path(@client), params: { source_instance_name: sibling.instance_name }
+    end
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "Conexão reutilizada. Sincronize os grupos deste cliente para popular a lista.", flash[:notice]
+
+    wi = @client.reload.whatsapp_instance
+    assert wi.connected?
+    assert wi.origin_reused_sibling?
+    assert_equal sibling.instance_name, wi.instance_name
+  end
+
+  test "create depois de unlink conecta numero novo sobrescrevendo a linha unpaired (sem 500)" do
+    @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :connected
+    )
+    post unlink_admin_client_whatsapp_instance_path(@client)
+    assert @client.reload.whatsapp_instance.unpaired?
+
+    assert_no_difference "WhatsappInstance.count" do
+      Evolution::Client.stub(:create_instance, ->(**) { FAKE_SUCCESS_RESPONSE }) do
+        post admin_client_whatsapp_instance_path(@client)
+      end
+    end
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "Instância criada. Escaneie o QR Code para parear.", flash[:notice]
+
+    wi = @client.reload.whatsapp_instance
+    assert wi.awaiting_qr?
+    assert wi.origin_created_by_app?
+    assert_equal "fake-instance-token", wi.token
+  end
 end

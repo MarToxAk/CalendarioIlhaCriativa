@@ -46,9 +46,18 @@ module Evolution
     # cliente novo. ZERO I/O de rede — não chama create_instance/connect/set_webhook
     # (a conexão física já está pareada e o webhook já aponta pra este sistema).
     # Público, ao lado de #call — NÃO modifica #call/#adopt/#persist_new (D-07).
+    #
+    # Quick task 260831-o9t: persiste via find_or_initialize_by(client:) (mesmo
+    # padrão de #adopt) para ser idempotente sobre uma linha :unpaired
+    # remanescente deixada por Admin::WhatsappInstancesController#unlink — a
+    # re-provisão depois de desvincular sobrescreve a linha em vez de bater em
+    # RecordNotUnique. O guard `persisted? && !unpaired?` mantém a rejeição "já
+    # possui instância" para uma linha em QUALQUER outro estado. Ainda zero I/O.
     def reuse(existing:)
-      row = WhatsappInstance.create!(
-        client: @client,
+      row = WhatsappInstance.find_or_initialize_by(client: @client)
+      raise ActiveRecord::RecordNotUnique, "cliente #{@client.id} já possui instância ativa" if row.persisted? && !row.unpaired?
+
+      row.assign_attributes(
         instance_name: existing.instance_name,      # CÓPIA — aponta pra mesma conexão física
         token: existing.token,                      # CÓPIA — encrypts transparente (whatsapp_instance.rb:12)
         remote_instance_id: existing.remote_instance_id,
@@ -57,6 +66,7 @@ module Evolution
         paired_at: existing.paired_at,
         last_checked_at: Time.current
       )
+      row.save!
       Result.new(instance: row, adopted: true, qr_base64: nil)
     end
 
@@ -123,9 +133,16 @@ module Evolution
       nil
     end
 
+    # Quick task 260831-o9t: find_or_initialize_by(client:) + guard `!unpaired?`
+    # (mesmo padrão de #adopt/#reuse) — "Criar instância" volta a funcionar
+    # depois de #unlink (sobrescreve a linha :unpaired remanescente em vez de
+    # levantar RecordNotUnique, que #create não resgata -> 500). Uma linha em
+    # qualquer outro estado ainda é rejeitada (guard "já possui instância").
     def persist_new(name, resp)
-      row = WhatsappInstance.create!(
-        client: @client,
+      row = WhatsappInstance.find_or_initialize_by(client: @client)
+      raise ActiveRecord::RecordNotUnique, "cliente #{@client.id} já possui instância ativa" if row.persisted? && !row.unpaired?
+
+      row.assign_attributes(
         instance_name: name,
         token: resp["hash"].is_a?(Hash) ? resp.dig("hash", "apikey") : resp["hash"],
         remote_instance_id: resp.dig("instance", "instanceId"),
@@ -133,6 +150,7 @@ module Evolution
         connection_state: :awaiting_qr,
         last_checked_at: Time.current
       )
+      row.save!
       Result.new(instance: row, adopted: false, qr_base64: resp.dig("qrcode", "base64"))
     end
 

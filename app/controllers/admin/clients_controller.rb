@@ -7,12 +7,18 @@ class Admin::ClientsController < Admin::BaseController
 
   def show
     @whatsapp_instance = @client.whatsapp_instance
+    # Quick task 260831-o9t: uma linha :unpaired (deixada por #unlink) conta como
+    # "sem instância" — mesmo precedente de _client_row.html.erb:11
+    # (instance.nil? || instance.unpaired?). Zerando @whatsapp_instance aqui,
+    # @reusable_targets é montado e _panel cai no empty-state ("Novo número (QR)"
+    # / "Reutilizar conexão") sem nenhuma mudança de view.
+    @whatsapp_instance = nil if @whatsapp_instance&.unpaired?
     # Fase 31 (D-06) / quick task 260831-nb7: coleção de conexões conectadas
     # AGORA no Evolution (fonte ao vivo via fetch_instances), inclusive
     # instâncias sem nenhuma linha WhatsappInstance local ainda — não só as já
     # vinculadas a outro cliente local. Para o toggle "Reutilizar conexão
     # existente" no empty-state do painel de WhatsApp — só faz sentido montar
-    # quando este cliente ainda não tem instância.
+    # quando este cliente ainda não tem instância (linha :unpaired incluída).
     @reusable_targets = WhatsappInstance.shareable_targets(excluding_client_id: @client.id) if @whatsapp_instance.nil?
     @artes = @client.artes.order(scheduled_on: :desc)
     @artes_with_responses = @client.artes
