@@ -132,6 +132,34 @@ class Admin::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Selecione ao menos um grupo"
   end
 
+  # --- CR-02 (28-REVIEW): param shapes malformados nao podem estourar 500 -----
+
+  test "CR-02: whatsapp_group_ids Hash-shaped (em vez de Array) -- 422 tratado, nunca 500" do
+    assert_no_difference "Divulgacao.count" do
+      post admin_client_divulgacoes_path(@client), params: {
+        divulgacao: { arte_id: @arte.id, whatsapp_group_ids: { "foo" => "1" }, scheduled_for: future_param }
+      }
+    end
+
+    # strong params descarta o Hash (permit de array so aceita Array) -> gids
+    # vira [] -> cai na validacao normal "ao menos um grupo", nao no rescue.
+    assert_response :unprocessable_entity
+    assert_includes response.body, "Selecione ao menos um grupo"
+  end
+
+  test "CR-02: arte_id Array-shaped (em vez de escalar) -- 422 tratado via rescue RecordNotFound, nunca 500" do
+    assert_no_difference "Divulgacao.count" do
+      post admin_client_divulgacoes_path(@client), params: {
+        divulgacao: { arte_id: [ @arte.id.to_s, @arte.id.to_s ], whatsapp_group_ids: [ @g1.id ], scheduled_for: future_param }
+      }
+    end
+
+    # strong params descarta o Array (permit escalar so aceita tipos escalares)
+    # -> arte_id vira nil -> .find(nil) levanta RecordNotFound -> rescue.
+    assert_response :unprocessable_entity
+    assert_match "Seleção inválida", flash[:alert]
+  end
+
   # --- Task 2: datetime-local -> Time.zone round-trip (DIVU-05) --------
 
   test "scheduled_for cru 2026-09-15T14:00 round-trips pra Time.zone.local Brasilia (-03:00)" do

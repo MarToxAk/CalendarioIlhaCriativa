@@ -43,13 +43,13 @@ class Admin::DivulgacoesController < Admin::BaseController
       return
     end
 
-    arte   = @client.artes.find(params.dig(:divulgacao, :arte_id))
-    gids   = Array(params.dig(:divulgacao, :whatsapp_group_ids)).map(&:to_i).uniq.reject(&:zero?)
+    arte   = @client.artes.find(divulgacao_params[:arte_id])
+    gids   = Array(divulgacao_params[:whatsapp_group_ids]).map(&:to_i).uniq.reject(&:zero?)
     groups = scoped_active_groups.find(gids)
 
     @divulgacao = @client.divulgacoes.new(
       arte:          arte,
-      scheduled_for: params.dig(:divulgacao, :scheduled_for)
+      scheduled_for: divulgacao_params[:scheduled_for]
     )
     groups.each do |g|
       @divulgacao.divulgacao_grupos.build(
@@ -77,6 +77,16 @@ class Admin::DivulgacoesController < Admin::BaseController
   end
 
   private
+
+  # WR-02/CR-02: strong-params allowlist (em vez de params.dig ad-hoc). Alem de
+  # seguir a convencao do Rails, isso coage/descarta formatos malformados antes
+  # que cheguem na logica de resolucao de id: um whatsapp_group_ids Hash-shaped
+  # vira nil (permit de array so aceita Array), e um arte_id Array-shaped tambem
+  # vira nil (permit escalar so aceita tipos escalares) — ambos batem no
+  # `rescue ActiveRecord::RecordNotFound` acima via `.find(nil)`, nunca num 500.
+  def divulgacao_params
+    params.require(:divulgacao).permit(:arte_id, :scheduled_for, whatsapp_group_ids: [])
+  end
 
   def set_client = @client = Client.find(params[:client_id])
 
