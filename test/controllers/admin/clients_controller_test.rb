@@ -159,11 +159,13 @@ class AdminClientsControllerTest < ActionDispatch::IntegrationTest
     get admin_client_path(@client)
 
     assert_response :success
-    assert_nil assigns(:whatsapp_instance)
-    targets = assigns(:reusable_targets)
-    assert_equal 1, targets.size
-    assert_equal sibling.instance_name, targets.first[:instance_name]
-    assert_includes targets.first[:client_names], sibling_client.name
+    # Sem @whatsapp_instance: o painel renderiza o toggle "Novo número (QR)" vs
+    # "Reutilizar conexão existente" (branch whatsapp_instance.nil? do _panel).
+    assert_select "label", text: "Novo número (QR)"
+    # @reusable_targets tem 1 entrada: o <select> aparece com a irmã conectada.
+    assert_select "select#source_instance_name" do
+      assert_select "option", text: "#{sibling.instance_name} — usado por: #{sibling_client.name}"
+    end
   end
 
   test "show de cliente COM instancia nao monta @reusable_targets" do
@@ -175,7 +177,9 @@ class AdminClientsControllerTest < ActionDispatch::IntegrationTest
     get admin_client_path(@client)
 
     assert_response :success
-    assert_nil assigns(:reusable_targets)
+    # Com @whatsapp_instance presente: o painel renderiza o branch "conectado",
+    # nunca o toggle/select de reutilização (@reusable_targets não é montado).
+    assert_select "select#source_instance_name", count: 0
   end
 
   # ── toggle de reutilizacao no _panel (fase 31, D-06/D-07) ──────────────────
