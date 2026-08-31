@@ -25,6 +25,11 @@ class Divulgacao < ApplicationRecord
   # mantem status_agendada? / status_cancelada! explicitos e evita colisao futura.
   enum :status, { agendada: 0, em_andamento: 1, concluida: 2, cancelada: 3 }, prefix: :status
 
+  # ACOMP-01 / fase 30: mesmo padrao de arte.rb:27 e divulgacao_grupo.rb — after_update_commit
+  # guardado por saved_change_to_status?. Dispara no finalize_divulgacao_if_done da fase 29
+  # (agendada->em_andamento->concluida) e no cancelar! abaixo (->cancelada).
+  after_update_commit :broadcast_status, if: -> { saved_change_to_status? }
+
   # Todas as mensagens de validacao de criacao caem em errors[:base] — a view
   # (new.html.erb) tem uma unica caixa vermelha que itera errors[:base], sem
   # estilizacao por mensagem (28-UI-SPEC "Copywriting Contract").
@@ -51,6 +56,15 @@ class Divulgacao < ApplicationRecord
   end
 
   private
+
+  def broadcast_status
+    broadcast_replace_to [ client, self ],
+      target: ActionView::RecordIdentifier.dom_id(self, :status_badge),
+      partial: "admin/divulgacoes/status_badge", locals: { divulgacao: self }
+    broadcast_replace_to [ client, self ],
+      target: ActionView::RecordIdentifier.dom_id(self, :progresso),
+      partial: "admin/divulgacoes/progresso_resumo", locals: { divulgacao: self }
+  end
 
   # DIVU-05 / 28-UI-SPEC: mensagem de branco verbatim, em errors[:base] (nao em
   # errors[:scheduled_for]) para passar pela unica caixa de erro do form.
