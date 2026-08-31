@@ -159,29 +159,59 @@ class WhatsappInstanceTest < ActiveSupport::TestCase
     assert wi.reload.shared?
   end
 
-  test "shareable_targets agrupa por instance_name conectado e lista os nomes dos clientes, excluindo o cliente informado" do
-    shared_name = "livia_client_targets_smoke"
-    owner = Client.create!(name: "Dono da Conexao", password: "senha1234", password_confirmation: "senha1234")
-    sibling_client = Client.create!(name: "Cliente Irmao", password: "senha1234", password_confirmation: "senha1234")
-    owner.create_whatsapp_instance!(instance_name: shared_name, connection_state: :connected)
-    sibling_client.create_whatsapp_instance!(instance_name: shared_name, connection_state: :connected)
+  # --- shareable_targets (fase 31 D-06 + quick task 260831-nb7: fonte ao vivo) ---
 
-    excluded = Client.create!(name: "Excluido", password: "senha1234", password_confirmation: "senha1234")
-    targets = WhatsappInstance.shareable_targets(excluding_client_id: excluded.id)
+  test "shareable_targets lista entrada Evolution conectada com irma local e exclui o nome do proprio cliente" do
+    shared_name = "livia_client_targets_smoke"
+    sibling_client = Client.create!(name: "Cliente Irmao", password: "senha1234", password_confirmation: "senha1234")
+    sibling_client.create_whatsapp_instance!(instance_name: shared_name, connection_state: :connected)
+    own_name = WhatsappInstance.evolution_name_for(@client)
+
+    entries = [
+      { "name" => shared_name, "connectionStatus" => "open" },
+      { "name" => own_name, "connectionStatus" => "open" }
+    ]
+
+    targets = Evolution::Client.stub(:fetch_instances, ->(**) { entries }) do
+      WhatsappInstance.shareable_targets(excluding_client_id: @client.id)
+    end
 
     entry = targets.find { |t| t[:instance_name] == shared_name }
     assert entry.present?
-    assert_equal [ owner.name, sibling_client.name ].sort, entry[:client_names].sort
+    assert_equal [ sibling_client.name ], entry[:client_names]
+    refute targets.any? { |t| t[:instance_name] == own_name }
   end
 
-  test "shareable_targets nao lista instancias nao conectadas nem do proprio cliente" do
-    @client.create_whatsapp_instance!(instance_name: WhatsappInstance.evolution_name_for(@client), connection_state: :connected)
-    unconnected_owner = Client.create!(name: "Nao Conectado", password: "senha1234", password_confirmation: "senha1234")
-    unconnected_owner.create_whatsapp_instance!(instance_name: "livia_client_unconnected_smoke", connection_state: :awaiting_qr)
+  test "shareable_targets nao lista entrada cujo connectionStatus nao mapeia para :connected" do
+    entries = [
+      { "name" => "livia_client_connecting_smoke", "connectionStatus" => "connecting" },
+      { "name" => "livia_client_close_smoke", "connectionStatus" => "close" }
+    ]
 
-    targets = WhatsappInstance.shareable_targets(excluding_client_id: @client.id)
+    targets = Evolution::Client.stub(:fetch_instances, ->(**) { entries }) do
+      WhatsappInstance.shareable_targets(excluding_client_id: @client.id)
+    end
 
-    refute targets.any? { |t| t[:instance_name] == @client.whatsapp_instance.instance_name }
-    refute targets.any? { |t| t[:instance_name] == "livia_client_unconnected_smoke" }
+    assert_empty targets
+  end
+
+  test "shareable_targets lista entrada Evolution conectada SEM nenhuma linha WhatsappInstance local com client_names vazio" do
+    entries = [ { "name" => "livia_client_orphan_smoke", "connectionStatus" => "open" } ]
+
+    targets = Evolution::Client.stub(:fetch_instances, ->(**) { entries }) do
+      WhatsappInstance.shareable_targets(excluding_client_id: @client.id)
+    end
+
+    entry = targets.find { |t| t[:instance_name] == "livia_client_orphan_smoke" }
+    assert entry.present?
+    assert_equal [], entry[:client_names]
+  end
+
+  test "shareable_targets devolve [] em vez de propagar quando fetch_instances levanta Evolution::Errors::Transient" do
+    targets = Evolution::Client.stub(:fetch_instances, ->(**) { raise Evolution::Errors::Transient, "timeout" }) do
+      WhatsappInstance.shareable_targets(excluding_client_id: @client.id)
+    end
+
+    assert_equal [], targets
   end
 end

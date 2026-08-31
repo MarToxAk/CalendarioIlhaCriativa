@@ -53,7 +53,7 @@
         <% else %>
           <%= form_with url: reuse_admin_client_whatsapp_instance_path(client), method: :post, local: true do |f| %>
             <%= f.select :source_instance_name,
-                  reusable_targets.map { |t| ["#{t[:instance_name]} — usado por: #{t[:client_names].join(', ')}", t[:instance_name]] },
+                  reusable_targets.map { |t| ["#{t[:instance_name]} — #{t[:client_names].present? ? "usado por: #{t[:client_names].join(', ')}" : "ainda não vinculada a nenhum cliente"}", t[:instance_name]] },
                   { include_blank: "Selecione uma conexão" },
                   id: "source_instance_name",
                   data: { action: "whatsapp-provision-toggle#toggleSubmitState", "whatsapp-provision-toggle-target": "reuseSelect" },

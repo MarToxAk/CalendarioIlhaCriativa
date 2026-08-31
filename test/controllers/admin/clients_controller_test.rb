@@ -91,7 +91,9 @@ class AdminClientsControllerTest < ActionDispatch::IntegrationTest
   # ── divulgações (mirror — DIVU-01) ───────────────────────────────────────
 
   test "show com 0 divulgacoes exibe mensagem vazia e link Nova divulgacao" do
-    get admin_client_path(@client)
+    Evolution::Client.stub(:fetch_instances, ->(**) { [] }) do
+      get admin_client_path(@client)
+    end
 
     assert_response :success
     assert_includes response.body, "Nenhuma divulgação agendada."
@@ -141,7 +143,9 @@ class AdminClientsControllerTest < ActionDispatch::IntegrationTest
     )
     arte.approval_responses.create!(decision: :change_requested)
 
-    get admin_client_path(@client)
+    Evolution::Client.stub(:fetch_instances, ->(**) { [] }) do
+      get admin_client_path(@client)
+    end
     assert_response :success
     assert_includes response.body, "Arte com Resposta"
     assert_includes response.body, "Histórico de aprovações"
@@ -156,7 +160,9 @@ class AdminClientsControllerTest < ActionDispatch::IntegrationTest
       connection_state: :connected
     )
 
-    get admin_client_path(@client)
+    Evolution::Client.stub(:fetch_instances, ->(**) { [ { "name" => sibling.instance_name, "connectionStatus" => "open" } ] }) do
+      get admin_client_path(@client)
+    end
 
     assert_response :success
     # Sem @whatsapp_instance: o painel renderiza o toggle "Novo número (QR)" vs
@@ -178,7 +184,8 @@ class AdminClientsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     # Com @whatsapp_instance presente: o painel renderiza o branch "conectado",
-    # nunca o toggle/select de reutilização (@reusable_targets não é montado).
+    # nunca o toggle/select de reutilização (@reusable_targets não é montado,
+    # fetch_instances nem é chamado).
     assert_select "select#source_instance_name", count: 0
   end
 
@@ -186,17 +193,42 @@ class AdminClientsControllerTest < ActionDispatch::IntegrationTest
 
   test "show de cliente sem instancia renderiza o select de reutilizacao com opcao 'usado por:'" do
     sibling_client = Client.create!(name: "Reusable Select Sibling", password: "senha1234", password_confirmation: "senha1234")
-    sibling_client.create_whatsapp_instance!(
+    sibling = sibling_client.create_whatsapp_instance!(
       instance_name: WhatsappInstance.evolution_name_for(sibling_client),
       connection_state: :connected
     )
 
-    get admin_client_path(@client)
+    Evolution::Client.stub(:fetch_instances, ->(**) { [ { "name" => sibling.instance_name, "connectionStatus" => "open" } ] }) do
+      get admin_client_path(@client)
+    end
 
     assert_response :success
     assert_select "select#source_instance_name" do
       assert_select "option", text: /usado por:/
     end
+  end
+
+  # ── shareable_targets ao vivo (quick task 260831-nb7) ───────────────────────
+
+  test "show de cliente sem instancia com Evolution reportando instancia SEM linha local mostra opcao com rotulo de fallback" do
+    Evolution::Client.stub(:fetch_instances, ->(**) { [ { "name" => "livia_client_orphan_live", "connectionStatus" => "open" } ] }) do
+      get admin_client_path(@client)
+    end
+
+    assert_response :success
+    assert_select "select#source_instance_name" do
+      assert_select "option", text: "livia_client_orphan_live — ainda não vinculada a nenhum cliente"
+      assert_select "option", text: /usado por:/, count: 0
+    end
+  end
+
+  test "show de cliente sem instancia com Evolution falhando responde :success e mostra mensagem de lista vazia" do
+    Evolution::Client.stub(:fetch_instances, ->(**) { raise Evolution::Errors::Transient, "timeout" }) do
+      get admin_client_path(@client)
+    end
+
+    assert_response :success
+    assert_includes response.body, "Nenhuma conexão conectada disponível para reutilizar."
   end
 
   # ── aviso de blast radius no modal "Parear novamente" (31-REVIEW.md WR-03) ──

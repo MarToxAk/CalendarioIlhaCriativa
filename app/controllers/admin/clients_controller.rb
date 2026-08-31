@@ -7,10 +7,12 @@ class Admin::ClientsController < Admin::BaseController
 
   def show
     @whatsapp_instance = @client.whatsapp_instance
-    # Fase 31 (D-06): coleção de conexões físicas já conectadas em OUTROS
-    # clientes, para o toggle "Reutilizar conexão existente" no empty-state
-    # do painel de WhatsApp — só faz sentido montar quando este cliente ainda
-    # não tem instância.
+    # Fase 31 (D-06) / quick task 260831-nb7: coleção de conexões conectadas
+    # AGORA no Evolution (fonte ao vivo via fetch_instances), inclusive
+    # instâncias sem nenhuma linha WhatsappInstance local ainda — não só as já
+    # vinculadas a outro cliente local. Para o toggle "Reutilizar conexão
+    # existente" no empty-state do painel de WhatsApp — só faz sentido montar
+    # quando este cliente ainda não tem instância.
     @reusable_targets = WhatsappInstance.shareable_targets(excluding_client_id: @client.id) if @whatsapp_instance.nil?
     @artes = @client.artes.order(scheduled_on: :desc)
     @artes_with_responses = @client.artes

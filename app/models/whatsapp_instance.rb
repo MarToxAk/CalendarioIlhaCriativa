@@ -42,14 +42,32 @@ class WhatsappInstance < ApplicationRecord
   # true quando existe pelo menos outra linha (id diferente) com o mesmo instance_name.
   def shared? = self.class.where(instance_name: instance_name).where.not(id: id).exists?
 
-  # Alvos reutilizáveis para o <select> de D-06 — uma entrada por instance_name
-  # distinto CONECTADO em outro cliente, com os nomes dos clientes que já o usam.
-  # GROUP BY fica aqui (fora do ERB) — Claude's Discretion / 31-RESEARCH.md Q3.
+  # Alvos reutilizáveis para o <select> de D-06 — fonte AO VIVO (quick task
+  # 260831-nb7): lista TODAS as instâncias que o Evolution reporta como
+  # conectadas agora (GET /instance/fetchInstances, campo `connectionStatus`
+  # confirmado pelo smoke check da task — Prisma model `Instance`), inclusive
+  # instâncias sem NENHUMA linha WhatsappInstance local ainda (decisão travada
+  # do usuário). client_names só serve pra exibição — vem das linhas LOCAIS
+  # quando existem, podendo ser [] pro caso novo. Degrada pra [] em qualquer
+  # Evolution::Errors::* (nunca propaga -> nunca 500 em admin/clients#show).
   def self.shareable_targets(excluding_client_id:)
-    connected.where.not(client_id: excluding_client_id)
-             .includes(:client)
-             .group_by(&:instance_name)
-             .map { |name, rows| { instance_name: name, client_names: rows.map { |r| r.client.name } } }
+    own_name = evolution_name_for(Client.new(id: excluding_client_id))
+
+    Evolution::Client.fetch_instances.filter_map do |entry|
+      name = entry["name"] || entry["instanceName"]
+      next if name.blank?
+      next if name == own_name
+      next unless map_evolution_state(entry["connectionStatus"]) == :connected
+
+      client_names = connected.where(instance_name: name)
+                               .where.not(client_id: excluding_client_id)
+                               .includes(:client)
+                               .map { |r| r.client.name }
+      { instance_name: name, client_names: client_names }
+    end
+  rescue Evolution::Errors::ConfigurationError, Evolution::Errors::Permanent, Evolution::Errors::Transient, Evolution::Errors::Unknown => e
+    Rails.logger.warn("[whatsapp_instance] shareable_targets falhou: #{e.class}")
+    []
   end
 
   # HMAC-SHA256(instance_name, chave global) — determinístico e não persistido
