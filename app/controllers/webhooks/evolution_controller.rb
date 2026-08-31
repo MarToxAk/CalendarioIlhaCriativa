@@ -12,10 +12,17 @@ class Webhooks::EvolutionController < ActionController::API
   def create
     return head(:unauthorized) unless valid_signature?
 
-    instance = WhatsappInstance.find_by(instance_name: params[:instance].to_s)
-    return head(:no_content) if instance.nil?
+    # Fase 31 (D-05/Pitfall 1): instance_name deixou de ser único — um
+    # connection.update/qrcode.updated do Evolution descreve a CONEXÃO FÍSICA,
+    # então precisa refletir em TODAS as linhas-irmãs (find_by atualizava só
+    # uma, deixando as demais com connection_state obsoleto e o guard
+    # instance&.connected? do SendToGroupJob lendo estado errado — ENVIO-07).
+    # apply_event já é idempotente por linha (save!/update! próprios), então o
+    # fan-out não precisa de nenhuma chamada Evolution extra.
+    siblings = WhatsappInstance.where(instance_name: params[:instance].to_s)
+    return head(:no_content) if siblings.empty?
 
-    apply_event(instance)
+    siblings.find_each { |instance| apply_event(instance) }
     head :ok
   end
 

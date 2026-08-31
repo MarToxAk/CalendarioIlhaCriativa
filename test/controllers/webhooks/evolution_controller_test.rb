@@ -157,6 +157,33 @@ class Webhooks::EvolutionControllerTest < ActionDispatch::IntegrationTest
     assert_equal "awaiting_qr", @instance.connection_state
   end
 
+  # --- fan-out para irmãs (fase 31, D-05/Pitfall 1) -------------------------
+
+  test "connection.update com instance_name compartilhado atualiza TODAS as linhas-irmãs" do
+    outro_cliente = Client.create!(
+      name: "Webhook Test Irmão",
+      password: "senha1234",
+      password_confirmation: "senha1234"
+    )
+    irma = outro_cliente.create_whatsapp_instance!(
+      instance_name: @name,
+      token: "tok-irma",
+      connection_state: :connected
+    )
+
+    post "/webhooks/evolution",
+      params: { instance: @name, event: "connection.update", data: { state: "close" } },
+      headers: { "X-Webhook-Secret" => @secret }
+    assert_response :ok
+
+    @instance.reload
+    irma.reload
+    assert_equal "disconnected", @instance.connection_state
+    assert_equal "disconnected", irma.connection_state
+    assert @instance.last_checked_at.present?
+    assert irma.last_checked_at.present?
+  end
+
   # --- eventos não tratados (messages.*, fase 29) ---------------------------
 
   test "evento não tratado (ex: messages.upsert) é um no-op, responde 200" do
