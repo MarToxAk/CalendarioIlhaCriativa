@@ -125,4 +125,44 @@ class Whatsapp::GroupSynchronizerTest < ActiveSupport::TestCase
     assert_equal 2, result.count
     assert_equal %w[1@g.us 2@g.us], @instance.whatsapp_groups.active_groups.order(:remote_jid).pluck(:remote_jid)
   end
+
+  # --- (h) regressão D-05: instância SEM irmãs faz exatamente 1 fetch (fase 31) ---
+  test "instance without siblings behaves byte-identically to pre-D-05 (fake.calls == 1)" do
+    fake = FakeEvolutionClient.new([ [ group(1), group(2), group(3) ] ])
+    result = Whatsapp::GroupSynchronizer.new(@instance, client_api: fake).call
+
+    assert result.ok
+    assert_equal 1, fake.calls
+    assert_equal 3, result.count
+    assert_equal 3, @instance.whatsapp_groups.active_groups.count
+    assert @instance.reload.groups_synced_at.present?
+    assert_equal "idle", @instance.groups_sync_state
+  end
+
+  # --- (i) fan-out D-05: 2 irmãs, 1 fetch, N upserts locais (fase 31) -------
+  test "sibling fan-out: shared instance_name does 1 fetch_groups and populates both siblings' caches with the same groups_synced_at" do
+    client2 = Client.create!(
+      name: "Test GroupSync Irmão",
+      password: "senha1234",
+      password_confirmation: "senha1234"
+    )
+    instance2 = WhatsappInstance.create!(
+      client: client2,
+      instance_name: @instance.instance_name,
+      token: @instance.token,
+      connection_state: :connected
+    )
+
+    fake = FakeEvolutionClient.new([ [ group(1), group(2) ] ])
+    result = Whatsapp::GroupSynchronizer.new(@instance, client_api: fake).call
+
+    assert result.ok
+    assert_equal 1, fake.calls
+    assert_equal %w[1@g.us 2@g.us], @instance.whatsapp_groups.active_groups.order(:remote_jid).pluck(:remote_jid)
+    assert_equal %w[1@g.us 2@g.us], instance2.whatsapp_groups.active_groups.order(:remote_jid).pluck(:remote_jid)
+    # cada irmã tem suas próprias linhas, escopadas ao próprio whatsapp_instance_id
+    assert_equal [ @instance.id ], @instance.whatsapp_groups.pluck(:whatsapp_instance_id).uniq
+    assert_equal [ instance2.id ], instance2.whatsapp_groups.pluck(:whatsapp_instance_id).uniq
+    assert_equal @instance.reload.groups_synced_at, instance2.reload.groups_synced_at
+  end
 end

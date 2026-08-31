@@ -21,29 +21,45 @@ module Whatsapp
     def call
       # Defense-in-depth (RESEARCH Pitfall 7): connection_state é coluna
       # cacheada; o controller no 27-02 também guarda antes de enfileirar.
+      # Fase 31 (D-05, Pitfall 5): o guard de não-conectado e a escrita de
+      # :sync_error ficam SÓ em @instance — NUNCA propagados às irmãs (elas
+      # nunca entraram em :syncing, então nunca ficam presas nesse estado).
       unless @instance.connected?
         @instance.update!(groups_sync_state: :sync_error, groups_sync_error: "not_connected")
         return Result.new(ok: false, reason: :not_connected)
       end
 
       batch_started_at = Time.current
-      raw  = @api.fetch_groups(@instance.instance_name, api_key: @instance.token)
-      rows = Array(raw).filter_map { |g| row_for(g, batch_started_at) }
+      # Fase 31 (D-05, Pitfall 6): UMA chamada fetch_groups, FORA de qualquer
+      # loop de irmãs. token/instance_name são idênticos entre irmãs (copiados
+      # em InstanceProvisioner#reuse) — qualquer uma serve de fonte. Repetir a
+      # chamada por irmã multiplicaria os ~40s de fetchAllGroups por cliente.
+      raw = @api.fetch_groups(@instance.instance_name, api_key: @instance.token)
 
-      WhatsappGroup.upsert_all(rows, unique_by: %i[whatsapp_instance_id remote_jid]) if rows.any?
+      # Fase 31 (D-05): irmãs = todas as WhatsappInstance com o mesmo
+      # instance_name (inclui @instance). Sem irmãs, devolve [self] — o loop
+      # abaixo roda exatamente 1 vez, byte-idêntico ao comportamento anterior
+      # a esta fase (regressão single-instance).
+      rows = nil
+      WhatsappInstance.where(instance_name: @instance.instance_name).find_each do |sib|
+        rows = Array(raw).filter_map { |g| row_for(g, batch_started_at, sib) }
 
-      # GRUPO-05: escopado pela associação (nunca toca outra instância), "<"
-      # estrito, updated_at explícito (update_all não auto-toca). Roda MESMO
-      # com rows vazio — o `if rows.any?` acima só guarda o upsert_all
-      # (upsert_all([]) levanta ArgumentError — Pitfall 4). NUNCA delete/destroy.
-      @instance.whatsapp_groups
-               .where(active: true)
-               .where("synced_at < ?", batch_started_at)
-               .update_all(active: false, updated_at: Time.current)
+        WhatsappGroup.upsert_all(rows, unique_by: %i[whatsapp_instance_id remote_jid]) if rows.any?
 
-      @instance.update!(groups_synced_at: batch_started_at,
-                         groups_sync_state: :idle,
-                         groups_sync_error: nil)
+        # GRUPO-05: escopado pela associação de CADA irmã (nunca toca outra
+        # instância), "<" estrito, updated_at explícito (update_all não
+        # auto-toca), mesmo batch_started_at de referência para todas. Roda
+        # MESMO com rows vazio — o `if rows.any?` acima só guarda o upsert_all
+        # (upsert_all([]) levanta ArgumentError — Pitfall 4). NUNCA delete/destroy.
+        sib.whatsapp_groups
+           .where(active: true)
+           .where("synced_at < ?", batch_started_at)
+           .update_all(active: false, updated_at: Time.current)
+
+        sib.update!(groups_synced_at: batch_started_at,
+                     groups_sync_state: :idle,
+                     groups_sync_error: nil)
+      end
 
       Result.new(ok: true, count: rows.size)
     end
@@ -61,14 +77,18 @@ module Whatsapp
     # (27-REVIEW.md WR-1), mascarando uma regressão real de contrato da API
     # como flakiness de rede transitória. filter_map descarta o elemento e
     # segue o batch em vez de crashar.
-    def row_for(g, ts)
+    #
+    # Fase 31 (D-05): recebe a irmã (`sib`) em vez de fechar sobre @instance —
+    # cada irmã grava suas próprias linhas em whatsapp_groups, escopadas ao
+    # próprio whatsapp_instance_id.
+    def row_for(g, ts, sib)
       return nil unless g.is_a?(Hash)
 
       jid = g["id"].to_s
       return nil unless jid.end_with?("@g.us")
 
       {
-        whatsapp_instance_id: @instance.id,
+        whatsapp_instance_id: sib.id,
         remote_jid: jid,
         subject:    g["subject"].presence,
         announce:   g["announce"] == true,
