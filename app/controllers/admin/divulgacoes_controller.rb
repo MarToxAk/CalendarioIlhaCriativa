@@ -39,7 +39,21 @@ class Admin::DivulgacoesController < Admin::BaseController
     # O reopen concluida -> em_andamento vive AQUI, no controller — nao no job
     # da fase 29 (30-CONTEXT). finalize_divulgacao_if_done fecha de novo
     # quando esta linha sair de pendente.
-    @divulgacao.update!(status: :em_andamento) if @divulgacao.status_concluida?
+    #
+    # CR-01 (30-REVIEW): update! roda TODAS as validacoes do model (so
+    # scheduled_for_no_futuro e on: :create) -- inclusive arte_deve_estar_aprovada,
+    # que pode legitimamente estar falsa exatamente aqui (e o motivo mais comum da
+    # linha ter falhou com error_code "arte_nao_aprovada" antes). save!(validate:
+    # false) pula so a validacao pra esta transicao pura de status, sem tocar
+    # nenhum outro campo, e continua rodando os callbacks normalmente -- inclusive
+    # o after_update_commit :broadcast_status (ACOMP-01) que a tela ao vivo
+    # depende -- entao a mudanca ainda aparece pros clientes conectados. Um
+    # update_column bypassaria os callbacks junto com as validacoes e quebraria
+    # esse broadcast.
+    if @divulgacao.status_concluida?
+      @divulgacao.status = :em_andamento
+      @divulgacao.save!(validate: false)
+    end
     Whatsapp::SendToGroupJob.perform_later(@dg) # verbatim fase 29 — nenhum envio sincrono aqui
 
     respond_to do |format|

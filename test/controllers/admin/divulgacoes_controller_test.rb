@@ -686,6 +686,30 @@ class Admin::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "em_andamento", d.reload.status
   end
 
+  test "POST resend numa linha falhou com error_code arte_nao_aprovada e arte atualmente reprovada -- reabre sem 500 (CR-01)" do
+    d = build_divulgacao_agendada
+    dg = d.divulgacao_grupos.first
+    dg.update!(status: :falhou, error_code: "arte_nao_aprovada", sent_at: Time.current, evolution_message_id: "abc123")
+    d.update!(status: :concluida)
+    # arte perdeu a aprovacao depois do agendamento -- exatamente o cenario que
+    # fez esta linha falhar com "arte_nao_aprovada" em primeiro lugar. Um
+    # update! ingenuo em @divulgacao re-validaria arte_deve_estar_aprovada e
+    # levantaria RecordInvalid (sem rescue_from -- 500).
+    @arte.update!(status: :change_requested)
+
+    assert_enqueued_with(job: Whatsapp::SendToGroupJob, args: [ dg ]) do
+      post resend_admin_client_divulgacao_divulgacao_grupo_path(@client, d, dg)
+    end
+
+    assert_response :redirect
+    dg.reload
+    assert_equal "pendente", dg.status
+    assert_nil dg.error_code
+    assert_nil dg.sent_at
+    assert_nil dg.evolution_message_id
+    assert_equal "em_andamento", d.reload.status
+  end
+
   test "POST resend numa linha incerto com divulgacao ainda em_andamento -- reseta e reenfileira, sem mexer no status da divulgacao" do
     d = build_divulgacao_agendada
     dg = d.divulgacao_grupos.first
