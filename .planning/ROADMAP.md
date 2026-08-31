@@ -20,7 +20,7 @@
 - [ ] **Phase 25: Fundação — Transporte Evolution + Storage Alcançável** - Contrato do Evolution verificado no host real da agência, `Evolution::Client` com timeouts e taxonomia de erros, mídia servida por S3 alcançável de fora e fila confiável em development
 - [ ] **Phase 26: Instância de WhatsApp por Cliente + Pareamento** - Criação ou adoção da instância, QR Code na tela, estado de conexão visível, webhook autenticado e token guardado criptografado
 - [x] **Phase 27: Grupos do Cliente — Sync, Cache e Seleção Escopada** - Sincronização e cache dos grupos da instância, sinalização de grupos só-admin, grupos sumidos inativos e seleção que nunca cruza clientes (completed 2026-08-30)
-- [ ] **Phase 28: Divulgação — Agendar sem Enviar** - Divulgação com item por grupo, validações cruzadas de cliente, bloqueio de link externo e de arquivo grande, preview e estimativa de duração — deliberadamente sem disparo
+- [x] **Phase 28: Divulgação — Agendar sem Enviar** - Divulgação com item por grupo, validações cruzadas de cliente, bloqueio de link externo e de arquivo grande, preview e estimativa de duração — deliberadamente sem disparo (completed 2026-08-30)
 - [ ] **Phase 29: Motor de Envio** - Disparo agendado grupo a grupo com intervalo aleatório, idempotência à prova de retry/deploy, revalidação de aprovação e conexão, e cancelamento respeitado
 - [ ] **Phase 30: Acompanhamento ao Vivo + Hardening** - Progresso do disparo ao vivo, reenvio manual por grupo, histórico por cliente, testes negativos cross-client e retenção de jobs falhados
 
@@ -320,7 +320,7 @@ Plans:
 | 25. Fundação — Transporte Evolution + Storage | v1.7 | 5/5 | In Progress|  |
 | 26. Instância de WhatsApp + Pareamento | v1.7 | 5/5 | In Progress|  |
 | 27. Grupos do Cliente | v1.7 | 3/3 | Complete    | 2026-08-30 |
-| 28. Divulgação — Agendar sem Enviar | v1.7 | 4/4 | In Progress|  |
+| 28. Divulgação — Agendar sem Enviar | v1.7 | 4/4 | Complete    | 2026-08-30 |
 | 29. Motor de Envio | v1.7 | 0/? | Not started | - |
 | 30. Acompanhamento ao Vivo + Hardening | v1.7 | 0/? | Not started | - |
 

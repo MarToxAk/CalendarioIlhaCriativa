@@ -50,15 +50,15 @@
 
 ### Divulgação
 
-- [ ] **DIVU-01**: Admin cria uma Divulgação escolhendo cliente, arte, grupos e data/hora de envio
-- [ ] **DIVU-02**: Só artes aprovadas podem ser selecionadas para Divulgação
-- [ ] **DIVU-03**: Artes cujo arquivo é um link externo (Drive/Dropbox) são recusadas na criação, com mensagem orientando o upload
-- [ ] **DIVU-04**: Arquivos acima do teto que o WhatsApp aceita são recusados na criação da Divulgação, sem alterar a validação da Arte
-- [ ] **DIVU-05**: A data e hora do envio são exibidas com o fuso explícito, e `Arte#scheduled_on` permanece uma data sem hora
-- [ ] **DIVU-06**: Admin vê um preview do que será postado — mídia e legenda — antes de confirmar
-- [ ] **DIVU-07**: Admin vê uma estimativa de duração do disparo ao agendar, dado o número de grupos e a faixa de delay
+- [x] **DIVU-01**: Admin cria uma Divulgação escolhendo cliente, arte, grupos e data/hora de envio
+- [x] **DIVU-02**: Só artes aprovadas podem ser selecionadas para Divulgação
+- [x] **DIVU-03**: Artes cujo arquivo é um link externo (Drive/Dropbox) são recusadas na criação, com mensagem orientando o upload
+- [x] **DIVU-04**: Arquivos acima do teto que o WhatsApp aceita são recusados na criação da Divulgação, sem alterar a validação da Arte
+- [x] **DIVU-05**: A data e hora do envio são exibidas com o fuso explícito, e `Arte#scheduled_on` permanece uma data sem hora
+- [x] **DIVU-06**: Admin vê um preview do que será postado — mídia e legenda — antes de confirmar
+- [x] **DIVU-07**: Admin vê uma estimativa de duração do disparo ao agendar, dado o número de grupos e a faixa de delay
 - [ ] **DIVU-08**: Admin cancela uma Divulgação agendada, e o cancelamento é respeitado pelos envios ainda não realizados
-- [ ] **DIVU-09**: Cada grupo de uma Divulgação tem um registro próprio com status `pendente / enviado / falhou / incerto`, com o nome do grupo preservado como estava no momento do envio
+- [x] **DIVU-09**: Cada grupo de uma Divulgação tem um registro próprio com status `pendente / enviado / falhou / incerto`, com o nome do grupo preservado como estava no momento do envio
 
 ### Motor de Envio
 
@@ -75,8 +75,8 @@
 
 ### Isolamento entre Clientes
 
-- [ ] **SEG-01**: O identificador do grupo nunca vem cru do formulário — só chaves internas resolvidas dentro do escopo do cliente
-- [ ] **SEG-02**: O sistema recusa uma Divulgação cuja arte e cujos grupos não pertençam ao mesmo cliente
+- [x] **SEG-01**: O identificador do grupo nunca vem cru do formulário — só chaves internas resolvidas dentro do escopo do cliente
+- [x] **SEG-02**: O sistema recusa uma Divulgação cuja arte e cujos grupos não pertençam ao mesmo cliente
 - [ ] **SEG-03**: O envio usa o token da instância daquele cliente, de forma que um erro de escopo falhe com 401 em vez de postar no cliente errado
 - [ ] **SEG-04**: Existem testes que provam que a arte do cliente A não alcança os grupos do cliente B
 
@@ -165,15 +165,15 @@ Preenchido na criação do roadmap (2026-08-29). Fonte: `.planning/ROADMAP.md`.
 | GRUPO-03 | Phase 27 | Complete |
 | GRUPO-04 | Phase 27 | Complete |
 | GRUPO-05 | Phase 27 | Complete |
-| DIVU-01 | Phase 28 | Pending |
-| DIVU-02 | Phase 28 | Pending |
-| DIVU-03 | Phase 28 | Pending |
-| DIVU-04 | Phase 28 | Pending |
-| DIVU-05 | Phase 28 | Pending |
-| DIVU-06 | Phase 28 | Pending |
-| DIVU-07 | Phase 28 | Pending |
+| DIVU-01 | Phase 28 | Complete |
+| DIVU-02 | Phase 28 | Complete |
+| DIVU-03 | Phase 28 | Complete |
+| DIVU-04 | Phase 28 | Complete |
+| DIVU-05 | Phase 28 | Complete |
+| DIVU-06 | Phase 28 | Complete |
+| DIVU-07 | Phase 28 | Complete |
 | DIVU-08 | Phase 29 | Pending |
-| DIVU-09 | Phase 28 | Pending |
+| DIVU-09 | Phase 28 | Complete |
 | ENVIO-01 | Phase 29 | Pending |
 | ENVIO-02 | Phase 29 | Pending |
 | ENVIO-03 | Phase 29 | Pending |
@@ -184,8 +184,8 @@ Preenchido na criação do roadmap (2026-08-29). Fonte: `.planning/ROADMAP.md`.
 | ENVIO-08 | Phase 29 | Pending |
 | ENVIO-09 | Phase 29 | Pending |
 | ENVIO-10 | Phase 29 | Pending |
-| SEG-01 | Phase 28 | Pending |
-| SEG-02 | Phase 28 | Pending |
+| SEG-01 | Phase 28 | Complete |
+| SEG-02 | Phase 28 | Complete |
 | SEG-03 | Phase 29 | Pending |
 | SEG-04 | Phase 30 | Pending |
 | ACOMP-01 | Phase 30 | Pending |
