@@ -632,17 +632,19 @@ Não aplicável — solid_queue 1.4.0 é a versão instalada e atual; nenhuma mu
 | A2 | Formato exato do texto de erro 4xx do `sendMedia` (mensagens reais de grupo `announce`, número não-admin, arquivo inválido) | Pattern 6, Pitfall 6 | Baixo risco — o design já é robusto a texto livre por construção (decisão por status HTTP, não por parsing de conteúdo); só a qualidade da mensagha exibida ao admin pode ser menos específica que o ideal até o UAT confirmar exemplos reais |
 | A3 | `SolidQueue.process_alive_threshold` (usado no cálculo do pior caso do Pitfall/Pattern 3 de ~13 min) não foi lido diretamente nesta sessão — só `default_concurrency_control_period` (3 min) e `concurrency_maintenance_interval` (600s, do `DISPATCHER_DEFAULTS` já lido) foram confirmados por leitura direta | Pattern 3 | Risco baixo — não afeta nenhuma decisão de código, só a estimativa de tempo no comentário; se o planner quiser o valor exato, `grep process_alive_threshold vendor/bundle/.../solid_queue-1.4.0/lib/solid_queue.rb` resolve em segundos |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **A janela de risco do Pitfall 1 (claim antes do envio) é aceitável para este milestone?**
    - What we know: é uma decisão já travada em CONTEXT.md; o comportamento do solid_queue quando o processo morre (Pattern 4) está totalmente verificado.
    - What's unclear: se o operador vai monitorar `divulgacao_grupos` com `status: enviado` e `evolution_message_id: nil` como sinal de falha nesta janela — não há UI/alerta para isso nesta fase (ACOMP-03 é fase 30).
    - Recommendation: planner documenta o padrão de detecção (Pitfall 1) num comentário no job, e considera se vale adicionar um teste de regressão explícito provando que o claim SEMPRE acontece antes da chamada HTTP no código (ex.: grep estático ou teste de ordem de chamadas com um double).
+   - **RESOLVIDO** em `29-CONTEXT.md` § "Pergunta em aberto da pesquisa — RESOLVIDA": aceito como risco documentado (nenhum outbox pattern viável sem reescrever a arquitetura travada), remédio operacional é o reenvio manual da fase 30 (ACOMP-02). O teste de ordem claim-antes-de-HTTP recomendado foi entregue em `29-02-PLAN.md` Task 2 (testes adversariais de idempotência).
 
 2. **`concurrency_maintenance_interval` do dispatcher — vale reduzir de 600s (default) para encurtar a janela de recuperação de semáforo?**
    - What we know: default 600s, não sobrescrito em `config/queue.yml` atual; reduzir para 60s encurtaria o pior caso de "instância travada por lock órfão" de ~13min para ~4min.
    - What's unclear: se esse ajuste vale o custo (query leve, rodando mais frequentemente) para um caso considerado raro (worker morrendo no meio de uma chamada HTTP rápida).
    - Recommendation: Claude's Discretion do planner — não é um requisito explícito, é uma otimização de robustez opcional.
+   - **RESOLVIDO** em `29-CONTEXT.md`: manter o default (600s) — ajuste fino de performance fora do escopo funcional desta fase, não implementado nos planos.
 
 ## Environment Availability
 
