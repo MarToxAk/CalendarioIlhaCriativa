@@ -39,3 +39,5 @@
 # Ignore vendor/bundle — gems installed locally
 /vendor/bundle
 .env
+.gsd/
+.planning/milestone.lock
