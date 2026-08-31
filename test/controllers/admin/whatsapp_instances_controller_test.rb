@@ -327,7 +327,9 @@ class AdminWhatsappInstancesControllerTest < ActionDispatch::IntegrationTest
 
   test "reuse com instance_name inexistente nao cria linha e redireciona com alert generico" do
     assert_no_difference "WhatsappInstance.count" do
-      post reuse_admin_client_whatsapp_instance_path(@client), params: { source_instance_name: "nao-existe-livia_client_999" }
+      Evolution::Client.stub(:fetch_instances, ->(**) { [] }) do
+        post reuse_admin_client_whatsapp_instance_path(@client), params: { source_instance_name: "nao-existe-livia_client_999" }
+      end
     end
 
     assert_redirected_to admin_client_path(@client)
@@ -342,11 +344,38 @@ class AdminWhatsappInstancesControllerTest < ActionDispatch::IntegrationTest
     )
 
     assert_no_difference "WhatsappInstance.count" do
-      post reuse_admin_client_whatsapp_instance_path(@client), params: { source_instance_name: not_connected.instance_name }
+      Evolution::Client.stub(:fetch_instances, ->(**) { [ { "name" => not_connected.instance_name, "connectionStatus" => "connecting" } ] }) do
+        post reuse_admin_client_whatsapp_instance_path(@client), params: { source_instance_name: not_connected.instance_name }
+      end
     end
 
     assert_redirected_to admin_client_path(@client)
     assert_equal "Conexão indisponível para reutilização. Atualize a página e tente de novo.", flash[:alert]
+  end
+
+  # --- reuse sem irma local (quick task 260831-nb7) — adocao ao vivo --------
+
+  test "reuse com source_instance_name sem nenhuma linha local adota ao vivo via adopt_named" do
+    name = "livia_client_reuse_adopt_smoke"
+    fake_instance = { "name" => name, "connectionStatus" => "open", "hash" => "reuse-adopt-token", "id" => "remote-reuse-adopt" }
+
+    assert_difference "WhatsappInstance.count", 1 do
+      Evolution::Client.stub(:fetch_instances, ->(**) { [ fake_instance ] }) do
+        Evolution::Client.stub(:set_webhook, ->(*, **) { { "webhook" => { "enabled" => true } } }) do
+          Evolution::Client.stub(:connection_state, ->(*, **) { "open" }) do
+            post reuse_admin_client_whatsapp_instance_path(@client), params: { source_instance_name: name }
+          end
+        end
+      end
+    end
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "Conexão reutilizada. Sincronize os grupos deste cliente para popular a lista.", flash[:notice]
+
+    wi = @client.reload.whatsapp_instance
+    assert_equal name, wi.instance_name
+    assert wi.origin_adopted_existing?
+    assert_equal "connected", wi.connection_state
   end
 
   test "reuse com instance_name da PROPRIA instancia do cliente (self-target) nao cria linha (T-31-01)" do

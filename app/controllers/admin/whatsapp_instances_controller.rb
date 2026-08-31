@@ -87,20 +87,32 @@ class Admin::WhatsappInstancesController < Admin::BaseController
       alert: "Não foi possível atualizar o QR Code. Clique em \"Gerar novo QR\" para tentar outra vez."
   end
 
-  # Fase 31 (D-03/D-06, T-31-01). "Reutilizar conexão existente" — vincula ESTE
-  # cliente a uma instância-irmã JÁ CONECTADA de outro cliente, sem QR e sem
-  # chamada ao Evolution. SEG-01: a irmã é resolvida por uma cadeia escopada
-  # (connected + client_id diferente + find_by instance_name), NUNCA por um id
-  # cru de params — evita que um source_instance_name forjado alcance uma
-  # instância de qualquer outro cliente fora da lista exibida.
+  # Fase 31 (D-03/D-06, T-31-01) + quick task 260831-nb7. "Reutilizar conexão
+  # existente" — vincula ESTE cliente a uma conexão JÁ CONECTADA reportada
+  # pelo <select> ao vivo (WhatsappInstance.shareable_targets). Dois caminhos:
+  # (a) existe irmã local conectada -> #reuse (zero I/O, D-07 intocado); (b)
+  # sem irmã local (instância só no Evolution ainda) -> #adopt_named (mesmo
+  # caminho de adoção da fase 26). SEG-01: o nome nunca é confiado cegamente —
+  # ou casa com uma irmã já escopada localmente, ou é revalidado AO VIVO
+  # contra o Evolution antes de qualquer escrita.
   def reuse
-    target = WhatsappInstance.connected
-                             .where.not(client_id: @client.id)
-                             .find_by(instance_name: params.require(:source_instance_name))
+    name = params.require(:source_instance_name)
+    own_name = WhatsappInstance.evolution_name_for(@client)
     return redirect_to(admin_client_path(@client),
-      alert: "Conexão indisponível para reutilização. Atualize a página e tente de novo.") if target.nil?
+      alert: "Conexão indisponível para reutilização. Atualize a página e tente de novo.") if name == own_name
 
-    Evolution::InstanceProvisioner.new(@client).reuse(existing: target)
+    sibling = WhatsappInstance.connected.where.not(client_id: @client.id).find_by(instance_name: name)
+
+    if sibling
+      Evolution::InstanceProvisioner.new(@client).reuse(existing: sibling)
+    else
+      entry = Evolution::Client.fetch_instances.find { |i| (i["name"] || i["instanceName"]) == name }
+      return redirect_to(admin_client_path(@client),
+        alert: "Conexão indisponível para reutilização. Atualize a página e tente de novo.") if entry.nil? || WhatsappInstance.map_evolution_state(entry["connectionStatus"]) != :connected
+
+      Evolution::InstanceProvisioner.new(@client).adopt_named(name)
+    end
+
     redirect_to admin_client_path(@client),
       notice: "Conexão reutilizada. Sincronize os grupos deste cliente para popular a lista."
   rescue ActiveRecord::RecordNotUnique
