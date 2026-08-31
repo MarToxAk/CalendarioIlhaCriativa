@@ -171,7 +171,7 @@ class AdminWhatsappInstancesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to admin_client_path(@client)
-    assert_equal "A instância respondeu como desconectada. Use \"Parear novamente\" para reconectar o número.", flash[:alert]
+    assert_equal "A instância respondeu como desconectada. Use \"Desvincular WhatsApp\" e conecte um número novo ou reutilize outra conexão.", flash[:alert]
 
     wi.reload
     assert_equal "disconnected", wi.connection_state
@@ -297,6 +297,100 @@ class AdminWhatsappInstancesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_client_path(@client)
     assert_equal "Não foi possível atualizar o QR Code. Clique em \"Gerar novo QR\" para tentar outra vez.", flash[:alert]
     assert_equal "connected", wi.reload.connection_state
+  end
+
+  # --- #unlink — "Desvincular WhatsApp" (quick task 260831-o9t) -------------
+
+  test "unlink de instancia connected flipa para unpaired e redireciona com notice" do
+    wi = @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :connected,
+      paired_at: 3.days.ago,
+      last_qr_base64: "data:image/png;base64,stale"
+    )
+
+    post unlink_admin_client_whatsapp_instance_path(@client)
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "WhatsApp desvinculado deste cliente. A conexão em si continua ativa — nada foi apagado. Conecte um número novo ou reutilize outra conexão quando quiser.", flash[:notice]
+
+    wi.reload
+    assert wi.unpaired?
+    assert_nil wi.paired_at
+    assert_nil wi.last_qr_base64
+  end
+
+  test "unlink desativa os whatsapp_groups da linha e nao apaga nada (sem FK error)" do
+    wi = @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :connected
+    )
+    g1 = wi.whatsapp_groups.create!(remote_jid: "u9a@g.us", subject: "Grupo A", active: true, synced_at: Time.current)
+    g2 = wi.whatsapp_groups.create!(remote_jid: "u9b@g.us", subject: "Grupo B", active: true, synced_at: Time.current)
+
+    arte = @client.artes.new(scheduled_on: Date.current, platform: :instagram, media_type: :image, status: :approved, title: "Arte Unlink FK")
+    arte.media_file.attach(fixture_file_upload("sample.jpg", "image/jpeg"))
+    arte.save!
+    @client.divulgacoes.create!(
+      arte: arte, scheduled_for: 1.day.from_now,
+      divulgacao_grupos: [ DivulgacaoGrupo.new(whatsapp_group: g1, group_name: g1.display_name, remote_jid: g1.remote_jid) ]
+    )
+
+    groups_before = WhatsappGroup.count
+    dg_before = DivulgacaoGrupo.count
+
+    post unlink_admin_client_whatsapp_instance_path(@client)
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal groups_before, WhatsappGroup.count
+    assert_equal dg_before, DivulgacaoGrupo.count
+    assert_equal false, g1.reload.active
+    assert_equal false, g2.reload.active
+  end
+
+  test "unlink de conexao COMPARTILHADA nao afeta a linha irma" do
+    nome = WhatsappInstance.evolution_name_for(@client)
+    wi = @client.create_whatsapp_instance!(instance_name: nome, connection_state: :connected)
+    own_group = wi.whatsapp_groups.create!(remote_jid: "share-own@g.us", subject: "Grupo Próprio", active: true, synced_at: Time.current)
+
+    sibling_client = Client.create!(name: "WA Unlink Sibling", password: "senha1234", password_confirmation: "senha1234")
+    sib = sibling_client.create_whatsapp_instance!(instance_name: nome, connection_state: :connected)
+    sib_group = sib.whatsapp_groups.create!(remote_jid: "share-sib@g.us", subject: "Grupo Irmã", active: true, synced_at: Time.current)
+
+    post unlink_admin_client_whatsapp_instance_path(@client)
+
+    assert @client.reload.whatsapp_instance.unpaired?
+    assert sib.reload.connected?
+    assert_equal true, sib_group.reload.active
+    assert_equal false, own_group.reload.active
+  end
+
+  test "unlink sem instancia redireciona com alert em vez de 500" do
+    assert_nil @client.whatsapp_instance
+
+    post unlink_admin_client_whatsapp_instance_path(@client)
+
+    assert_redirected_to admin_client_path(@client)
+    assert_equal "Este cliente ainda não tem uma instância de WhatsApp.", flash[:alert]
+  end
+
+  test "unlink nunca chama o Evolution" do
+    wi = @client.create_whatsapp_instance!(
+      instance_name: WhatsappInstance.evolution_name_for(@client),
+      connection_state: :connected
+    )
+
+    assert_nothing_raised do
+      Evolution::Client.stub(:connect, ->(*) { raise "unlink não deve chamar o Evolution" }) do
+        Evolution::Client.stub(:connection_state, ->(*) { raise "unlink não deve chamar o Evolution" }) do
+          Evolution::Client.stub(:fetch_instances, ->(**) { raise "unlink não deve chamar o Evolution" }) do
+            post unlink_admin_client_whatsapp_instance_path(@client)
+          end
+        end
+      end
+    end
+
+    assert wi.reload.unpaired?
   end
 
   # --- #reuse — reutilizar conexão existente (fase 31, D-03/D-06, SEG-01/T-31-01) ---

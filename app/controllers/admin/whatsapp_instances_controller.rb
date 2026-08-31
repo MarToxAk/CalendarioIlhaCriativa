@@ -51,7 +51,7 @@ class Admin::WhatsappInstancesController < Admin::BaseController
       notice: (old_label == inst.connection_state_label ? "Conexão verificada: #{inst.connection_state_label}." : "Estado atualizado: agora #{inst.connection_state_label}.")
   rescue Evolution::Errors::NotConnected
     redirect_to admin_client_path(@client),
-      alert: "A instância respondeu como desconectada. Use \"Parear novamente\" para reconectar o número."
+      alert: "A instância respondeu como desconectada. Use \"Desvincular WhatsApp\" e conecte um número novo ou reutilize outra conexão."
   rescue Evolution::Errors::ConfigurationError, Evolution::Errors::Permanent, Evolution::Errors::Transient, Evolution::Errors::Unknown => e
     Rails.logger.warn("[whatsapp_instances] verify falhou client=#{@client.id}: #{e.class}")
     redirect_to admin_client_path(@client),
@@ -85,6 +85,39 @@ class Admin::WhatsappInstancesController < Admin::BaseController
     Rails.logger.warn("[whatsapp_instances] reconnect falhou client=#{@client.id}: #{e.class}")
     redirect_to admin_client_path(@client),
       alert: "Não foi possível atualizar o QR Code. Clique em \"Gerar novo QR\" para tentar outra vez."
+  end
+
+  # Quick task 260831-o9t. "Desvincular WhatsApp" — substitui o antigo botão
+  # "Parear novamente" do painel (mostrado quando connected?/disconnected?).
+  # NÃO toca #reconnect (ainda usado pelo botão "Gerar novo QR" de _qr.html.erb
+  # no estado awaiting_qr). ZERO I/O de rede: NUNCA chama Evolution::Client — a
+  # sessão física do WhatsApp continua viva (e, se compartilhada, segue em uso
+  # pelos clientes-irmãos). "Desvincular" = flipar connection_state para a
+  # sentinela :unpaired que JÁ EXISTE (enum valor 0, mesma semântica "sem
+  # instância" de _client_row.html.erb) + soft-desativar os whatsapp_groups em
+  # cache DESTA linha (update_all(active: false), sem callbacks, escopado pela
+  # associação) para não deixar grupo ativo enganoso. NUNCA destroy/destroy_all:
+  # divulgacao_grupos.whatsapp_group_id é null: false sem on_delete: :cascade,
+  # então destruir levantaria ActiveRecord::InvalidForeignKey.
+  def unlink
+    inst = @client.whatsapp_instance
+    return redirect_to(admin_client_path(@client),
+      alert: "Este cliente ainda não tem uma instância de WhatsApp.") if inst.nil?
+
+    ActiveRecord::Base.transaction do
+      inst.update!(
+        connection_state: :unpaired,
+        groups_sync_state: :idle,
+        groups_sync_error: nil,
+        last_qr_base64: nil,
+        paired_at: nil,
+        last_checked_at: Time.current
+      )
+      inst.whatsapp_groups.update_all(active: false)
+    end
+
+    redirect_to admin_client_path(@client),
+      notice: "WhatsApp desvinculado deste cliente. A conexão em si continua ativa — nada foi apagado. Conecte um número novo ou reutilize outra conexão quando quiser."
   end
 
   # Fase 31 (D-03/D-06, T-31-01) + quick task 260831-nb7. "Reutilizar conexão

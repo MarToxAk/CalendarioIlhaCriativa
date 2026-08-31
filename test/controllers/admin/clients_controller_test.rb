@@ -231,26 +231,27 @@ class AdminClientsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Nenhuma conexão conectada disponível para reutilizar."
   end
 
-  # ── aviso de blast radius no modal "Parear novamente" (31-REVIEW.md WR-03) ──
+  # ── copy do modal "Desvincular WhatsApp" (quick task 260831-o9t) ──────────
 
-  test "show de cliente com conexao COMPARTILHADA mostra aviso de irmas no modal Parear novamente" do
+  test "show de cliente com conexao COMPARTILHADA descreve as irmas no modal Desvincular WhatsApp" do
     nome = WhatsappInstance.evolution_name_for(@client)
     @client.create_whatsapp_instance!(instance_name: nome, connection_state: :connected)
 
-    sibling_client = Client.create!(name: "Reconnect Sibling", password: "senha1234", password_confirmation: "senha1234")
+    sibling_client = Client.create!(name: "Unlink Sibling", password: "senha1234", password_confirmation: "senha1234")
     sibling_client.create_whatsapp_instance!(instance_name: nome, connection_state: :connected)
 
     get admin_client_path(@client)
 
     assert_response :success
-    assert_select "#reconnect-modal-desc" do |elements|
+    assert_select "#unlink-modal-desc" do |elements|
       body = elements.first.text
-      assert_match(/compartilhada com 1 outro/, body)
-      assert_match(/TODOS eles/, body)
+      assert_match(/em uso por 1 outro/, body)
+      assert_match(/não são afetados/, body)
+      assert_match(/Nada é apagado/, body)
     end
   end
 
-  test "show de cliente com conexao NAO compartilhada mostra o aviso padrao (sem mencionar irmas) no modal Parear novamente" do
+  test "show de cliente com conexao NAO compartilhada descreve a conexao ativa no modal Desvincular WhatsApp" do
     @client.create_whatsapp_instance!(
       instance_name: WhatsappInstance.evolution_name_for(@client),
       connection_state: :connected
@@ -259,10 +260,11 @@ class AdminClientsControllerTest < ActionDispatch::IntegrationTest
     get admin_client_path(@client)
 
     assert_response :success
-    assert_select "#reconnect-modal-desc" do |elements|
+    assert_select "#unlink-modal-desc" do |elements|
       body = elements.first.text
-      refute_match(/compartilhada/, body)
-      assert_match(/Os disparos ficam indisponíveis até um novo pareamento ser concluído\./, body)
+      refute_match(/outro\(s\) cliente/, body)
+      refute_match(/compartilham/, body)
+      assert_match(/A conexão em si continua ativa/, body)
     end
   end
 end

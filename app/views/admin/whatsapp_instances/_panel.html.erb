@@ -3,7 +3,7 @@
     D-06 — só relevante quando whatsapp_instance é nil; array de
     {instance_name:, client_names:}) %>
 <%# Card "WhatsApp" completo — empty-state, badge de estado, QR + banner de banimento,
-    cautela de idade e ações (Forçar verificação / Parear novamente). 26-UI-SPEC. %>
+    cautela de idade e ações (Forçar verificação / Desvincular WhatsApp). 26-UI-SPEC. %>
 <% reusable_targets ||= [] %>
 
 <div class="bg-white rounded-xl border border-gray-200 shadow-card p-6 max-w-2xl mt-4">
@@ -132,26 +132,30 @@
           <button type="button"
                   data-action="click->modal#open"
                   class="inline-flex items-center h-9 px-3 border border-gray-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-gray-50 transition-colors">
-            Parear novamente
+            Desvincular WhatsApp
           </button>
-          <%# 31-REVIEW.md WR-03: o corpo do modal avisa do "blast radius" real
-              quando a conexão é compartilhada -- `reconnect` chama
-              Evolution::Client.connect(inst.instance_name), que encerra a
-              sessão FÍSICA, derrubando TODOS os clientes-irmãos que usam o
-              mesmo instance_name, não só este. Mesma lógica que o modal de
-              "Reutilizar conexão existente" (linha ~65) já aplica. %>
+          <%# Quick task 260831-o9t: a ação #unlink NÃO encerra sessão nenhuma e
+              NÃO chama o Evolution — ela só remove o vínculo LOCAL deste
+              cliente com a conexão (flipa connection_state para :unpaired e
+              soft-desativa os grupos em cache desta linha). A conexão física
+              continua viva e, se compartilhada, segue em uso pelos
+              clientes-irmãos, que não são afetados. Nada é apagado: o
+              histórico de grupos e divulgações deste cliente fica guardado. %>
           <%= render "admin/clients/confirm_modal",
-                id: "reconnect-modal",
-                title: "Parear novamente",
+                id: "unlink-modal",
+                title: "Desvincular WhatsApp",
                 body: (whatsapp_instance.shared? ?
-                        "Parear novamente encerra a sessão atual do WhatsApp deste número. " \
-                        "Esta conexão é compartilhada com #{whatsapp_instance.siblings.where.not(id: whatsapp_instance.id).count} outro(s) cliente(s) — " \
-                        "os disparos ficam indisponíveis para TODOS eles, não só para este cliente, até um novo pareamento ser concluído." :
-                        "Parear novamente encerra a sessão atual do WhatsApp deste número. Os disparos ficam indisponíveis até um novo pareamento ser concluído."),
-                confirm_label: "Parear novamente",
-                cancel_label: "Manter conexão atual",
+                        "Isto remove APENAS o vínculo deste cliente com a conexão. " \
+                        "A conexão continua ativa e em uso por #{whatsapp_instance.siblings.where.not(id: whatsapp_instance.id).count} outro(s) cliente(s) que a compartilham — eles não são afetados. " \
+                        "Nada é apagado: o histórico deste cliente fica guardado. " \
+                        "Depois de desvincular, este cliente volta para 'sem instância' e você pode conectar um número novo (QR) ou reutilizar outra conexão." :
+                        "Isto remove o vínculo deste cliente com a conexão de WhatsApp. " \
+                        "A conexão em si continua ativa e pode ser reaproveitada depois — nada é apagado: o histórico de grupos e divulgações deste cliente fica guardado. " \
+                        "Depois de desvincular, este cliente volta para 'sem instância' e você pode conectar um número novo (QR) ou reutilizar outra conexão."),
+                confirm_label: "Desvincular",
+                cancel_label: "Manter vínculo",
                 confirm_variant: "warning",
-                form_action: reconnect_admin_client_whatsapp_instance_path(client),
+                form_action: unlink_admin_client_whatsapp_instance_path(client),
                 method: :post %>
         </div>
       <% end %>
