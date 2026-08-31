@@ -45,3 +45,13 @@ persistent Postgres database rather than a per-run ephemeral one) — leftover r
 from earlier full-suite runs can leak into deterministic-looking assertions in unrelated test
 files. Out of scope per the executor's scope boundary rule — logged here, not fixed. The
 divulgacoes controller test file itself is green in isolation (48/48) and in the full run.
+
+## Additional pre-existing unrelated failure observed during 30-03 full-suite run
+
+- `Api::V1::Ai::ClientsControllerTest` — three tests (`GET /summary retorna 200...`, `GET
+  /summary não inclui artes de outro cliente`, and a third `/summary` variant) return 401
+  instead of 200. `app/controllers/api/v1/ai/clients_controller.rb` and its test file are not
+  touched by any 30-01/30-02/30-03 commit (`git log` shows last touch is Phase 24, commit
+  `f78a155`). Same class of symptom as the other entries above (shared, non-ephemeral Postgres
+  test DB — likely a stale/expired API token or leftover auth state from an earlier full-suite
+  run). Out of scope per the executor's scope boundary rule — logged here, not fixed.
