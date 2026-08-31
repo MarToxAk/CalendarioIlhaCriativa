@@ -111,24 +111,28 @@ class Whatsapp::SendToGroupJob < ApplicationJob
     divulgacao = group.divulgacao.reload
     return if divulgacao.status_cancelada? # DIVU-08/DIVU-09: no-op silencioso, item permanece pendente
 
+    # CR-01: o claim NÃO seta `sent_at` -- ele só precisa flipar o status para
+    # :enviado para fazer seu trabalho de lock atômico. `sent_at` é setado
+    # EXCLUSIVAMENTE em `send_via_evolution`, depois da Evolution confirmar o
+    # aceite. Invariante resultante: `sent_at != nil` <=> "envio confirmado".
+    # Antes, o claim setava `sent_at` e só o rescue Transient revertia --
+    # todo outro caminho de falha (arte_nao_aprovada, instancia_desconectada,
+    # mark_falhou/mark_incerto) deixava um timestamp real numa linha que nunca
+    # foi enviada, poluindo o audit trail que a fase 30 renderiza.
     claimed = DivulgacaoGrupo.where(id: group.id, status: :pendente)
-                              .update_all(status: :enviado, sent_at: Time.current, updated_at: Time.current)
+                              .update_all(status: :enviado, updated_at: Time.current)
     return if claimed.zero? # ENVIO-04: já processado por outro worker/retry — nunca chega ao HTTP
 
     arte = divulgacao.arte.reload
     unless arte.approved?
-      # CR-01: o claim atômico acima setou `sent_at` como parte do flip para
-      # :enviado; aqui a Evolution NUNCA foi chamada, então `sent_at` tem que
-      # voltar a nil -- uma linha `falhou` nunca pode carregar timestamp de envio.
-      group.update!(status: :falhou, sent_at: nil, error_code: "arte_nao_aprovada") # ENVIO-06
+      group.update!(status: :falhou, error_code: "arte_nao_aprovada") # ENVIO-06
       self.class.finalize_divulgacao_if_done(divulgacao)
       return
     end
 
     instance = divulgacao.client.whatsapp_instance
     unless instance&.connected?
-      # CR-01: idem -- Evolution nunca chamada neste guard, limpa o `sent_at` do claim.
-      group.update!(status: :falhou, sent_at: nil, error_code: "instancia_desconectada") # ENVIO-07
+      group.update!(status: :falhou, error_code: "instancia_desconectada") # ENVIO-07
       self.class.finalize_divulgacao_if_done(divulgacao)
       return
     end
@@ -145,7 +149,9 @@ class Whatsapp::SendToGroupJob < ApplicationJob
       # claim acima, então o dirty-tracking em memória ainda acha `status`
       # "pendente" (valor anterior ao claim) e um `update!(status: :pendente)`
       # sem reload seria tratado como NENHUMA mudança, silenciosamente
-      # deixando a coluna presa em "enviado" no banco.
+      # deixando a coluna presa em "enviado" no banco. `sent_at` já é nil
+      # (o claim não o seta mais -- CR-01), mas mantemos `sent_at: nil` aqui
+      # como defesa em profundidade caso o fluxo mude.
       group.reload.update!(status: :pendente, sent_at: nil, updated_at: Time.current)
       raise
     end
@@ -159,21 +165,22 @@ class Whatsapp::SendToGroupJob < ApplicationJob
 
   def self.mark_falhou(job, message)
     group = job.arguments.first
-    # CR-01: espelha o revert de `sent_at` do rescue Transient no `perform`. O
-    # claim atômico seta `sent_at` ao flipar para :enviado; toda saída que NÃO
-    # termina em :enviado tem que zerar de novo, senão uma linha :falhou fica
-    # com timestamp de "envio" que nunca aconteceu (audit trail enganoso para
-    # as telas de histórico da fase 30, que leem `divulgacao_grupos.sent_at`).
-    group.update!(status: :falhou, sent_at: nil, error_code: sanitize_error_code(message))
+    # CR-01: `sent_at` nunca foi setado pelo claim (só `send_via_evolution` o
+    # seta, na confirmação de sucesso), então uma linha que chega aqui já tem
+    # `sent_at` nil. Mantemos `sent_at: nil` explícito como defesa em
+    # profundidade -- uma linha :falhou NUNCA pode carregar timestamp de envio.
+    group.reload.update!(status: :falhou, sent_at: nil, error_code: sanitize_error_code(message))
     finalize_divulgacao_if_done(group.divulgacao.reload)
   end
 
   def self.mark_incerto(job, err)
     group = job.arguments.first
-    # CR-01: `incerto` = read-timeout, a mensagem PODE ter sido entregue de
-    # fato -- por isso `sent_at` é DELIBERADAMENTE preservado aqui (ao
-    # contrário de :falhou), sinalizando "tentamos, resultado incerto".
-    group.update!(status: :incerto, error_code: sanitize_error_code(err.message))
+    # CR-01: `incerto` só é alcançado via `discard_on(Unknown)`, e Unknown é
+    # levantado de DENTRO de `send_via_evolution` ANTES da linha que seta
+    # `sent_at` -- então `sent_at` é nil aqui, coerente com "só confirmação
+    # positiva popula sent_at". O status :incerto (não o sent_at) é o sinal de
+    # "tentamos, resultado incerto, precisa checagem manual".
+    group.reload.update!(status: :incerto, sent_at: nil, error_code: sanitize_error_code(err.message))
     finalize_divulgacao_if_done(group.divulgacao.reload)
   end
 
@@ -211,6 +218,10 @@ class Whatsapp::SendToGroupJob < ApplicationJob
     # uma mensagem que de fato foi entregue.
     key = resp["key"]
     message_id = (key.is_a?(Hash) ? key["id"] : nil) || resp["id"]
-    group.update!(evolution_message_id: message_id)
+    # CR-01: ÚNICO ponto que popula `sent_at` -- só aqui há confirmação
+    # positiva de que a Evolution aceitou o envio. Invariante: `sent_at != nil`
+    # <=> "envio confirmado" (nunca setado pelo claim, nunca sobra numa linha
+    # :falhou/:incerto).
+    group.reload.update!(status: :enviado, evolution_message_id: message_id, sent_at: Time.current)
   end
 end

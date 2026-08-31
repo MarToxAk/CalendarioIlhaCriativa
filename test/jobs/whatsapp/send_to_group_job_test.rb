@@ -175,7 +175,7 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
     end
 
     assert_equal "incerto", @group_row.reload.status
-    assert_not_nil @group_row.reload.sent_at, "CR-01: :incerto PRESERVA sent_at de proposito -- read-timeout pode ter entregue"
+    assert_nil @group_row.reload.sent_at, "CR-01: sent_at so e populado na confirmacao positiva de envio; Unknown e levantado antes disso, entao :incerto tem sent_at nil (o status :incerto e o sinal de 'checar manualmente', nao o sent_at)"
   end
 
   test "discard_on NotConnected grava falhou com instancia_desconectada" do
