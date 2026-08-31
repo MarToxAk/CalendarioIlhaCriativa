@@ -28,18 +28,25 @@ class Whatsapp::SendToGroupJob < ApplicationJob
   # sensível) no banco.
   ERROR_CODE_MAX_LENGTH = 500
 
-  # ENVIO-09 — nunca dois envios da MESMA instância em paralelo. `key:` usa a
-  # cadeia IDÊNTICA à do token (SEG-03) acima — se um dia divergirem, a
-  # concorrência serializaria a instância errada (ou nenhuma), e o teste de
-  # regressão "concurrency_key resolve para o whatsapp_instance_id do grupo"
-  # existe justamente para pegar isso. `on_conflict:` fica no default do gem
-  # (`:block`) -- NUNCA `:discard`, que perderia o envio silenciosamente; um
-  # job sem slot só fica em `solid_queue_blocked_executions` até liberar.
+  # ENVIO-09 — nunca dois envios da MESMA conexão física em paralelo. Fase 31
+  # (D-04): a chave resolve `instance_name` (a conexão física), não mais
+  # `whatsapp_instance.id` (a linha) — com instância compartilhada (fase 31),
+  # dois clientes diferentes têm LINHAS diferentes (`id` diferente) mas a MESMA
+  # conexão física (`instance_name` igual); travar por `id` deixaria dois
+  # envios simultâneos passarem pela mesma sessão Evolution/Baileys ao mesmo
+  # tempo, exatamente o que ENVIO-09 foi desenhado para impedir. `instance_name`
+  # é `t.string null: false` — sempre presente quando a linha existe. `key:`
+  # continua espelhando a cadeia do token (SEG-03) acima — se um dia
+  # divergirem, a concorrência serializaria a instância errada (ou nenhuma), e
+  # o teste de regressão "concurrency_key resolve para o instance_name do
+  # grupo" existe justamente para pegar isso. `on_conflict:` fica no default do
+  # gem (`:block`) -- NUNCA `:discard`, que perderia o envio silenciosamente;
+  # um job sem slot só fica em `solid_queue_blocked_executions` até liberar.
   # WR-01: `whatsapp_instance` é `has_one` e PODE ser nil -- a mesma razão pela
   # qual o guard `instance&.connected?` no `perform` usa safe navigation. Este
   # lambda roda SÍNCRONO no enqueue (`perform_later`), dentro do loop do
   # DispatchJob; um `NoMethodError` aqui abortaria o dispatch de todos os
-  # grupos irmãos -- por isso o `&.id`.
+  # grupos irmãos -- por isso o `&.instance_name`.
   #
   # Cuidado com o ramo sem instância: uma `key:` que retorna nil NÃO desliga o
   # limite. Em solid_queue 1.4.0 (active_job/concurrency_controls.rb) a chave
@@ -56,7 +63,7 @@ class Whatsapp::SendToGroupJob < ApplicationJob
   # na Evolution.
   limits_concurrency to: 1,
     key: ->(group) {
-      group.divulgacao.client.whatsapp_instance&.id ||
+      group.divulgacao.client.whatsapp_instance&.instance_name ||
         "send_to_group:no_instance:#{group.id}"
     }
 

@@ -313,9 +313,38 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
     assert_equal :block, Whatsapp::SendToGroupJob.concurrency_on_conflict
   end
 
-  test "concurrency_key resolve para o whatsapp_instance_id do grupo (regressao do fix da Task 1 do plano 29-01)" do
+  test "concurrency_key resolve para o instance_name da instancia do grupo (fase 31, D-04 -- por conexao fisica, nao por id de linha)" do
     job = Whatsapp::SendToGroupJob.new(@group_row)
-    assert_includes job.concurrency_key, @instance.id.to_s
+    assert_includes job.concurrency_key, @instance.instance_name
+  end
+
+  test "duas instancias-irmas (mesmo instance_name, id diferente) produzem a MESMA concurrency_key (fase 31, D-04)" do
+    other_client = Client.create!(name: "SendToGroupJob Sibling", password: "senha1234", password_confirmation: "senha1234")
+    sibling_instance = other_client.create_whatsapp_instance!(
+      instance_name: @instance.instance_name,
+      token: @instance.token,
+      connection_state: :connected
+    )
+    sibling_group = sibling_instance.whatsapp_groups.create!(remote_jid: "g2@g.us", subject: "Grupo Irma", active: true, synced_at: Time.current)
+    sibling_arte = other_client.artes.new(
+      scheduled_on: Date.current, platform: :instagram, media_type: :image, status: :approved, title: "Arte Irma"
+    )
+    sibling_arte.media_file.attach(
+      io: File.open(Rails.root.join("test/fixtures/files/sample.jpg")),
+      filename: "sample.jpg", content_type: "image/jpeg"
+    )
+    sibling_arte.save!
+    sibling_divulgacao = other_client.divulgacoes.create!(
+      arte: sibling_arte, scheduled_for: 3.days.from_now,
+      divulgacao_grupos: [ DivulgacaoGrupo.new(whatsapp_group: sibling_group, group_name: sibling_group.display_name, remote_jid: sibling_group.remote_jid) ]
+    )
+    sibling_group_row = sibling_divulgacao.divulgacao_grupos.first
+
+    job_a = Whatsapp::SendToGroupJob.new(@group_row)
+    job_b = Whatsapp::SendToGroupJob.new(sibling_group_row)
+
+    assert_equal job_a.concurrency_key, job_b.concurrency_key
+    assert_includes job_a.concurrency_key, @instance.instance_name
   end
 
   test "WR-01: sem whatsapp_instance a concurrency_key usa sentinel unico por grupo, nunca colapsa para um slot global compartilhado" do
