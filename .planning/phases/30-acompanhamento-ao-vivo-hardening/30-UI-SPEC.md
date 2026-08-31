@@ -1,10 +1,11 @@
 ---
 phase: 30
 slug: acompanhamento-ao-vivo-hardening
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-08-31
+reviewed_at: 2026-08-31
 ---
 
 # Phase 30 — UI Design Contract
@@ -455,11 +456,11 @@ in this repo.
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: FLAG (non-blocking — "Reenviar" single-word verb; mitigated by row context + group-naming turbo_confirm)
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** APPROVED 2026-08-31 (gsd-ui-checker — 6/6 dimensions, 1 non-blocking FLAG)
