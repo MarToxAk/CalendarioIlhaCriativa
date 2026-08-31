@@ -5,16 +5,16 @@ milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 31
 current_phase_name: Instância WhatsApp Compartilhada entre Clientes
 status: executing
-stopped_at: Completed 31-01-PLAN.md
-last_updated: "2026-08-31T19:07:25.543Z"
+stopped_at: Completed 31-02-PLAN.md
+last_updated: "2026-08-31T19:12:07.000Z"
 last_activity: 2026-08-31
-last_activity_desc: Phase 31 Plan 01 executed (reutilização de conexão WhatsApp — D-03/D-04/D-06/D-07)
-state_head: 1f9a5a43fd9a69eb76db98bd789978d4322ccc2c
+last_activity_desc: Phase 31 Plan 02 executed (fan-out do webhook + GroupSynchronizer para instâncias-irmãs — D-05, Pitfall 1)
+state_head: c738789
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 26
-  completed_plans: 25
+  completed_plans: 26
   percent: 29
 ---
 
@@ -39,16 +39,16 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 ## Current Position
 
 Phase: 31 (Instância WhatsApp Compartilhada entre Clientes) — EXECUTING
-Plans complete: 01 of 2 (31-01 done — migração + InstanceProvisioner#reuse + controller/rota #reuse +
-  concorrência por instance_name + toggle Stimulus; 31-02 pendente — fan-out do webhook connection.update
+Plans complete: 02 of 2 (31-01 done — migração + InstanceProvisioner#reuse + controller/rota #reuse +
+  concorrência por instance_name + toggle Stimulus; 31-02 done — fan-out do webhook connection.update
+  + GroupSynchronizer para instâncias-irmãs, D-05 — fase completa, aguardando tail de verificação)
 
-  + GroupSynchronizer para instâncias-irmãs, D-05)
-
-Status: Executing Phase 31
+Status: Executing Phase 31 — ambos os planos executados, verificação de fase pendente (human_verify_mode:
+  end-of-phase)
   Fases 25/26/29/30 do milestone v1.7 seguem com verification_deferred_human (ver "Deferred Verification"
   acima) — não bloqueiam a execução da fase 31.
-Last activity: 2026-08-31 — Phase 31 Plan 01 executado (4 tasks, 4 commits, ver
-  31-01-SUMMARY.md)
+Last activity: 2026-08-31 — Phase 31 Plan 02 executado (3 tasks, 3 commits, ver
+  31-02-SUMMARY.md)
 
 ## Progress Bar
 
@@ -225,6 +225,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 30 P02 | ~20min | 2 tasks | 5 files |
 | Phase 30 P03 | ~15min | 3 tasks | 8 files |
 | Phase 31-inst-ncia-whatsapp-compartilhada-entre-clientes P01 | ~50min | 4 tasks | 16 files |
+| Phase 31-inst-ncia-whatsapp-compartilhada-entre-clientes P02 | ~20min | 3 tasks | 5 files |
 
 ## Decisions
 
@@ -277,6 +278,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 30]: [Phase 30-02]: resend route uses controller: "divulgacoes" override on the nested divulgacao_grupos resource to keep #resend on Admin::DivulgacoesController
 - [Phase 30]: [Phase 30-03]: divulgacao_grupo_error_label is a pure copy-map (sentinel hash lookup or a "Motivo: " prefix) — never re-runs Phase 29's sanitize_error_code, never truncates/gsubs, never re-fetches the model (T-30-10); divulgacao_placar reads divulgacao.divulgacao_grupos.to_a (the includes-preloaded association) so it never issues its own query (T-30-11)
 - [Phase 31]: [Phase 31-01]: instância deuniqueificada + InstanceProvisioner#reuse copia irmã já conectada sem I/O; SendToGroupJob serializa por instance_name (D-04); toggle Stimulus dedicado no painel (D-06/D-07)
+- [Phase 31]: [Phase 31-02]: webhook connection.update/qrcode.updated faz fan-out por instance_name (Pitfall 1); GroupSynchronizer faz 1 fetch_groups fora do loop + N upserts/GRUPO-05/update! por irmã com o mesmo batch_started_at (D-05); regressão single-instance provada (fake.calls==1 sem irmãs); guard de não-conectado/:sync_error nunca propagado a irmãs (Pitfall 5); SEG-04 confirmado intacto com par de irmãos, 3 testes existentes byte-idênticos
 
 ## Quick Tasks Completed
 
@@ -290,9 +292,9 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-31T19:07:24.852Z
-**Stopped at:** Completed 31-01-PLAN.md
-**Resume file:** .planning/phases/31-inst-ncia-whatsapp-compartilhada-entre-clientes/31-02-PLAN.md
+**Last session:** 2026-08-31T19:12:07.000Z
+**Stopped at:** Completed 31-02-PLAN.md
+**Resume file:** None — fase 31 completa (2/2 planos), aguardando verificação/tail (human_verify_mode: end-of-phase)
 
 ### Blockers
 

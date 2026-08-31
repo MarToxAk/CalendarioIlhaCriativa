@@ -351,7 +351,7 @@ sem reabrir a possibilidade de uma arte do Cliente A alcançar um grupo do
 Cliente B.
 **Requirements**: TBD (fase aditiva — sem REQ-ID novo; entrega as decisões D-01..D-07 do 31-CONTEXT.md e preserva PAIR-*/GRUPO-*/SEG-*/ENVIO-* intactos)
 **Depends on:** Phase 30
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans executed
 
 **Wave 1**
 
@@ -359,7 +359,7 @@ Cliente B.
 
 **Wave 2** *(bloqueado no 31-01)*
 
-- [ ] 31-02-PLAN.md — Fan-out por conexão física: webhook `connection.update`/`qrcode.updated` para todas as linhas-irmãs (Pitfall 1) + `GroupSynchronizer` (1 `fetchAllGroups`, N upserts locais) com regressão single-instance (D-05, `costly`) + `COVERAGE.md` + teste aditivo de SEG-04 (D-02, D-05)
+- [x] 31-02-PLAN.md — Fan-out por conexão física: webhook `connection.update`/`qrcode.updated` para todas as linhas-irmãs (Pitfall 1) + `GroupSynchronizer` (1 `fetchAllGroups`, N upserts locais) com regressão single-instance (D-05, `costly`) + `COVERAGE.md` + teste aditivo de SEG-04 (D-02, D-05)
 
 ---
 
