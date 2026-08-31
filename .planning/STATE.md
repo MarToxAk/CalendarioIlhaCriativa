@@ -4,17 +4,17 @@ milestone: v1.7
 milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 30
 current_phase_name: Acompanhamento ao Vivo + Hardening
-status: planning
-stopped_at: "Fase 29 (Motor de Envio) implementada e verificada 5/5 em codigo (human_needed) — 3 planos, code review --auto convergido (CR-01 + 8 WR fixed, 4 Info deferidos), regressao 130/131 (1 pre-existente). UAT de operador: round-trip real de envio + decisao SC5 cancel-em-andamento. Autonomo pausado antes da fase 30 por limite de contexto."
-last_updated: "2026-08-31T00:26:26.802Z"
-last_activity: 2026-08-30
-last_activity_desc: "Phase 29 execution + code review + verification complete; deferred to operator UAT (29-UAT.md, 4 items)"
-state_head: e40f2bae6cfa5d9a667401cbd194aba7e49a5e29
+status: executing
+stopped_at: Completed 30-01-PLAN.md
+last_updated: "2026-08-31T13:02:31.754Z"
+last_activity: 2026-08-31
+last_activity_desc: Phase 30 execution started
+state_head: 42eb6eb3f31d5d70ab7d882216262a9905ed49a4
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 17
-  completed_plans: 17
+  total_plans: 24
+  completed_plans: 21
   percent: 33
 ---
 
@@ -25,7 +25,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-29)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 27 — Grupos do Cliente — Sync, Cache e Seleção Escopada
+**Current focus:** Phase 30 — Acompanhamento ao Vivo + Hardening
 
 ## Deferred Verification
 
@@ -37,10 +37,10 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 
 ## Current Position
 
-Phase: 25 — Fundação — Transporte Evolution + Storage Alcançável
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-08-30 — Phase 28 complete, transitioned to Phase 25
+Phase: 30 (Acompanhamento ao Vivo + Hardening) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-08-31 — Phase 30 execution started
 
 ## Progress Bar
 
@@ -211,6 +211,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 26 P03 | ~25min | 2 tasks | 4 files |
 | Phase 26 P04 | ~10min | 2 tasks | 4 files |
 | Phase 26-inst-ncia-de-whatsapp-por-cliente-pareamento P05 | ~15min | 3 tasks | 9 files |
+| Phase 30 P01 | ~25min | 3 tasks | 9 files |
 
 ## Decisions
 
@@ -256,6 +257,8 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 26]: [Phase 26]: [Phase 26-03]: throttle webhooks/evolution_by_ip (120/60s) cai no ramo HTML de throttled_responder (path não começa com /api/) — aceitável, o chamador é uma máquina que ignora o corpo
 - [Phase 26]: 26-04: verify — falha de TRANSPORTE em connection_state nunca toca o banco (connection_state/last_checked_at ficam com o último valor conhecido); um estado close/refused lido COM SUCESSO atualiza o banco normalmente, é resultado válido, não falha.
 - [Phase 26]: 26-04: refresh_qr é a única ação JSON do controller — sempre render json:, mesmo quando pull_fresh_qr falha silenciosamente. Rails.cache.write(key, true, unless_exist:true, expires_in:15.seconds) throttla a 1 chamada Evolution::Client.connect por instância a cada 15s.
+- [Phase 30]: [Phase 30-01]: dev ActionCable adapter async -> solid_cable (planner-surfaced) — bin/jobs is the first process to originate a broadcast; async is in-process only, would never reach the web process browser
+- [Phase 30]: [Phase 30-01]: broadcast_replace_to (turbo-rails high-level helper) used for DivulgacaoGrupo/Divulgacao live broadcasts instead of arte.rb's manual turbo_stream_tag assembly
 
 ## Quick Tasks Completed
 
@@ -265,8 +268,8 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-30T13:40:04.348Z
-**Stopped at:** Phase 28 complete, ready to plan Phase 25
+**Last session:** 2026-08-31T13:02:31.182Z
+**Stopped at:** Completed 30-01-PLAN.md
 **Resume file:** None
 
 ### Blockers

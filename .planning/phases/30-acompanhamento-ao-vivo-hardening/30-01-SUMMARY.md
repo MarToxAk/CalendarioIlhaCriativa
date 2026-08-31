@@ -171,3 +171,7 @@ None - no external service configuration required. The `bin/setup` cable-schema 
 ---
 *Phase: 30-acompanhamento-ao-vivo-hardening*
 *Completed: 2026-08-31*
+
+## Self-Check: PASSED
+
+All claimed files found on disk; all claimed commits found in `git log --oneline --all`.
