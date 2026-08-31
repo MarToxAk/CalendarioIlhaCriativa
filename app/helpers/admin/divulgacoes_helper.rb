@@ -41,8 +41,10 @@ module Admin::DivulgacoesHelper
 
   # Placar compacto por status, lido da associacao JA carregada via
   # includes(:divulgacao_grupos) no controller -- group_by nunca dispara
-  # query nova. "para {n} grupos" / singular NAO e pluralizado (copy travada
-  # na fase 28, ver divulgacao_duration_estimate acima).
+  # query nova. Contrato de pluralizacao (WR-02, 30-REVIEW): o branch
+  # "todas as linhas pendente" usa plural ("N pendentes"), mas o branch misto
+  # usa singular fixo ("N pendente") mesmo quando N > 1 -- teste em
+  # test/helpers/admin/divulgacoes_helper_test.rb:133-136.
   def divulgacao_placar(divulgacao)
     grupos = divulgacao.divulgacao_grupos.to_a
     total = grupos.size
