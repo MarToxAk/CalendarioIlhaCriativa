@@ -349,13 +349,17 @@ pareamento de um número novo por cliente. Hoje `Client has_one :whatsapp_instan
 precisa redesenhar esse limite para operar por grupo (não mais por instância),
 sem reabrir a possibilidade de uma arte do Cliente A alcançar um grupo do
 Cliente B.
-**Requirements**: TBD
+**Requirements**: TBD (fase aditiva — sem REQ-ID novo; entrega as decisões D-01..D-07 do 31-CONTEXT.md e preserva PAIR-*/GRUPO-*/SEG-*/ENVIO-* intactos)
 **Depends on:** Phase 30
-**Plans:** 0 plans
+**Plans:** 2 plans
 
-Plans:
+**Wave 1**
 
-- [ ] TBD (run /gsd-plan-phase 31 to break down)
+- [ ] 31-01-PLAN.md — Tracer: fatia vertical da reutilização (migração de-uniqueify do índice `instance_name`, `origin` enum `reused_sibling`, `InstanceProvisioner#reuse`, rota/controller `#reuse` escopado, `@reusable_targets` no `#show`) + trava de concorrência do `SendToGroupJob` por `instance_name` (D-04) + toggle Stimulus "Novo número (QR)" vs "Reutilizar conexão existente" (D-01, D-03, D-04, D-06, D-07)
+
+**Wave 2** *(bloqueado no 31-01)*
+
+- [ ] 31-02-PLAN.md — Fan-out por conexão física: webhook `connection.update`/`qrcode.updated` para todas as linhas-irmãs (Pitfall 1) + `GroupSynchronizer` (1 `fetchAllGroups`, N upserts locais) com regressão single-instance (D-05, `costly`) + `COVERAGE.md` + teste aditivo de SEG-04 (D-02, D-05)
 
 ---
 
