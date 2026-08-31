@@ -467,4 +467,29 @@ class Evolution::ClientTest < ActiveSupport::TestCase
   ensure
     Evolution::Client.instance_variable_set(:@connection, nil)
   end
+
+  test "fetch_groups uses Evolution::READ_TIMEOUT_GROUPS, not READ_TIMEOUT_FAST" do
+    captured_read_timeout = nil
+    stubs = Faraday::Adapter::Test::Stubs.new do |s|
+      s.get("/group/fetchAllGroups/livia_client_1?getParticipants=false") do |env|
+        captured_read_timeout = env.request.read_timeout
+        [ 200, { "Content-Type" => "application/json" }, "[]" ]
+      end
+    end
+    Evolution::Client.instance_variable_set(
+      :@connection,
+      Faraday.new do |f|
+        f.request :json
+        f.response :json, content_type: /\bjson$/
+        f.adapter :test, stubs
+      end
+    )
+
+    Evolution::Client.fetch_groups("livia_client_1", api_key: "test-api-key")
+
+    assert_equal Evolution::READ_TIMEOUT_GROUPS, captured_read_timeout
+    refute_equal Evolution::READ_TIMEOUT_FAST, captured_read_timeout
+  ensure
+    Evolution::Client.instance_variable_set(:@connection, nil)
+  end
 end
