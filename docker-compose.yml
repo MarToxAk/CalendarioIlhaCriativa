@@ -26,6 +26,7 @@
 #     ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY
 #     ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
 #   Opcionais:
+#     PROXY_HTTP_PORT / PROXY_HTTPS_PORT   (default 80 / 443 — mude se ocupadas no host)
 #     AWS_REGION                                    (default us-east-1)
 #
 # O boot em produção é fail-fast: falta de qualquer obrigatória derruba o
@@ -173,8 +174,14 @@ services:
       web:
         condition: service_healthy
     ports:
-      - "80:80"
-      - "443:443"
+      # Portas do host configuráveis — se 80/443 já estiverem ocupadas no host
+      # (ex.: nginx-proxy-manager), defina PROXY_HTTP_PORT / PROXY_HTTPS_PORT no
+      # stack (ex.: 8880 / 8843) e ponha o proxy existente na frente encaminhando
+      # para elas. ATENÇÃO: o Let's Encrypt automático do Caddy exige 80/443
+      # alcançáveis pela internet — fora disso, faça a terminação TLS no proxy da
+      # frente e trate o Caddy só como upstream HTTP.
+      - "${PROXY_HTTP_PORT:-80}:80"
+      - "${PROXY_HTTPS_PORT:-443}:443"
     # Caddyfile inline via `configs` — evita bind mount relativo, que no Portainer
     # falha ("not a directory") quando o arquivo não existe no momento do `up`.
     # Conteúdo espelha deploy/Caddyfile (mantido no repo como referência/dev).
