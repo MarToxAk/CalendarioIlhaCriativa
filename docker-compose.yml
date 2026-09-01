@@ -5,7 +5,8 @@
 #   - Repository URL: este repo (branch main)
 #   - Compose path:   docker-compose.yml
 #   - Este modo faz o CLONE do repo no host, então `build: .` e os bind mounts
-#     relativos (./deploy/Caddyfile) funcionam. O modo "Web editor" NÃO funciona
+#     funcionam. (O Caddyfile agora é inline via `configs:`, sem bind mount.)
+#     O modo "Web editor" ainda NÃO funciona por causa do `build: .`.
 #     (sem contexto de build / sem os arquivos do repo).
 #
 # Variáveis de ambiente — preencher na aba "Environment variables" do stack
@@ -174,11 +175,26 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    # Caddyfile inline via `configs` — evita bind mount relativo, que no Portainer
+    # falha ("not a directory") quando o arquivo não existe no momento do `up`.
+    # Conteúdo espelha deploy/Caddyfile (mantido no repo como referência/dev).
+    configs:
+      - source: caddyfile
+        target: /etc/caddy/Caddyfile
     volumes:
-      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     restart: unless-stopped
+
+configs:
+  caddyfile:
+    content: |
+      # Reverse proxy do app Rails. TLS automatico via Let's Encrypt quando as
+      # portas 80/443 do host estao acessiveis pela internet. Upstream web:3000
+      # e HTTP puro atras deste proxy (production.rb: assume_ssl + force_ssl).
+      ilhacriativa.autopyweb.com.br {
+      	reverse_proxy web:3000
+      }
 
 volumes:
   postgres_data:
