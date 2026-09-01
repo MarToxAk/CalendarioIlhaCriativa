@@ -102,6 +102,19 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
+          # Config env-driven (sem fallback pro credentials.yml.enc) — valores dummy
+          # só para os testes bootarem/stubarem o Evolution::Client. Nenhum é segredo real.
+          EVOLUTION_BASE_URL: https://evolution.test.invalid
+          EVOLUTION_GLOBAL_API_KEY: ci-dummy-evolution-key
+          EVOLUTION_WEBHOOK_HMAC_KEY: ci-dummy-webhook-hmac-key
+          EVOLUTION_WEBHOOK_BASE_URL: https://webhook.test.invalid
+          S3_ENDPOINT: https://s3.test.invalid
+          AWS_ACCESS_KEY_ID: ci-dummy
+          AWS_SECRET_ACCESS_KEY: ci-dummy-secret
+          AWS_REGION: us-east-1
+          ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY: 000102030405060708090a0b0c0d0e0f
+          ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: 0f0e0d0c0b0a09080706050403020100
+          ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT: 0011223344556677889900aa
         run: bin/rails db:test:prepare test
 
   system-test:
@@ -141,6 +154,19 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
+          # Config env-driven (sem fallback pro credentials.yml.enc) — valores dummy
+          # só para os testes bootarem/stubarem o Evolution::Client. Nenhum é segredo real.
+          EVOLUTION_BASE_URL: https://evolution.test.invalid
+          EVOLUTION_GLOBAL_API_KEY: ci-dummy-evolution-key
+          EVOLUTION_WEBHOOK_HMAC_KEY: ci-dummy-webhook-hmac-key
+          EVOLUTION_WEBHOOK_BASE_URL: https://webhook.test.invalid
+          S3_ENDPOINT: https://s3.test.invalid
+          AWS_ACCESS_KEY_ID: ci-dummy
+          AWS_SECRET_ACCESS_KEY: ci-dummy-secret
+          AWS_REGION: us-east-1
+          ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY: 000102030405060708090a0b0c0d0e0f
+          ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: 0f0e0d0c0b0a09080706050403020100
+          ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT: 0011223344556677889900aa
         run: bin/rails db:test:prepare test:system
 
       - name: Keep screenshots from failed system tests
