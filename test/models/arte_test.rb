@@ -91,8 +91,8 @@ class ArteTest < ActiveSupport::TestCase
     end
 
     assert_equal 1, admin_calls.length
-    assert_match(/target="arte_\d+_admin_calendar_chip"/, admin_calls.first,
-                 "revised! deve fazer broadcast ao admin com turbo-stream target arte_N_admin_calendar_chip")
+    assert_match(/target="admin_calendar_chip_arte_\d+"/, admin_calls.first,
+                 "revised! deve fazer broadcast ao admin com turbo-stream target admin_calendar_chip_arte_N")
   end
 
   test "revised! nao dispara broadcast quando update nao muda status para revised" do

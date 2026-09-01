@@ -155,8 +155,8 @@ class ApprovalResponseTest < ActiveSupport::TestCase
       ApprovalResponse.create!(arte: @arte_pending, decision: :change_requested)
     end
     content = @broadcast_calls.first[:content]
-    assert_match(/target="arte_\d+_admin_calendar_chip"/, content,
-                 "broadcasts_to_admin deve incluir turbo-stream com target arte_N_admin_calendar_chip")
+    assert_match(/target="admin_calendar_chip_arte_\d+"/, content,
+                 "broadcasts_to_admin deve incluir turbo-stream com target admin_calendar_chip_arte_N")
   end
 
   # Test G: broadcasts_to_admin não deve disparar N+1 para arte.client

@@ -5,13 +5,15 @@ class Api::V1::Ai::ClientsController < Api::V1::Ai::BaseController
     # D-11: RecordNotFound automático → 404 via rescue_from herdado (T-24-07)
     client = Client.find(params[:id])
 
+    # `group(:status).count` retorna chaves pelo RÓTULO do enum ("approved"), não
+    # pelo inteiro — indexar por Arte.statuses["approved"] (1) devolvia sempre nil.
     counts = Arte.where(client_id: client.id).group(:status).count
 
     total                  = counts.values.sum
-    approved_count         = counts[Arte.statuses["approved"]].to_i
-    pending_count          = counts[Arte.statuses["pending"]].to_i
-    change_requested_count = counts[Arte.statuses["change_requested"]].to_i
-    revised_count          = counts[Arte.statuses["revised"]].to_i
+    approved_count         = counts["approved"].to_i
+    pending_count          = counts["pending"].to_i
+    change_requested_count = counts["change_requested"].to_i
+    revised_count          = counts["revised"].to_i
 
     render_envelope(data: {
       client_id:             client.id,
