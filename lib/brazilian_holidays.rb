@@ -54,7 +54,7 @@ module BrazilianHolidays
       Date.new(2025, 12,  1) => "Cyber Monday",
       Date.new(2025, 12,  2) => "Dia Nacional do Samba",
       Date.new(2025, 12, 12) => "Dia Internacional da Criança na Mídia",
-      Date.new(2025, 12, 25) => "Natal",
+      Date.new(2025, 12, 25) => "Natal"
     }.freeze,
     2026 => {
       Date.new(2026,  1,  1) => "Ano Novo",
@@ -242,7 +242,7 @@ module BrazilianHolidays
       Date.new(2026, 12, 13) => "Dia Nacional da Pessoa com Deficiência Visual",
       Date.new(2026, 12, 18) => "Dia Internacional dos Migrantes",
       Date.new(2026, 12, 21) => "Início do Verão",
-      Date.new(2026, 12, 25) => "Natal",
+      Date.new(2026, 12, 25) => "Natal"
     }.freeze,
     2027 => {
       Date.new(2027,  1,  1) => "Ano Novo",
@@ -263,8 +263,8 @@ module BrazilianHolidays
       Date.new(2027, 11, 20) => "Consciência Negra",
       Date.new(2027, 11, 26) => "Black Friday",
       Date.new(2027, 11, 29) => "Cyber Monday",
-      Date.new(2027, 12, 25) => "Natal",
-    }.freeze,
+      Date.new(2027, 12, 25) => "Natal"
+    }.freeze
   }.freeze
 
   def self.for(year)

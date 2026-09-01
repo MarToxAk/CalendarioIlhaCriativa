@@ -43,10 +43,13 @@ module ActiveSupport
     end
 
     # Run tests in parallel with specified workers
-    parallelize(workers: :number_of_processors)
+    # `with: :processes` (do backup CI): isola o MemoryStore do Rack::Attack entre
+    # processos de teste — sem isso o throttle vaza entre testes e cascateia falhas
+    # em api/v1/ai/*. `defer_foreign_keys_for_fixtures!` (do milestone) roda nos dois
+    # caminhos (paralelo via parallelize_setup, e processo único abaixo do limiar).
+    parallelize(workers: :number_of_processors, with: :processes)
     parallelize_setup { defer_foreign_keys_for_fixtures! }
 
-    # Caminho de processo único (abaixo do limiar de paralelização).
     defer_foreign_keys_for_fixtures!
 
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.

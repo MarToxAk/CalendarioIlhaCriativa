@@ -28,7 +28,7 @@ class ApprovalResponse < ApplicationRecord
     admin = User.order(:id).first
     return unless admin
 
-    arte_with_client = Arte.includes(:client).find(arte_id)
+    arte_with_client = Arte.eager_load(:client).find(arte_id)
     badge_count      = Arte.change_requested.count
 
     toast_html    = render_partial_html(

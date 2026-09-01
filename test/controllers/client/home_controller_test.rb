@@ -57,7 +57,7 @@ class Client::HomeControllerTest < ActionDispatch::IntegrationTest
     sign_in_as_client(@client)
     get client_root_path(token: @client.access_token)
     assert_response :success
-    assert_no_match(/role="status"/, response.body)
+    assert_select "#calendar-summary.hidden"
   end
 
   test "summary strip aparece quando há artes no mês corrente" do
