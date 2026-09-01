@@ -1,5 +1,5 @@
 module ApplicationHelper
-  include Pagy::NumericHelperLoader
+  include Pagy::Frontend
 
   def client_color(client)
     palette = [
