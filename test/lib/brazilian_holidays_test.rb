@@ -38,7 +38,7 @@ class BrazilianHolidaysTest < ActiveSupport::TestCase
   end
 
   test "cobre os três anos configurados" do
-    [2025, 2026, 2027].each do |year|
+    [ 2025, 2026, 2027 ].each do |year|
       assert BrazilianHolidays.for(year).any?, "Ano #{year} deve ter feriados"
     end
   end

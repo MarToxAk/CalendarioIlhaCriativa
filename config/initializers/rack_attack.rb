@@ -33,8 +33,15 @@ class Rack::Attack
     end
   end
 
+  # Fallback por IP SÓ para requisições SEM Bearer token — abuso não autenticado.
+  # Um cliente autenticado é limitado pelo `api/ai_by_key` (60); aplicar também um
+  # teto de IP menor (30) cortaria integrações server-to-server legítimas (o caso
+  # de uso do namespace AI) antes do limite da própria key.
   throttle("api/ai_by_ip", limit: 30, period: 60) do |req|
-    req.ip if req.path.start_with?("/api/v1/ai/")
+    next unless req.path.start_with?("/api/v1/ai/")
+
+    bearer = req.get_header("HTTP_AUTHORIZATION")&.delete_prefix("Bearer ")&.strip
+    req.ip if bearer.blank?
   end
 
   throttle("webhooks/evolution_by_ip", limit: 120, period: 60) do |req|
@@ -49,11 +56,11 @@ class Rack::Attack
 
   Rack::Attack.throttled_responder = lambda do |request|
     if request.path.start_with?("/api/")
-      [429, { "Content-Type" => "application/json" },
-       ['{"data":null,"meta":{},"errors":[{"code":"too_many_requests","detail":"Aguarde antes de tentar novamente."}]}']]
+      [ 429, { "Content-Type" => "application/json" },
+       [ '{"data":null,"meta":{},"errors":[{"code":"too_many_requests","detail":"Aguarde antes de tentar novamente."}]}' ] ]
     else
-      [429, { "Content-Type" => "text/html; charset=utf-8" },
-       ["<h1>Muitas tentativas</h1><p>Aguarde alguns instantes antes de tentar novamente.</p>"]]
+      [ 429, { "Content-Type" => "text/html; charset=utf-8" },
+       [ "<h1>Muitas tentativas</h1><p>Aguarde alguns instantes antes de tentar novamente.</p>" ] ]
     end
   end
 end

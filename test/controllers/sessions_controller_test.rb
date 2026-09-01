@@ -5,6 +5,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   ADMIN_PASSWORD = "SenhaSegura123!"
 
   setup do
+    Rack::Attack.cache.store.clear
     User.find_or_create_by!(email_address: ADMIN_EMAIL) do |u|
       u.password = ADMIN_PASSWORD
       u.password_confirmation = ADMIN_PASSWORD

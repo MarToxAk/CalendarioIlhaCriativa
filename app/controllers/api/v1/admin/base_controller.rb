@@ -18,7 +18,7 @@ class Api::V1::Admin::BaseController < Api::V1::BaseController
     return render_unauthorized unless claims[:scope] == "admin"
 
     @current_user = User.find_by(id: claims[:sub])
-    return render_unauthorized unless @current_user
+    render_unauthorized unless @current_user
   rescue Api::Errors::TokenExpired, Api::Errors::TokenInvalid
     render_unauthorized
   end
@@ -49,7 +49,7 @@ class Api::V1::Admin::BaseController < Api::V1::BaseController
   end
 
   def per_page_param
-    [(params[:per_page] || 25).to_i, 100].min.clamp(1, 100)
+    [ (params[:per_page] || 25).to_i, 100 ].min.clamp(1, 100)
   end
 
   def page_overflow

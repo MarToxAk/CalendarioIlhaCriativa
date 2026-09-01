@@ -1,3 +1,39 @@
+# ============================================================================
+# Stack Portainer — Calendário Ilha Criativa
+# ============================================================================
+# Deploy no Portainer via "Stacks" -> "Add stack" -> "Repository":
+#   - Repository URL: este repo (branch main)
+#   - Compose path:   docker-compose.yml
+#   - Este modo faz o CLONE do repo no host, então `build: .` e os bind mounts
+#     relativos (./deploy/Caddyfile) funcionam. O modo "Web editor" NÃO funciona
+#     (sem contexto de build / sem os arquivos do repo).
+#
+# Variáveis de ambiente — preencher na aba "Environment variables" do stack
+# (Portainer as injeta na substituição ${...} abaixo). NENHUMA vai versionada.
+#   Obrigatórias:
+#     POSTGRES_PASSWORD
+#     RAILS_MASTER_KEY
+#     CORS_ORIGINS                                  (ex.: https://ilhacriativa.autopyweb.com.br)
+#     EVOLUTION_BASE_URL                            (https://...)
+#     EVOLUTION_GLOBAL_API_KEY
+#     EVOLUTION_WEBHOOK_HMAC_KEY
+#     EVOLUTION_WEBHOOK_BASE_URL                    (https://...)
+#     S3_ENDPOINT                                   (https://...)
+#     AWS_ACCESS_KEY_ID
+#     AWS_SECRET_ACCESS_KEY
+#     ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY
+#     ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY
+#     ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
+#   Opcionais:
+#     AWS_REGION                                    (default us-east-1)
+#
+# O boot em produção é fail-fast: falta de qualquer obrigatória derruba o
+# serviço com mensagem clara (config/initializers/evolution.rb + application.rb).
+# `restart: unless-stopped` faz o Portainer re-subir — corrija a env e faça
+# "Update the stack" / "Re-pull and redeploy".
+# ============================================================================
+name: calendario-livia
+
 services:
   db:
     image: postgres:16-alpine
@@ -44,6 +80,22 @@ services:
       # INFRA-03 — timezone_check.rb aborta o boot em producao se TZ != America/Sao_Paulo
       # (config.active_record.default_timezone = :local exige TZ fixo). Ver 25-RESEARCH.md Pattern 4 / Pitfall 5.
       TZ: America/Sao_Paulo
+      # Config env-driven (sem fallback para credentials.yml.enc). Boot-fatal em producao se
+      # faltar (config/initializers/evolution.rb). Valores no .env do host. Ver .env.example.
+      # --- Evolution API (transporte WhatsApp) ---
+      EVOLUTION_BASE_URL: ${EVOLUTION_BASE_URL}
+      EVOLUTION_GLOBAL_API_KEY: ${EVOLUTION_GLOBAL_API_KEY}
+      EVOLUTION_WEBHOOK_HMAC_KEY: ${EVOLUTION_WEBHOOK_HMAC_KEY}
+      EVOLUTION_WEBHOOK_BASE_URL: ${EVOLUTION_WEBHOOK_BASE_URL}
+      # --- Object storage (MinIO / S3-compativel) — INFRA-01 ---
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+      # --- active_record_encryption (encrypts :token em whatsapp_instances) ---
+      ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY: ${ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY}
+      ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: ${ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY}
+      ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT: ${ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT}
     volumes:
       - storage:/rails/storage
     # WR-03 / IN-07 — /up esta excluido do force-redirect (config.ssl_options, 25-03), entao
@@ -85,6 +137,21 @@ services:
       # INFRA-03 — TZ tem que estar nos DOIS servicos (web + jobs) ou o timezone_check.rb
       # aborta o boot de quem faltar. Jobs agendados usam o wall-clock local (America/Sao_Paulo).
       TZ: America/Sao_Paulo
+      # Config env-driven — MESMO conjunto do web (o job de envio usa Evolution + S3 + encrypts :token).
+      # --- Evolution API (transporte WhatsApp) ---
+      EVOLUTION_BASE_URL: ${EVOLUTION_BASE_URL}
+      EVOLUTION_GLOBAL_API_KEY: ${EVOLUTION_GLOBAL_API_KEY}
+      EVOLUTION_WEBHOOK_HMAC_KEY: ${EVOLUTION_WEBHOOK_HMAC_KEY}
+      EVOLUTION_WEBHOOK_BASE_URL: ${EVOLUTION_WEBHOOK_BASE_URL}
+      # --- Object storage (MinIO / S3-compativel) — INFRA-01 ---
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+      # --- active_record_encryption (encrypts :token em whatsapp_instances) ---
+      ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY: ${ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY}
+      ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: ${ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY}
+      ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT: ${ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT}
     volumes:
       - storage:/rails/storage
     restart: unless-stopped

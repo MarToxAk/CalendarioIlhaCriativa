@@ -1,0 +1,9 @@
+{
+  "ignored_warnings": [
+    {
+      "fingerprint": "4b939e034d609350a8d11206a8104fee3e994edf214ef4fe8b7377b4833331ae",
+      "note": "external_url is validated to only allow http/https URLs via Arte model validation — javascript: and data: URIs are rejected before persisting"
+    }
+  ],
+  "brakeman_version": "7.0.0"
+}

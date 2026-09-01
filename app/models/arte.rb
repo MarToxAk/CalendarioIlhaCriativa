@@ -33,6 +33,7 @@ class Arte < ApplicationRecord
 
   validate :media_source_present
   validate :only_one_media_source
+  validates :external_url, format: { with: /\Ahttps?:\/\/\S+\z/, message: "deve começar com http:// ou https://" }, allow_blank: true
 
   validates :media_file,
     content_type: {

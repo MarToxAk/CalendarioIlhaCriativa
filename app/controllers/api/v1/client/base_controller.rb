@@ -49,7 +49,7 @@ class Api::V1::Client::BaseController < Api::V1::BaseController
   end
 
   def per_page_param
-    [(params[:per_page] || 25).to_i, 100].min.clamp(1, 100)
+    [ (params[:per_page] || 25).to_i, 100 ].min.clamp(1, 100)
   end
 
   def page_overflow

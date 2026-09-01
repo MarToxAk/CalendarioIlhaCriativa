@@ -32,7 +32,7 @@ module Admin::DivulgacoesHelper
   # ja seguro com uma segunda passada de regex.
   SENTINEL_ERROR_LABELS = {
     "arte_nao_aprovada"      => "Motivo: a aprovação da arte foi retirada antes do envio.",
-    "instancia_desconectada" => "Motivo: o número do cliente estava desconectado no momento do envio.",
+    "instancia_desconectada" => "Motivo: o número do cliente estava desconectado no momento do envio."
   }.freeze
 
   def divulgacao_grupo_error_label(dg)

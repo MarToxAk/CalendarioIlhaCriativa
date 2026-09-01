@@ -14,7 +14,7 @@ class Api::V1::BaseController < ActionController::API
   def render_error(code:, detail:, status:, field: nil)
     error = { code: code, detail: detail }
     error[:field] = field if field
-    render json: { data: nil, meta: {}, errors: [error] }, status: status
+    render json: { data: nil, meta: {}, errors: [ error ] }, status: status
   end
 
   def not_found

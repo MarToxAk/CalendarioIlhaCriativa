@@ -12,44 +12,48 @@
 #
 # O fail-fast de boot em produção vive em config/initializers/evolution.rb.
 module Evolution
-  # Resolve base_url de ENV["EVOLUTION_BASE_URL"] ou credentials.evolution.base_url.
+  # Config do transporte Evolution vem SÓ de variável de ambiente (.env / docker-compose).
+  # O fallback para config/credentials.yml.enc foi removido (deploy env-driven) — a var
+  # ausente é erro de configuração, nunca silenciosa.
+
+  # Resolve base_url de ENV["EVOLUTION_BASE_URL"].
   def self.base_url
-    value = ENV.fetch("EVOLUTION_BASE_URL") { Rails.application.credentials.dig(:evolution, :base_url) }
+    value = ENV["EVOLUTION_BASE_URL"]
     if value.blank?
       raise Evolution::Errors::ConfigurationError,
-            "EVOLUTION_BASE_URL não configurado (ENV ou credentials.evolution.base_url) — ver 25-RESEARCH.md Pattern 2"
+            "EVOLUTION_BASE_URL não configurado (variável de ambiente) — ver .env.example / 25-RESEARCH.md Pattern 2"
     end
     value
   end
 
-  # Resolve a apikey global de ENV["EVOLUTION_GLOBAL_API_KEY"] ou credentials.evolution.global_api_key.
+  # Resolve a apikey global de ENV["EVOLUTION_GLOBAL_API_KEY"].
   def self.global_api_key
-    value = ENV.fetch("EVOLUTION_GLOBAL_API_KEY") { Rails.application.credentials.dig(:evolution, :global_api_key) }
+    value = ENV["EVOLUTION_GLOBAL_API_KEY"]
     if value.blank?
       raise Evolution::Errors::ConfigurationError,
-            "EVOLUTION_GLOBAL_API_KEY não configurado (ENV ou credentials.evolution.global_api_key) — ver 25-RESEARCH.md Pattern 2"
+            "EVOLUTION_GLOBAL_API_KEY não configurado (variável de ambiente) — ver .env.example / 25-RESEARCH.md Pattern 2"
     end
     value
   end
 
-  # Resolve a chave HMAC do webhook de ENV["EVOLUTION_WEBHOOK_HMAC_KEY"] ou
-  # credentials.evolution.webhook_hmac_key (fase 26, PAIR-06 — assinatura do webhook).
+  # Resolve a chave HMAC do webhook de ENV["EVOLUTION_WEBHOOK_HMAC_KEY"]
+  # (fase 26, PAIR-06 — assinatura do webhook).
   def self.webhook_hmac_key
-    value = ENV.fetch("EVOLUTION_WEBHOOK_HMAC_KEY") { Rails.application.credentials.dig(:evolution, :webhook_hmac_key) }
+    value = ENV["EVOLUTION_WEBHOOK_HMAC_KEY"]
     if value.blank?
       raise Evolution::Errors::ConfigurationError,
-            "EVOLUTION_WEBHOOK_HMAC_KEY não configurado (ENV ou credentials.evolution.webhook_hmac_key) — ver 26-RESEARCH.md"
+            "EVOLUTION_WEBHOOK_HMAC_KEY não configurado (variável de ambiente) — ver .env.example / 26-RESEARCH.md"
     end
     value
   end
 
-  # Resolve a base URL pública do webhook de ENV["EVOLUTION_WEBHOOK_BASE_URL"] ou
-  # credentials.evolution.webhook_base_url (fase 26 — host público que recebe /webhooks/evolution).
+  # Resolve a base URL pública do webhook de ENV["EVOLUTION_WEBHOOK_BASE_URL"]
+  # (fase 26 — host público que recebe /webhooks/evolution).
   def self.webhook_base_url
-    value = ENV.fetch("EVOLUTION_WEBHOOK_BASE_URL") { Rails.application.credentials.dig(:evolution, :webhook_base_url) }
+    value = ENV["EVOLUTION_WEBHOOK_BASE_URL"]
     if value.blank?
       raise Evolution::Errors::ConfigurationError,
-            "EVOLUTION_WEBHOOK_BASE_URL não configurado (ENV ou credentials.evolution.webhook_base_url) — ver 26-RESEARCH.md"
+            "EVOLUTION_WEBHOOK_BASE_URL não configurado (variável de ambiente) — ver .env.example / 26-RESEARCH.md"
     end
     value
   end
