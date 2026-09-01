@@ -1,3 +1,39 @@
+# ============================================================================
+# Stack Portainer — Calendário Ilha Criativa
+# ============================================================================
+# Deploy no Portainer via "Stacks" -> "Add stack" -> "Repository":
+#   - Repository URL: este repo (branch main)
+#   - Compose path:   docker-compose.yml
+#   - Este modo faz o CLONE do repo no host, então `build: .` e os bind mounts
+#     relativos (./deploy/Caddyfile) funcionam. O modo "Web editor" NÃO funciona
+#     (sem contexto de build / sem os arquivos do repo).
+#
+# Variáveis de ambiente — preencher na aba "Environment variables" do stack
+# (Portainer as injeta na substituição ${...} abaixo). NENHUMA vai versionada.
+#   Obrigatórias:
+#     POSTGRES_PASSWORD
+#     RAILS_MASTER_KEY
+#     CORS_ORIGINS                                  (ex.: https://ilhacriativa.autopyweb.com.br)
+#     EVOLUTION_BASE_URL                            (https://...)
+#     EVOLUTION_GLOBAL_API_KEY
+#     EVOLUTION_WEBHOOK_HMAC_KEY
+#     EVOLUTION_WEBHOOK_BASE_URL                    (https://...)
+#     S3_ENDPOINT                                   (https://...)
+#     AWS_ACCESS_KEY_ID
+#     AWS_SECRET_ACCESS_KEY
+#     ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY
+#     ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY
+#     ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
+#   Opcionais:
+#     AWS_REGION                                    (default us-east-1)
+#
+# O boot em produção é fail-fast: falta de qualquer obrigatória derruba o
+# serviço com mensagem clara (config/initializers/evolution.rb + application.rb).
+# `restart: unless-stopped` faz o Portainer re-subir — corrija a env e faça
+# "Update the stack" / "Re-pull and redeploy".
+# ============================================================================
+name: calendario-livia
+
 services:
   db:
     image: postgres:16-alpine
