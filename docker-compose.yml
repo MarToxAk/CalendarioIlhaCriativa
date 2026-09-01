@@ -5,9 +5,9 @@
 #   - Repository URL: este repo (branch main)
 #   - Compose path:   docker-compose.yml
 #   - Este modo faz o CLONE do repo no host, então `build: .` e os bind mounts
-#     funcionam. (O Caddyfile agora é inline via `configs:`, sem bind mount.)
-#     O modo "Web editor" ainda NÃO funciona por causa do `build: .`.
-#     (sem contexto de build / sem os arquivos do repo).
+#     funcionam.
+
+
 #
 # Variáveis de ambiente — preencher na aba "Environment variables" do stack
 # (Portainer as injeta na substituição ${...} abaixo). NENHUMA vai versionada.
@@ -26,7 +26,7 @@
 #     ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY
 #     ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
 #   Opcionais:
-#     PROXY_HTTP_PORT / PROXY_HTTPS_PORT   (default 80 / 443 — mude se ocupadas no host)
+#     WEB_PORT                             (default 5881 — porta do host que o nginx-proxy-manager encaminha)
 #     AWS_REGION                                    (default us-east-1)
 #
 # O boot em produção é fail-fast: falta de qualquer obrigatória derruba o
@@ -62,10 +62,11 @@ services:
       db:
         condition: service_healthy
     ports:
-      # WR-02 — bind em loopback: sem TLS nessa porta e com config.assume_ssl=true, expor em
-      # 0.0.0.0 serviria trafego de sessao/auth em cleartext p/ quem alcance o host. Ingresso
-      # publico e SO pelo proxy (Caddy) nas portas 80/443. Ver 25-REVIEW.md WR-02.
-      - "127.0.0.1:5881:3000"
+      # Publicado para o nginx-proxy-manager (que faz TLS + ingress público) encaminhar.
+      # production.rb tem assume_ssl + force_ssl: o npm precisa mandar X-Forwarded-Proto=https.
+      # Se o npm estiver na MESMA rede docker, prefira apontar direto para calendario-web-1:3000
+      # e remover este mapeamento de porta.
+      - "${WEB_PORT:-5881}:3000"
     environment:
       RAILS_ENV: production
       RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
@@ -101,7 +102,7 @@ services:
     volumes:
       - storage:/rails/storage
     # WR-03 / IN-07 — /up esta excluido do force-redirect (config.ssl_options, 25-03), entao
-    # responde 200 em HTTP interno; curl esta no runtime da imagem. jobs e proxy so sobem
+    # responde 200 em HTTP interno; curl esta no runtime da imagem. jobs so sobe
     # depois deste healthcheck passar. Ver 25-REVIEW.md WR-03 / IN-07.
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:3000/up || exit 1"]
@@ -158,53 +159,8 @@ services:
       - storage:/rails/storage
     restart: unless-stopped
 
-  # Reverse proxy — termina TLS (Let's Encrypt automatico quando as portas 80/443 do host
-  # estao acessiveis pela internet) e encaminha para o web. CONTEXT.md D-09 (app no host publico) /
-  # D-11 (co-locado com Evolution + MinIO — risco de co-locacao aceito conscientemente, threat T-25-13).
-  # Ver 25-RESEARCH.md Pitfall 5.
-  #
-  # O MinIO NAO e proxied aqui: nesta instalacao ele ja esta live e TLS-terminado em outra infra
-  # (endpoint externo em config/credentials.yml.enc -> aws.endpoint). O app o alcanca como servico
-  # HTTPS externo; nao ha container MinIO co-locado. Ver deploy/Caddyfile e 25-03-SUMMARY.md
-  # "Topology deviation" (Deviation Rule 2 — a premissa do plano de um bloco s3. proxied nao vale aqui).
-  proxy:
-    image: caddy:2-alpine
-    depends_on:
-      # IN-07 — o Caddy nao devolve 502 enquanto o Rails ainda boota.
-      web:
-        condition: service_healthy
-    ports:
-      # Portas do host configuráveis — se 80/443 já estiverem ocupadas no host
-      # (ex.: nginx-proxy-manager), defina PROXY_HTTP_PORT / PROXY_HTTPS_PORT no
-      # stack (ex.: 8880 / 8843) e ponha o proxy existente na frente encaminhando
-      # para elas. ATENÇÃO: o Let's Encrypt automático do Caddy exige 80/443
-      # alcançáveis pela internet — fora disso, faça a terminação TLS no proxy da
-      # frente e trate o Caddy só como upstream HTTP.
-      - "${PROXY_HTTP_PORT:-80}:80"
-      - "${PROXY_HTTPS_PORT:-443}:443"
-    # Caddyfile inline via `configs` — evita bind mount relativo, que no Portainer
-    # falha ("not a directory") quando o arquivo não existe no momento do `up`.
-    # Conteúdo espelha deploy/Caddyfile (mantido no repo como referência/dev).
-    configs:
-      - source: caddyfile
-        target: /etc/caddy/Caddyfile
-    volumes:
-      - caddy_data:/data
-      - caddy_config:/config
-    restart: unless-stopped
 
-configs:
-  caddyfile:
-    content: |
-      # Reverse proxy do app Rails. TLS automatico via Let's Encrypt quando as
-      # portas 80/443 do host estao acessiveis pela internet. Upstream web:3000
-      # e HTTP puro atras deste proxy (production.rb: assume_ssl + force_ssl).
-      ilhacriativa.autopyweb.com.br {
-      	reverse_proxy web:3000
-      }
 
 volumes:
   postgres_data:
   storage:
-  caddy_data:
-  caddy_config:
