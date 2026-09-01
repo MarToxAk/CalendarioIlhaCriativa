@@ -29,9 +29,15 @@ module CalendarioLivia
     # is handled before any authentication middleware (RESEARCH.md Pitfall 6)
     # Em produção, CORS_ORIGINS deve ser explicitamente provisionado; a ausência
     # da variável levanta KeyError (falha visível) em vez de aceitar qualquer origin.
-    allowed_origins = Rails.env.production? \
-      ? ENV.fetch("CORS_ORIGINS")
-      : ENV.fetch("CORS_ORIGINS", "http://localhost:3000")
+    # Exceção: durante `assets:precompile` no build da imagem (SECRET_KEY_BASE_DUMMY=1,
+    # sem env vars de runtime) — o middleware não roria de fato ali; um placeholder
+    # inócuo evita o KeyError no build sem afrouxar a exigência em runtime.
+    allowed_origins =
+      if Rails.env.production? && !ENV["SECRET_KEY_BASE_DUMMY"]
+        ENV.fetch("CORS_ORIGINS")
+      else
+        ENV.fetch("CORS_ORIGINS", "http://localhost:3000")
+      end
 
     config.middleware.insert_before 0, Rack::Cors do
       allow do
