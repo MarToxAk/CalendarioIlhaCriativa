@@ -11,13 +11,17 @@ local:
 # chamada dentro do job de envio (D-02). O serviço fica privado (sem a chave de acesso público);
 # um object store público exporia toda arte ainda não divulgada na internet.
 # Endpoint MinIO self-hosted + force_path_style (MinIO não faz virtual-host-style buckets por padrão).
-# Segredos: S3_ENDPOINT via ENV (.env em dev / credentials em prod); aws.* em config/credentials.yml.enc.
+# Config vem SÓ de variável de ambiente (.env / docker-compose) — o fallback para
+# config/credentials.yml.enc (aws.*) foi removido (deploy env-driven). O default nil aqui
+# é intencional: este arquivo é avaliado (ERB) no boot em TODOS os ambientes, e o serviço S3
+# só é instanciado quando de fato usado (dev/prod: :amazon; test: :test/Disk). O fail-fast de
+# produção para essas vars vive em config/initializers/evolution.rb.
 amazon:
   service: S3
-  endpoint: <%= ENV.fetch("S3_ENDPOINT") { Rails.application.credentials.dig(:aws, :endpoint) } %>
-  access_key_id: <%= Rails.application.credentials.dig(:aws, :access_key_id) %>
-  secret_access_key: <%= Rails.application.credentials.dig(:aws, :secret_access_key) %>
-  region: <%= Rails.application.credentials.dig(:aws, :region) || "us-east-1" %>
+  endpoint: <%= ENV.fetch("S3_ENDPOINT", nil) %>
+  access_key_id: <%= ENV.fetch("AWS_ACCESS_KEY_ID", nil) %>
+  secret_access_key: <%= ENV.fetch("AWS_SECRET_ACCESS_KEY", nil) %>
+  region: <%= ENV.fetch("AWS_REGION", "us-east-1") %>
   bucket: <%= "calendario-livia-#{Rails.env}" %>
   force_path_style: true
 
