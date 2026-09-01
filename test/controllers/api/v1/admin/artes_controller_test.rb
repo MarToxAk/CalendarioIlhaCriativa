@@ -197,7 +197,7 @@ class Api::V1::Admin::ArtesControllerTest < ActionDispatch::IntegrationTest
            media_file:   file
          },
          headers: { "Authorization" => "Bearer #{@admin_jwt}" }
-         # Sem Content-Type: application/json — Rack detecta multipart automaticamente
+    # Sem Content-Type: application/json — Rack detecta multipart automaticamente
 
     assert_equal 201, response.status
     body = response.parsed_body

@@ -49,11 +49,11 @@ class Rack::Attack
 
   Rack::Attack.throttled_responder = lambda do |request|
     if request.path.start_with?("/api/")
-      [429, { "Content-Type" => "application/json" },
-       ['{"data":null,"meta":{},"errors":[{"code":"too_many_requests","detail":"Aguarde antes de tentar novamente."}]}']]
+      [ 429, { "Content-Type" => "application/json" },
+       [ '{"data":null,"meta":{},"errors":[{"code":"too_many_requests","detail":"Aguarde antes de tentar novamente."}]}' ] ]
     else
-      [429, { "Content-Type" => "text/html; charset=utf-8" },
-       ["<h1>Muitas tentativas</h1><p>Aguarde alguns instantes antes de tentar novamente.</p>"]]
+      [ 429, { "Content-Type" => "text/html; charset=utf-8" },
+       [ "<h1>Muitas tentativas</h1><p>Aguarde alguns instantes antes de tentar novamente.</p>" ] ]
     end
   end
 end

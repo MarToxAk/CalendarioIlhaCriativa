@@ -155,7 +155,7 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
   end
 
   test "WR-03: error_code redige URLs presignadas ecoadas no texto livre do erro Evolution" do
-    leak = 'BadRequest: failed to download resource: https://bucket.s3.amazonaws.com/artes/1.jpg?X-Amz-Signature=deadbeef&X-Amz-Expires=300'
+    leak = "BadRequest: failed to download resource: https://bucket.s3.amazonaws.com/artes/1.jpg?X-Amz-Signature=deadbeef&X-Amz-Expires=300"
     Evolution::Client.stub(:send_media, ->(*) { raise Evolution::Errors::Permanent, leak }) do
       Whatsapp::SendToGroupJob.perform_now(@group_row)
     end
@@ -168,7 +168,7 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
   end
 
   test "WR-03: error_code redige URL presignada SEM esquema (host+path+query) ecoada no texto do erro" do
-    leak = 'failed to download resource: bucket.s3.amazonaws.com/artes/1.jpg?X-Amz-Signature=deadbeef&X-Amz-Expires=300'
+    leak = "failed to download resource: bucket.s3.amazonaws.com/artes/1.jpg?X-Amz-Signature=deadbeef&X-Amz-Expires=300"
     Evolution::Client.stub(:send_media, ->(*) { raise Evolution::Errors::Permanent, leak }) do
       Whatsapp::SendToGroupJob.perform_now(@group_row)
     end
@@ -182,7 +182,7 @@ class Whatsapp::SendToGroupJobTest < ActiveJob::TestCase
   end
 
   test "WR-03: error_code redige fragmento de query presignada solto (sem host, sem esquema)" do
-    leak = 'upstream rejected request signature: X-Amz-Signature=deadbeefcafe&X-Amz-Credential=AKIAEXAMPLE/20260831/us-east-1'
+    leak = "upstream rejected request signature: X-Amz-Signature=deadbeefcafe&X-Amz-Credential=AKIAEXAMPLE/20260831/us-east-1"
     Evolution::Client.stub(:send_media, ->(*) { raise Evolution::Errors::Permanent, leak }) do
       Whatsapp::SendToGroupJob.perform_now(@group_row)
     end

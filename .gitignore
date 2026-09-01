@@ -41,3 +41,6 @@
 .env
 .gsd/
 .planning/milestone.lock
+
+# editor swap files
+*.swp

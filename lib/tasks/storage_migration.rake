@@ -65,7 +65,7 @@ namespace :storage do
       say.call("[storage:migrate] copied #{blob.key} (#{blob.byte_size} bytes)")
     end
 
-    backfilled = ActiveStorage::Blob.where(service_name: [nil, "local"], id: confirmed_at_dest_ids)
+    backfilled = ActiveStorage::Blob.where(service_name: [ nil, "local" ], id: confirmed_at_dest_ids)
                                      .update_all(service_name: "amazon")
     say.call("[storage:migrate] service_name backfill — rows updated: #{backfilled}")
 
