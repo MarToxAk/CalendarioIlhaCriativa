@@ -62,7 +62,7 @@ module Evolution
       # RESEARCH: em alguns builds devolve HTTP 200 com { "error": true, "message":
       # "..." } em vez de um QR — NUNCA tratar esse corpo como QR válido.
       def connect(instance_name, api_key: Evolution.global_api_key)
-        resp = request(:get, "/instance/connect/#{instance_name}",
+        resp = request(:get, "/instance/connect/#{escape_segment(instance_name)}",
                        api_key: api_key, read_timeout: Evolution::READ_TIMEOUT_FAST)
         body = resp.body
         raise Evolution::Errors::Unknown, "resposta 2xx com corpo não-JSON do host Evolution" unless body.is_a?(Hash)
@@ -82,7 +82,7 @@ module Evolution
       # Evolution trocar por "todos os eventos". Retorna o body do 201.
       def set_webhook(instance_name, url:, headers:, events: %w[QRCODE_UPDATED CONNECTION_UPDATE], api_key: Evolution.global_api_key)
         body = { webhook: { enabled: true, url: url, byEvents: false, base64: true, events: events, headers: headers } }
-        request(:post, "/webhook/set/#{instance_name}", api_key: api_key, body: body).body
+        request(:post, "/webhook/set/#{escape_segment(instance_name)}", api_key: api_key, body: body).body
       end
 
       # GET /instance/fetchInstances — leitura rápida. Retorna o corpo (Array).
@@ -101,7 +101,7 @@ module Evolution
       # "open" / "connecting" / "close". Levantar NotConnected é papel do chamador
       # (fase 29); use assert_open! quando quiser transformar em erro.
       def connection_state(instance_name, api_key: Evolution.global_api_key)
-        resp = request(:get, "/instance/connectionState/#{instance_name}",
+        resp = request(:get, "/instance/connectionState/#{escape_segment(instance_name)}",
                        api_key: api_key, read_timeout: Evolution::READ_TIMEOUT_FAST)
         # WR-07 / SC3: idem fetch_instances — só seguir com o .dig quando o corpo é mesmo
         # um Hash JSON; um 2xx não-JSON vira Unknown com mensagem estática (sem ecoar o body).
@@ -126,7 +126,7 @@ module Evolution
       # fetch_instances/connection_state: fetchAllGroups não é uma leitura rápida
       # para contas com muitos grupos (ver Evolution::READ_TIMEOUT_GROUPS).
       def fetch_groups(instance_name, api_key:)
-        body = request(:get, "/group/fetchAllGroups/#{instance_name}",
+        body = request(:get, "/group/fetchAllGroups/#{escape_segment(instance_name)}",
                        api_key: api_key,
                        query: { "getParticipants" => "false" },
                        read_timeout: Evolution::READ_TIMEOUT_GROUPS).body
@@ -143,7 +143,7 @@ module Evolution
       # o chamador que tentar `.dig`/`[]` no corpo.
       def send_text(instance_name, number:, text:, api_key:)
         body = { number: number, text: text }
-        resp = request(:post, "/message/sendText/#{instance_name}", api_key: api_key, body: body)
+        resp = request(:post, "/message/sendText/#{escape_segment(instance_name)}", api_key: api_key, body: body)
         raise Evolution::Errors::Unknown, "resposta 2xx com corpo não-JSON do host Evolution" unless resp.body.is_a?(Hash)
 
         resp.body
@@ -159,13 +159,22 @@ module Evolution
       def send_media(instance_name, number:, mediatype:, media:, api_key:, caption: nil)
         body = { number: number, mediatype: mediatype, media: media }
         body[:caption] = caption if caption.present?
-        resp = request(:post, "/message/sendMedia/#{instance_name}", api_key: api_key, body: body)
+        resp = request(:post, "/message/sendMedia/#{escape_segment(instance_name)}", api_key: api_key, body: body)
         raise Evolution::Errors::Unknown, "resposta 2xx com corpo não-JSON do host Evolution" unless resp.body.is_a?(Hash)
 
         resp.body
       end
 
       private
+
+      # instance_name é texto livre vindo do manager Evolution (pode ter espaço,
+      # acento, etc. — ex.: "lingerie da nice") e entra no PATH da request, nunca
+      # como query param. Sem escapar, Faraday repassa o path crú pro URI.parse
+      # interno e qualquer caractere fora do conjunto "unreserved" (RFC 3986)
+      # levanta URI::InvalidURIError — StandardError não mapeado por
+      # raise_for_status!/rescue do #request, então escapava cru até o
+      # controller como 500 (reuse/adopt_named reproduziu isto ao vivo).
+      def escape_segment(name) = ERB::Util.url_encode(name)
 
       def request(method, path, api_key:, body: nil, read_timeout: nil, query: nil)
         started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
