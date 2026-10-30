@@ -154,6 +154,16 @@ class Admin::WhatsappInstancesController < Admin::BaseController
     Rails.logger.warn("[whatsapp_instances] reuse falhou client=#{@client.id}: #{e.class}")
     redirect_to admin_client_path(@client),
       alert: "Não foi possível reutilizar a conexão agora. Tente de novo em instantes."
+  rescue ActiveRecord::Encryption::Errors::Base => e
+    # #reuse (zero I/O) é o ÚNICO caminho que LÊ (descriptografa) um token já
+    # persistido (existing.token, instance_provisioner.rb) — create/adopt só
+    # criptografam um valor novo vindo em texto puro da API. Se as chaves de
+    # ACTIVE_RECORD_ENCRYPTION_* do .env do host mudarem (ex.: recriação da
+    # stack Portainer) sem corresponder ao que cifrou a linha-irmã, a leitura
+    # explode aqui — sem isto, StandardError não-rescatado = 500 cru pro admin.
+    Rails.logger.error("[whatsapp_instances] reuse: falha ao descriptografar token da conexão-irmã client=#{@client.id}: #{e.class}")
+    redirect_to admin_client_path(@client),
+      alert: "Não foi possível reutilizar esta conexão: o token salvo não pôde ser lido. Verifique as chaves de criptografia do ambiente (ACTIVE_RECORD_ENCRYPTION_*)."
   end
 
   private
