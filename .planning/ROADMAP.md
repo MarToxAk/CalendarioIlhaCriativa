@@ -361,6 +361,17 @@ Cliente B.
 
 - [x] 31-02-PLAN.md — Fan-out por conexão física: webhook `connection.update`/`qrcode.updated` para todas as linhas-irmãs (Pitfall 1) + `GroupSynchronizer` (1 `fetchAllGroups`, N upserts locais) com regressão single-instance (D-05, `costly`) + `COVERAGE.md` + teste aditivo de SEG-04 (D-02, D-05)
 
+### Phase 32: Divulgações na API de IA
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 31
+**Plans:** 0 plans
+
+Plans:
+
+- [ ] TBD (run /gsd-plan-phase 32 to break down)
+
 ---
 
 ## Cobertura de Requisitos — v1.7

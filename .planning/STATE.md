@@ -165,6 +165,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - v1.4 roadmap defined 2026-06-04: Phase 13 (aprovações) + Phase 14 (calendário admin) + Phase 15 (configurações) + Phase 16 (feriados brasileiros)
 - v1.5 roadmap defined 2026-06-05: Phase 17 (cable foundation + badge + toast) + Phase 18 (approval broadcasts) + Phase 19 (client real-time) + Phase 20 (admin calendar chips)
 - Phase 31 added 2026-08-31: Instância WhatsApp Compartilhada entre Clientes (permitir reuso de uma instância Evolution já pareada entre múltiplos clientes; requer redesenhar isolamento de segurança de por-instância para por-grupo)
+- Phase 32 added 2026-10-30: Divulgações na API de IA (expor criação/consulta de agendamentos de disparo no namespace api/v1/ai, que hoje só cobre Artes e resumo de cliente)
 
 ### v1.5 Context
 
