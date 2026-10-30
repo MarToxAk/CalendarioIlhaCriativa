@@ -107,6 +107,10 @@ jobs:
           # batendo em "FATAL: role root does not exist" contra o serviço acima.
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
+          # INFRA-03 — timezone_check.rb exige TZ fixo (config.active_record.default_timezone
+          # = :local); sem isto o runner usa UTC e testes de agendamento (Divulgacao,
+          # scheduled_for) falham por causa do offset de -03:00. Mesmo valor do docker-compose.yml.
+          TZ: America/Sao_Paulo
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
           # Config env-driven (sem fallback pro credentials.yml.enc) — valores dummy
@@ -166,6 +170,10 @@ jobs:
           # batendo em "FATAL: role root does not exist" contra o serviço acima.
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
+          # INFRA-03 — timezone_check.rb exige TZ fixo (config.active_record.default_timezone
+          # = :local); sem isto o runner usa UTC e testes de agendamento (Divulgacao,
+          # scheduled_for) falham por causa do offset de -03:00. Mesmo valor do docker-compose.yml.
+          TZ: America/Sao_Paulo
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
           # Config env-driven (sem fallback pro credentials.yml.enc) — valores dummy

@@ -216,21 +216,22 @@ class Admin::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
 
   # --- Task 2: datetime-local -> Time.zone round-trip (DIVU-05) --------
 
-  test "scheduled_for cru 2026-09-15T14:00 round-trips pra Time.zone.local Brasilia (-03:00)" do
+  test "scheduled_for cru round-trips pra Time.zone.local Brasilia (-03:00)" do
+    future = 3.days.from_now.to_date
     assert_difference("Divulgacao.count", 1) do
       post admin_client_divulgacoes_path(@client), params: {
-        divulgacao: { arte_id: @arte.id, whatsapp_group_ids: [ @g1.id ], scheduled_for: "2026-09-15T14:00" }
+        divulgacao: { arte_id: @arte.id, whatsapp_group_ids: [ @g1.id ], scheduled_for: future.strftime("%Y-%m-%dT14:00") }
       }
     end
 
     d = Divulgacao.last
-    assert_equal Time.zone.local(2026, 9, 15, 14, 0), d.scheduled_for
+    assert_equal Time.zone.local(future.year, future.month, future.day, 14, 0), d.scheduled_for
     assert_equal(-3 * 3600, d.scheduled_for.utc_offset)
   end
 
   test "criar a divulgacao nao transforma Arte#scheduled_on num datetime — continua Date sem hora" do
     post admin_client_divulgacoes_path(@client), params: {
-      divulgacao: { arte_id: @arte.id, whatsapp_group_ids: [ @g1.id ], scheduled_for: "2026-09-15T14:00" }
+      divulgacao: { arte_id: @arte.id, whatsapp_group_ids: [ @g1.id ], scheduled_for: future_param }
     }
     assert_redirected_to admin_client_divulgacao_path(@client, Divulgacao.last)
 
