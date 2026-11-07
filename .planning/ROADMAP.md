@@ -369,11 +369,11 @@ API key `ak_` que já usa, reusando o model `Divulgacao`, suas validações e o 
 real como estão — nenhuma regra de negócio nova, isolamento SEG-01..04 preservado.
 **Requirements**: TBD (fase aditiva — sem REQ-ID novo; entrega as decisões D-01..D-13 do 32-CONTEXT.md)
 **Depends on:** Phase 31
-**Plans:** 4 plans
+**Plans:** 1/4 plans executed
 
 **Wave 1**
 
-- [ ] 32-01-PLAN.md — Tracer: `POST /api/v1/ai/divulgacoes` de ponta a ponta (rotas da fase inteira, `DivulgacaoSerializer`, `create` com resolução escopada por cliente e `DispatchJob` real) + contrato de erro 400/404/422 e testes de integração do create; contrato D-02 documentado no controller (D-01, D-02, D-05..D-10)
+- [x] 32-01-PLAN.md — Tracer: `POST /api/v1/ai/divulgacoes` de ponta a ponta (rotas da fase inteira, `DivulgacaoSerializer`, `create` com resolução escopada por cliente e `DispatchJob` real) + contrato de erro 400/404/422 e testes de integração do create; contrato D-02 documentado no controller (D-01, D-02, D-05..D-10)
 
 **Wave 2** *(bloqueado no 32-01)*
 

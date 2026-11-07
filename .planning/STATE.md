@@ -1,21 +1,22 @@
 ---
-gsd_state_version: 1.0
+gsd_state_version: "1.0"
 milestone: v1.7
 milestone_name: WhatsApp Auto-Post + Deploy
-current_phase: 31
-current_phase_name: Instância WhatsApp Compartilhada entre Clientes
+current_phase: 32
+current_phase_name: Divulgações na API de IA
+current_plan: 2
 status: executing
-stopped_at: Completed 31-02-PLAN.md
-last_updated: "2026-08-31T19:12:07.000Z"
-last_activity: 2026-08-31
-last_activity_desc: Phase 31 Plan 02 executed (fan-out do webhook + GroupSynchronizer para instâncias-irmãs — D-05, Pitfall 1)
-state_head: c738789
+stopped_at: Completed 32-01-PLAN.md
+last_updated: "2026-11-07T14:42:06.538Z"
+last_activity: 2026-11-07
+last_activity_desc: Phase 32 execution started
+state_head: 88d876f6fb09f26770decc2f4d920a6b16c80eef
 progress:
-  total_phases: 7
+  total_phases: 8
   completed_phases: 2
-  total_plans: 26
-  completed_plans: 26
-  percent: 29
+  total_plans: 30
+  completed_plans: 27
+  percent: 25
 ---
 
 # Project State
@@ -25,7 +26,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-29)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 31 — Instância WhatsApp Compartilhada entre Clientes
+**Current focus:** Phase 32 — Divulgações na API de IA
 
 ## Deferred Verification
 
@@ -39,16 +40,15 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 
 ## Current Position
 
-Phase: 31 (Instância WhatsApp Compartilhada entre Clientes) — EXECUTING
-Plans complete: 02 of 2 (31-01 done — migração + InstanceProvisioner#reuse + controller/rota #reuse +
-  concorrência por instance_name + toggle Stimulus; 31-02 done — fan-out do webhook connection.update
-  + GroupSynchronizer para instâncias-irmãs, D-05 — fase completa, aguardando tail de verificação)
+Phase: 32 (Divulgações na API de IA) — EXECUTING
+Current Plan: 2
+Total Plans in Phase: 4
 
-Status: Executing Phase 31 — ambos os planos executados, verificação de fase pendente (human_verify_mode:
-  end-of-phase)
-  Fases 25/26/29/30 do milestone v1.7 seguem com verification_deferred_human (ver "Deferred Verification"
-  acima) — não bloqueiam a execução da fase 31.
-Last activity: 2026-08-31 — Completed quick task 260831-o9t: botão "Parear novamente" vira
+Status: Ready to execute
+  para o CI; testes não executados localmente)
+  Fases 25/26/29/30/31 do milestone v1.7 seguem com verification_deferred_human (ver "Deferred
+  Verification" acima) — não bloqueiam a execução da fase 32.
+Last activity: 2026-11-07 — Phase 32 execution started
   "Desvincular WhatsApp" (ação #unlink desvincula localmente sem tocar Evolution; linha
   :unpaired = "sem instância"; re-provisão idempotente)
 
@@ -229,6 +229,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 30 P03 | ~15min | 3 tasks | 8 files |
 | Phase 31-inst-ncia-whatsapp-compartilhada-entre-clientes P01 | ~50min | 4 tasks | 16 files |
 | Phase 31-inst-ncia-whatsapp-compartilhada-entre-clientes P02 | ~20min | 3 tasks | 5 files |
+| Phase 32 P01 | 12 min | 2 tasks | 4 files |
 
 ## Decisions
 
@@ -282,6 +283,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 30]: [Phase 30-03]: divulgacao_grupo_error_label is a pure copy-map (sentinel hash lookup or a "Motivo: " prefix) — never re-runs Phase 29's sanitize_error_code, never truncates/gsubs, never re-fetches the model (T-30-10); divulgacao_placar reads divulgacao.divulgacao_grupos.to_a (the includes-preloaded association) so it never issues its own query (T-30-11)
 - [Phase 31]: [Phase 31-01]: instância deuniqueificada + InstanceProvisioner#reuse copia irmã já conectada sem I/O; SendToGroupJob serializa por instance_name (D-04); toggle Stimulus dedicado no painel (D-06/D-07)
 - [Phase 31]: [Phase 31-02]: webhook connection.update/qrcode.updated faz fan-out por instance_name (Pitfall 1); GroupSynchronizer faz 1 fetch_groups fora do loop + N upserts/GRUPO-05/update! por irmã com o mesmo batch_started_at (D-05); regressão single-instance provada (fake.calls==1 sem irmãs); guard de não-conectado/:sync_error nunca propagado a irmãs (Pitfall 5); SEG-04 confirmado intacto com par de irmãos, 3 testes existentes byte-idênticos
+- [Phase 32]: 32-01: POST /api/v1/ai/divulgacoes direto, sem campo de confirmacao; scheduled_for ilegivel cai em 422 (D-08); arte/grupos resolvidos pela associacao do cliente com 404 generico (D-09)
 
 ## Quick Tasks Completed
 
@@ -297,9 +299,9 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-08-31T19:12:07.000Z
-**Stopped at:** Completed 31-02-PLAN.md
-**Resume file:** None — fase 31 completa (2/2 planos), aguardando verificação/tail (human_verify_mode: end-of-phase)
+**Last session:** 2026-11-07T14:41:53.631Z
+**Stopped at:** Completed 32-01-PLAN.md
+**Resume file:** None
 
 ### Blockers
 
