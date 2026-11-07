@@ -230,7 +230,7 @@ class Api::V1::Ai::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
   test "GET index ordena por scheduled_for crescente" do
     tarde = make_divulgacao(client: @client, arte: @arte, groups: [ @g1 ], at: index_day.change(hour: 18))
     cedo = make_divulgacao(client: @client, arte: @arte, groups: [ @g1 ], at: index_day.change(hour: 8))
-    depois = make_divulgacao(client: @client, arte: @arte, groups: [ @g1 ], at: (index_day + 1).change(hour: 8))
+    depois = make_divulgacao(client: @client, arte: @arte, groups: [ @g1 ], at: index_day(1).change(hour: 8))
 
     get_index(client_id: @client.id)
 
@@ -260,7 +260,7 @@ class Api::V1::Ai::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
   test "GET index com from e to inclui o dia inteiro de to (23:30) e exclui o dia anterior a to" do
     cedo = make_divulgacao(client: @client, arte: @arte, groups: [ @g1 ], at: index_day.change(hour: 9))
     noite = make_divulgacao(client: @client, arte: @arte, groups: [ @g1 ], at: index_day.change(hour: 23, min: 30))
-    make_divulgacao(client: @client, arte: @arte, groups: [ @g1 ], at: (index_day + 2).change(hour: 12))
+    make_divulgacao(client: @client, arte: @arte, groups: [ @g1 ], at: index_day(2).change(hour: 12))
     dia = index_day.to_date
 
     get_index(client_id: @client.id, from: dia.to_s, to: dia.to_s)
@@ -274,7 +274,7 @@ class Api::V1::Ai::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
 
   test "GET index aceita so from ou so to" do
     d1 = make_divulgacao(client: @client, arte: @arte, groups: [ @g1 ], at: index_day.change(hour: 9))
-    d3 = make_divulgacao(client: @client, arte: @arte, groups: [ @g1 ], at: (index_day + 2).change(hour: 12))
+    d3 = make_divulgacao(client: @client, arte: @arte, groups: [ @g1 ], at: index_day(2).change(hour: 12))
     dia = index_day.to_date
 
     get_index(client_id: @client.id, from: (dia + 1).to_s)
@@ -429,8 +429,10 @@ class Api::V1::Ai::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
   end
 
   # Dia futuro (meia-noite no fuso do app) para o scheduled_for passar na validacao de criacao.
-  def index_day
-    (Date.current + 10).in_time_zone
+  # offset_days soma DIAS (aritmetica de Date): somar um inteiro a um TimeWithZone
+  # adicionaria segundos, nao dias.
+  def index_day(offset_days = 0)
+    (Date.current + 10 + offset_days).in_time_zone
   end
 
   def get_index(params = {})
