@@ -369,7 +369,7 @@ API key `ak_` que já usa, reusando o model `Divulgacao`, suas validações e o 
 real como estão — nenhuma regra de negócio nova, isolamento SEG-01..04 preservado.
 **Requirements**: TBD (fase aditiva — sem REQ-ID novo; entrega as decisões D-01..D-13 do 32-CONTEXT.md)
 **Depends on:** Phase 31
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 
 **Wave 1**
 
@@ -378,7 +378,7 @@ real como estão — nenhuma regra de negócio nova, isolamento SEG-01..04 prese
 **Wave 2** *(bloqueado no 32-01)*
 
 - [x] 32-02-PLAN.md — `index` (client_id obrigatório, filtros status/from/to validados, Pagy, sem N+1), `show` e `cancel` idempotente espelhando `cancelar!` + testes (D-01, D-03, D-04, D-10..D-13)
-- [ ] 32-03-PLAN.md — `GET /api/v1/ai/clients/:id/whatsapp_groups` (grupos ativos do cliente, paginado, `WhatsappGroupSerializer`) + testes (D-06, D-13)
+- [x] 32-03-PLAN.md — `GET /api/v1/ai/clients/:id/whatsapp_groups` (grupos ativos do cliente, paginado, `WhatsappGroupSerializer`) + testes (D-06, D-13)
 
 **Wave 3** *(bloqueado no 32-02 e 32-03)*
 

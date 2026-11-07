@@ -4,18 +4,18 @@ milestone: v1.7
 milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 32
 current_phase_name: Divulgações na API de IA
-current_plan: 3
+current_plan: 4
 status: executing
-stopped_at: Completed 32-02-PLAN.md
-last_updated: "2026-11-07T14:45:00.979Z"
+stopped_at: Completed 32-03-PLAN.md
+last_updated: "2026-11-07T14:46:57.242Z"
 last_activity: 2026-11-07
 last_activity_desc: Phase 32 execution started
-state_head: 6fdb2d1f3da1d846a7609eec91556b35f7e8a0d9
+state_head: 58498f30b788a637d0f239f644317ef660073030
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 30
-  completed_plans: 28
+  completed_plans: 29
   percent: 25
 ---
 
@@ -41,7 +41,7 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 ## Current Position
 
 Phase: 32 (Divulgações na API de IA) — EXECUTING
-Current Plan: 3
+Current Plan: 4
 Total Plans in Phase: 4
 
 Status: Ready to execute
@@ -231,6 +231,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 31-inst-ncia-whatsapp-compartilhada-entre-clientes P02 | ~20min | 3 tasks | 5 files |
 | Phase 32 P01 | 12 min | 2 tasks | 4 files |
 | Phase 32 P02 | 15min | 3 tasks | 2 files |
+| Phase 32 P03 | 8min | 2 tasks | 3 files |
 
 ## Decisions
 
@@ -287,6 +288,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 32]: 32-01: POST /api/v1/ai/divulgacoes direto, sem campo de confirmacao; scheduled_for ilegivel cai em 422 (D-08); arte/grupos resolvidos pela associacao do cliente com 404 generico (D-09)
 - [Phase 32]: 32-02: index ordena por scheduled_for asc com desempate por id; show/cancel agency-wide via Divulgacao.find (404 generico)
 - [Phase 32]: 32-02: cancel reusa Divulgacao#cancelar! sob with_lock, 200 sempre, model intocado
+- [Phase 32]: 32-03: whatsapp_groups como acao no ClientsController; cliente sem instancia -> 200 lista vazia; Pagy 25/100 com ordem do admin
 
 ## Quick Tasks Completed
 
@@ -302,8 +304,8 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-11-07T14:45:00.020Z
-**Stopped at:** Completed 32-02-PLAN.md
+**Last session:** 2026-11-07T14:46:56.293Z
+**Stopped at:** Completed 32-03-PLAN.md
 **Resume file:** None
 
 ### Blockers
