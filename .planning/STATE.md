@@ -37,6 +37,7 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 | 29 | verification_deferred_human | /gsd-verify-work 29 |
 | 30 | verification_deferred_human | /gsd-verify-work 30 |
 | 31 | verification_deferred_human | /gsd-verify-work 31 |
+| 32 | verification_deferred_human | /gsd-verify-work 32 |
 
 ## Current Position
 
