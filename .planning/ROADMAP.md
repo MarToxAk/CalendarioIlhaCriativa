@@ -361,6 +361,29 @@ Cliente B.
 
 - [x] 31-02-PLAN.md — Fan-out por conexão física: webhook `connection.update`/`qrcode.updated` para todas as linhas-irmãs (Pitfall 1) + `GroupSynchronizer` (1 `fetchAllGroups`, N upserts locais) com regressão single-instance (D-05, `costly`) + `COVERAGE.md` + teste aditivo de SEG-04 (D-02, D-05)
 
+### Phase 32: Divulgações na API de IA
+
+**Goal:** Preencher o namespace `/api/v1/ai/*` com acesso a Divulgações: a IA lista,
+consulta, cria e cancela Divulgações (e descobre os ids de grupo antes de criar) pela mesma
+API key `ak_` que já usa, reusando o model `Divulgacao`, suas validações e o `DispatchJob`
+real como estão — nenhuma regra de negócio nova, isolamento SEG-01..04 preservado.
+**Requirements**: TBD (fase aditiva — sem REQ-ID novo; entrega as decisões D-01..D-13 do 32-CONTEXT.md)
+**Depends on:** Phase 31
+**Plans:** 4/4 plans executed
+
+**Wave 1**
+
+- [x] 32-01-PLAN.md — Tracer: `POST /api/v1/ai/divulgacoes` de ponta a ponta (rotas da fase inteira, `DivulgacaoSerializer`, `create` com resolução escopada por cliente e `DispatchJob` real) + contrato de erro 400/404/422 e testes de integração do create; contrato D-02 documentado no controller (D-01, D-02, D-05..D-10)
+
+**Wave 2** *(bloqueado no 32-01)*
+
+- [x] 32-02-PLAN.md — `index` (client_id obrigatório, filtros status/from/to validados, Pagy, sem N+1), `show` e `cancel` idempotente espelhando `cancelar!` + testes (D-01, D-03, D-04, D-10..D-13)
+- [x] 32-03-PLAN.md — `GET /api/v1/ai/clients/:id/whatsapp_groups` (grupos ativos do cliente, paginado, `WhatsappGroupSerializer`) + testes (D-06, D-13)
+
+**Wave 3** *(bloqueado no 32-02 e 32-03)*
+
+- [x] 32-04-PLAN.md — Testes de isolamento cross-client pelo caminho da API (mutation-sensitive, com cliente-irmão) + portão final da fase (rubocop, brakeman, 8 rotas, 5 harnesses runtime, escopo aditivo) (D-03, D-06, D-08, D-09)
+
 ---
 
 ## Cobertura de Requisitos — v1.7

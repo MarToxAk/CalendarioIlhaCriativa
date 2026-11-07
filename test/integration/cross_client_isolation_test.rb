@@ -11,6 +11,12 @@ require "test_helper"
 # `arte_e_grupos_do_mesmo_cliente` continue rejeitando os casos de
 # controller/model abaixo.
 #
+# Fase 32 (D-09) — os testes "API de IA:" travam a camada do CONTROLLER da API
+# de IA: se `Api::V1::Ai::DivulgacoesController#create` trocar a resolução pela
+# associação do cliente por um lookup cru, o backstop `arte_e_grupos_do_mesmo_cliente`
+# do model passa a responder 422 em vez de 404 e as asserts (404 + zero linhas +
+# zero jobs) quebram — a mesma ideia dos `assert_raises` diretos do primeiro teste.
+#
 # Setup shape combina os dois analogs lidos: o par de clientes de
 # test/integration/client_isolation_test.rb e o scaffolding de WhatsApp
 # (instância + grupo + arte aprovada + Divulgacao) de
@@ -18,6 +24,7 @@ require "test_helper"
 class CrossClientIsolationTest < ActionDispatch::IntegrationTest
   ADMIN_EMAIL    = "admin_cross_client_isolation@ilhacriativa.com.br"
   ADMIN_PASSWORD = ENV.fetch("ADMIN_PASSWORD", "SenhaSegura123!")
+  AI_API_KEY     = "ak_test_#{SecureRandom.hex(8)}"
 
   def setup
     ActiveStorage::Current.url_options = { host: "example.com", protocol: "https" }
@@ -206,7 +213,119 @@ class CrossClientIsolationTest < ActionDispatch::IntegrationTest
     assert_includes divulgacao.errors[:base], "Um ou mais grupos selecionados não pertencem a este cliente."
   end
 
+  # --- API de IA (fase 32, D-09 / D-03 / D-06) ------------------------------
+
+  teardown do
+    ENV["AI_API_KEY"] = @original_ai_key if @ai_key_saved
+  end
+
+  test "API de IA: arte do cliente B no client_id do A responde 404, sem linhas e sem jobs" do
+    # Controle positivo: o MESMO formato de payload com arte e grupo do proprio
+    # cliente A cria a divulgação — prova que o 404 abaixo vem do escopo, não de
+    # um payload inválido.
+    assert_difference "Divulgacao.count", 1 do
+      ai_post_divulgacao(client: @client_a, arte: @arte_a, group_ids: [ @group_a.id ])
+    end
+    assert_response :created
+
+    # Tentativa forasteira: com um lookup cru o backstop do model responderia
+    # 422; só a resolução escopada pela associação do cliente dá 404.
+    assert_no_difference [ "Divulgacao.count", "DivulgacaoGrupo.count" ] do
+      assert_no_enqueued_jobs do
+        ai_post_divulgacao(client: @client_a, arte: @arte_b, group_ids: [ @group_a.id ])
+      end
+    end
+    assert_response :not_found
+    assert_equal "not_found", response.parsed_body.dig("errors", 0, "code")
+  end
+
+  test "API de IA: grupo do cliente B no client_id do A responde 404, sem linhas e sem jobs" do
+    assert_difference "Divulgacao.count", 1 do
+      ai_post_divulgacao(client: @client_a, arte: @arte_a, group_ids: [ @group_a.id ])
+    end
+    assert_response :created
+
+    assert_no_difference [ "Divulgacao.count", "DivulgacaoGrupo.count" ] do
+      assert_no_enqueued_jobs do
+        ai_post_divulgacao(client: @client_a, arte: @arte_a, group_ids: [ @group_b.id ])
+      end
+    end
+    assert_response :not_found
+    assert_equal "not_found", response.parsed_body.dig("errors", 0, "code")
+  end
+
+  test "API de IA: a listagem de divulgações do cliente A nunca traz a do cliente B" do
+    divulgacao_a = @client_a.divulgacoes.create!(
+      arte: @arte_a, scheduled_for: 3.days.from_now,
+      divulgacao_grupos: [ DivulgacaoGrupo.new(whatsapp_group: @group_a, group_name: @group_a.display_name, remote_jid: @group_a.remote_jid) ]
+    )
+    divulgacao_b = @client_b.divulgacoes.create!(
+      arte: @arte_b, scheduled_for: 3.days.from_now,
+      divulgacao_grupos: [ DivulgacaoGrupo.new(whatsapp_group: @group_b, group_name: @group_b.display_name, remote_jid: @group_b.remote_jid) ]
+    )
+
+    get "/api/v1/ai/divulgacoes", params: { client_id: @client_a.id }, headers: ai_headers
+    assert_response :ok
+
+    ids = response.parsed_body["data"].map { |d| d["id"] }
+    assert_includes ids, divulgacao_a.id
+    assert_not_includes ids, divulgacao_b.id
+  end
+
+  test "API de IA: os grupos do cliente A não incluem os do cliente B nem os de um cliente-irmão da mesma conexão" do
+    sibling = build_client_with_whatsapp!(
+      name: "Cliente Irmão de B", password: "senhaS123", token: "SEGREDO-INSTANCIA-S",
+      instance_name: @instance_b.instance_name
+    )
+    group_sibling = sibling.whatsapp_instance.whatsapp_groups.create!(
+      remote_jid: "grupo-irmao@g.us", subject: "Grupo do Irmão", active: true, synced_at: Time.current
+    )
+
+    jids_a       = ai_group_jids(@client_a)
+    jids_b       = ai_group_jids(@client_b)
+    jids_sibling = ai_group_jids(sibling)
+
+    # Controles positivos: cada cliente enxerga o SEU grupo.
+    assert_includes jids_a, @group_a.remote_jid
+    assert_includes jids_b, @group_b.remote_jid
+    assert_includes jids_sibling, group_sibling.remote_jid
+
+    assert_not_includes jids_a, @group_b.remote_jid
+    assert_not_includes jids_a, group_sibling.remote_jid
+    # O isolamento é por linha de instância (um por cliente), não por instance_name.
+    assert_not_includes jids_b, group_sibling.remote_jid
+    assert_not_includes jids_sibling, @group_b.remote_jid
+  end
+
   private
+
+  # Bearer + JSON; seta a key de teste (guardando a original uma única vez para o
+  # teardown) e zera o throttle, no estilo de artes_controller_test.rb.
+  def ai_headers
+    unless @ai_key_saved
+      @original_ai_key = ENV["AI_API_KEY"]
+      @ai_key_saved = true
+    end
+    ENV["AI_API_KEY"] = AI_API_KEY
+    Rack::Attack.cache.store.clear if defined?(Rack::Attack)
+    { "Authorization" => "Bearer #{AI_API_KEY}", "Content-Type" => "application/json" }
+  end
+
+  def ai_post_divulgacao(client:, arte:, group_ids:)
+    body = {
+      client_id: client.id,
+      arte_id: arte.id,
+      whatsapp_group_ids: group_ids,
+      scheduled_for: 3.days.from_now.change(usec: 0).iso8601
+    }
+    post "/api/v1/ai/divulgacoes", params: body.to_json, headers: ai_headers
+  end
+
+  def ai_group_jids(client)
+    get "/api/v1/ai/clients/#{client.id}/whatsapp_groups", headers: ai_headers
+    assert_response :ok
+    response.parsed_body["data"].map { |g| g["remote_jid"] }
+  end
 
   def build_client_with_whatsapp!(name:, password:, token:, instance_name: nil)
     client = Client.create!(name: name, password: password, password_confirmation: password)

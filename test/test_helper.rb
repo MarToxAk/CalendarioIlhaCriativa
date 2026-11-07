@@ -52,6 +52,12 @@ module ActiveSupport
 
     defer_foreign_keys_for_fixtures!
 
+    # O MemoryStore do Rack::Attack é compartilhado por todos os testes do processo. Sem
+    # limpar antes de cada teste, os contadores de login do portal do cliente (10/60s por
+    # IP, 5/20s por token) vazam entre testes: o POST de login leva 429 em silêncio e o
+    # teste seguinte falha com redirect para session/new, dependendo só da ordem sorteada.
+    setup { Rack::Attack.cache.store.clear if defined?(Rack::Attack) }
+
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
