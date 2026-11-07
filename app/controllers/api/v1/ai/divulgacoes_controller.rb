@@ -99,7 +99,13 @@ class Api::V1::Ai::DivulgacoesController < Api::V1::Ai::BaseController
     client = Client.find(client_id)
     arte   = client.artes.find(arte_id)
 
-    gids   = Array(attrs[:whatsapp_group_ids]).map(&:to_i).uniq.reject(&:zero?)
+    # Um id malformado ("abc", "12abc") e 400, nunca descartado em silêncio: o envio
+    # é irreversível e o agente não pode agendar para menos grupos do que pediu.
+    raw_ids = Array(attrs[:whatsapp_group_ids])
+    unless raw_ids.all? { |v| v.to_s.match?(/\A\d+\z/) }
+      return render_error(code: "bad_request", detail: "whatsapp_group_ids deve conter apenas ids numéricos.", status: :bad_request)
+    end
+    gids   = raw_ids.map(&:to_i).uniq
     groups = scoped_active_groups(client).find(gids)
 
     # D-07: a string vai direto ao atributo; o cast do Rails normaliza offset/Z.

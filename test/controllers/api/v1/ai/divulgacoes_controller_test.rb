@@ -129,6 +129,15 @@ class Api::V1::Ai::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     assert_bad_request valid_body(arte_id: [ @arte.id ])
   end
 
+  test "POST create com id malformado em whatsapp_group_ids retorna 400 e nao agenda para os demais" do
+    assert_bad_request valid_body(whatsapp_group_ids: [ "abc", @g1.id ])
+    assert_equal "whatsapp_group_ids deve conter apenas ids numéricos.", response.parsed_body.dig("errors", 0, "detail")
+  end
+
+  test "POST create com id parcialmente numerico em whatsapp_group_ids retorna 400" do
+    assert_bad_request valid_body(whatsapp_group_ids: [ "#{@g1.id}abc" ])
+  end
+
   # --- 404: inexistente e escopo (D-09) ----------------------------------------
 
   test "POST create com client_id inexistente retorna 404 not_found" do
