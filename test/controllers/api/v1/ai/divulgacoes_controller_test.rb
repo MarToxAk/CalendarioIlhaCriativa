@@ -335,6 +335,15 @@ class Api::V1::Ai::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "page_out_of_range", response.parsed_body.dig("errors", 0, "code")
   end
 
+  test "GET index com page invalida retorna 400 bad_request e nunca 500" do
+    %w[abc 0 -1].each do |page|
+      get_index(client_id: @client.id, page: page)
+
+      assert_equal 400, response.status, "page=#{page}"
+      assert_equal "bad_request", response.parsed_body.dig("errors", 0, "code")
+    end
+  end
+
   # --- GET show -----------------------------------------------------------------------
 
   test "GET show sem Bearer retorna 401 unauthorized" do

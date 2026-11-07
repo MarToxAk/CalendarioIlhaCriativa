@@ -257,6 +257,26 @@ class Api::V1::Ai::ClientsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 100, response.parsed_body.dig("meta", "pagination", "per_page")
   end
 
+  test "GET /whatsapp_groups com page invalida retorna 400 bad_request e nunca 500" do
+    build_instance_with_groups!(@client, [ { remote_jid: "pg-01@g.us", subject: "Grupo 01" } ])
+
+    %w[abc 0 -1].each do |page|
+      get "/api/v1/ai/clients/#{@client.id}/whatsapp_groups", params: { page: page }, headers: @auth_headers
+
+      assert_equal 400, response.status, "page=#{page}"
+      assert_equal "bad_request", response.parsed_body.dig("errors", 0, "code")
+    end
+  end
+
+  test "GET /whatsapp_groups com pagina fora do intervalo continua 404 page_out_of_range" do
+    build_instance_with_groups!(@client, [ { remote_jid: "pg-02@g.us", subject: "Grupo 02" } ])
+
+    get "/api/v1/ai/clients/#{@client.id}/whatsapp_groups", params: { page: 99 }, headers: @auth_headers
+
+    assert_equal 404, response.status
+    assert_equal "page_out_of_range", response.parsed_body.dig("errors", 0, "code")
+  end
+
   private
 
   # Cria a instância do cliente (conectada) com os grupos dados; active: true por padrão.

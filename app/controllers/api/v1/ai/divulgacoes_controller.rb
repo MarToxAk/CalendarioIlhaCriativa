@@ -52,6 +52,16 @@ class Api::V1::Ai::DivulgacoesController < Api::V1::Ai::BaseController
     render_error(code: "bad_request", detail: e.message, status: :bad_request)
   end
 
+  # page=abc / page=0 / page=-1 levantam Pagy::VariableError (supertipo do
+  # OverflowError, que o base trata como 404): viram 400 estruturado em vez de 500.
+  # Declarado aqui (e nao no base) porque este handler, por ser mais novo, tambem
+  # casaria o OverflowError — por isso delega de volta ao page_overflow.
+  rescue_from Pagy::VariableError do |e|
+    next page_overflow if e.is_a?(Pagy::OverflowError)
+
+    render_error(code: "bad_request", detail: "Parâmetro de paginação inválido.", status: :bad_request)
+  end
+
   def index
     # permit antes do require: client_id em formato Hash/Array vira ausencia
     # (400), nunca 500. Nao ha ramo sem client_id.

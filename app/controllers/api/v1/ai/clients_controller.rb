@@ -1,6 +1,16 @@
 # frozen_string_literal: true
 
 class Api::V1::Ai::ClientsController < Api::V1::Ai::BaseController
+  # page=abc / page=0 / page=-1 levantam Pagy::VariableError (supertipo do
+  # OverflowError, que o base trata como 404): viram 400 estruturado em vez de 500.
+  # Declarado aqui (e nao no base) porque este handler, por ser mais novo, tambem
+  # casaria o OverflowError — por isso delega de volta ao page_overflow.
+  rescue_from Pagy::VariableError do |e|
+    next page_overflow if e.is_a?(Pagy::OverflowError)
+
+    render_error(code: "bad_request", detail: "Parâmetro de paginação inválido.", status: :bad_request)
+  end
+
   def summary
     # D-11: RecordNotFound automático → 404 via rescue_from herdado (T-24-07)
     client = Client.find(params[:id])
