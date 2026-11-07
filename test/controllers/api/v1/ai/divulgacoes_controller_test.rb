@@ -52,12 +52,15 @@ class Api::V1::Ai::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
   # --- autenticacao ---------------------------------------------------------
 
   test "POST create sem Bearer retorna 401 unauthorized" do
-    assert_no_difference [ "Divulgacao.count", "DivulgacaoGrupo.count" ] do
-      post_divulgacao(valid_body, headers: { "Content-Type" => "application/json" })
+    # Forma de bloco: o setup anexa arquivos (Active Storage enfileira AnalyzeJob),
+    # entao um assert_no_enqueued_jobs sem bloco contaria jobs que nao sao do request.
+    assert_no_enqueued_jobs do
+      assert_no_difference [ "Divulgacao.count", "DivulgacaoGrupo.count" ] do
+        post_divulgacao(valid_body, headers: { "Content-Type" => "application/json" })
+      end
     end
     assert_equal 401, response.status
     assert_equal "unauthorized", response.parsed_body.dig("errors", 0, "code")
-    assert_no_enqueued_jobs
   end
 
   # --- caminho feliz ----------------------------------------------------------
@@ -466,12 +469,14 @@ class Api::V1::Ai::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     arte
   end
 
-  # Falhas nunca gravam linhas nem enfileiram job.
+  # Falhas nunca gravam linhas nem enfileiram job. Forma de bloco: o setup anexa
+  # arquivos (Active Storage enfileira AnalyzeJob), que nao pode contar aqui.
   def assert_rejected_without_effects(body)
-    assert_no_difference [ "Divulgacao.count", "DivulgacaoGrupo.count" ] do
-      post_divulgacao(body)
+    assert_no_enqueued_jobs do
+      assert_no_difference [ "Divulgacao.count", "DivulgacaoGrupo.count" ] do
+        post_divulgacao(body)
+      end
     end
-    assert_no_enqueued_jobs
   end
 
   def assert_bad_request(body)
