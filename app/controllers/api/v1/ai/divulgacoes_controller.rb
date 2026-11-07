@@ -32,6 +32,18 @@
 #   400 para data ilegivel ou from depois de to.
 # * Ordenacao por scheduled_for crescente (as proximas primeiro), desempate por
 #   id. Paginacao por page/per_page (25 por padrao, maximo 100).
+#
+# CONTRATO DO GET /api/v1/ai/divulgacoes/:id (D-01, D-10):
+#
+# * Devolve a divulgacao com o resumo por grupo (status, sent_at, error_code);
+#   e por este GET que a IA acompanha o progresso do disparo (polling).
+#
+# CONTRATO DO POST /api/v1/ai/divulgacoes/:id/cancel (D-04):
+#
+# * Idempotente: uma divulgacao agendada passa a cancelada; qualquer outro status
+#   (em andamento, concluida, ja cancelada) nao muda nada. Responde 200 com o
+#   estado atual nos dois casos — nunca 422 — e nao enfileira job.
+# * Nao existe update nem destroy na API: criar, consultar e cancelar (D-01).
 class Api::V1::Ai::DivulgacoesController < Api::V1::Ai::BaseController
   # Filtro de listagem invalido vira 400 estruturado (mesmo code do Artes#index).
   class InvalidFilter < StandardError; end
@@ -57,6 +69,23 @@ class Api::V1::Ai::DivulgacoesController < Api::V1::Ai::BaseController
       data: Api::V1::Ai::DivulgacaoSerializer.serialize_collection(@divulgacoes),
       meta: { pagination: pagination_meta(@pagy) }
     )
+  end
+
+  def show
+    render_envelope(data: Api::V1::Ai::DivulgacaoSerializer.serialize(find_divulgacao))
+  end
+
+  def cancel
+    divulgacao = find_divulgacao
+
+    # Reusa a regra do model como esta: so uma divulgacao agendada e cancelada;
+    # qualquer outro status e no-op e o retorno e ignorado (nunca 422 por "ja
+    # estava em outro status"). O lock de linha recarrega o registro antes, para
+    # que um cancel que chegue no instante em que o disparo marca a divulgacao
+    # como em andamento nao sobrescreva o status mais novo.
+    divulgacao.with_lock { divulgacao.cancelar! }
+
+    render_envelope(data: Api::V1::Ai::DivulgacaoSerializer.serialize(divulgacao))
   end
 
   def create
@@ -93,6 +122,14 @@ class Api::V1::Ai::DivulgacoesController < Api::V1::Ai::BaseController
   end
 
   private
+
+  # show/cancel recebem so o :id (D-01/D-04) e a key ak_ e unica e agency-wide
+  # (mesma postura de Artes#index sem client_id e Clients#summary), entao a busca
+  # e global; id inexistente cai no 404 generico herdado. Chamado dentro das
+  # acoes (sem before_action: o ambiente liga raise_on_missing_callback_actions).
+  def find_divulgacao
+    Divulgacao.includes(:divulgacao_grupos).find(params[:id])
+  end
 
   # Validacao explicita: um where com valor de enum desconhecido viraria
   # "status IS NULL" e devolveria 200 com lista vazia, escondendo o erro do
