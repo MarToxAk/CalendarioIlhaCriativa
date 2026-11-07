@@ -72,6 +72,8 @@ Rails.application.routes.draw do
       end
 
       namespace :ai do
+        # Documentacao para agentes de IA (docs/api-ia.md); exige a mesma ak_ key.
+        get :docs, to: "docs#show"
         resources :artes, only: [ :index, :create ]
         resources :divulgacoes, only: [ :index, :show, :create ] do
           post :cancel, on: :member
