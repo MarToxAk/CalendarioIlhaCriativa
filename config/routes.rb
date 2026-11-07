@@ -73,8 +73,12 @@ Rails.application.routes.draw do
 
       namespace :ai do
         resources :artes, only: [ :index, :create ]
+        resources :divulgacoes, only: [ :index, :show, :create ] do
+          post :cancel, on: :member
+        end
         resources :clients, only: [] do
           get :summary, on: :member
+          get :whatsapp_groups, on: :member
         end
       end
     end
