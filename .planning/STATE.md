@@ -4,18 +4,18 @@ milestone: v1.7
 milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 32
 current_phase_name: Divulgações na API de IA
-current_plan: 2
+current_plan: 3
 status: executing
-stopped_at: Completed 32-01-PLAN.md
-last_updated: "2026-11-07T14:42:06.538Z"
+stopped_at: Completed 32-02-PLAN.md
+last_updated: "2026-11-07T14:45:00.979Z"
 last_activity: 2026-11-07
 last_activity_desc: Phase 32 execution started
-state_head: 88d876f6fb09f26770decc2f4d920a6b16c80eef
+state_head: 6fdb2d1f3da1d846a7609eec91556b35f7e8a0d9
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 30
-  completed_plans: 27
+  completed_plans: 28
   percent: 25
 ---
 
@@ -41,7 +41,7 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 ## Current Position
 
 Phase: 32 (Divulgações na API de IA) — EXECUTING
-Current Plan: 2
+Current Plan: 3
 Total Plans in Phase: 4
 
 Status: Ready to execute
@@ -230,6 +230,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 31-inst-ncia-whatsapp-compartilhada-entre-clientes P01 | ~50min | 4 tasks | 16 files |
 | Phase 31-inst-ncia-whatsapp-compartilhada-entre-clientes P02 | ~20min | 3 tasks | 5 files |
 | Phase 32 P01 | 12 min | 2 tasks | 4 files |
+| Phase 32 P02 | 15min | 3 tasks | 2 files |
 
 ## Decisions
 
@@ -284,6 +285,8 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 31]: [Phase 31-01]: instância deuniqueificada + InstanceProvisioner#reuse copia irmã já conectada sem I/O; SendToGroupJob serializa por instance_name (D-04); toggle Stimulus dedicado no painel (D-06/D-07)
 - [Phase 31]: [Phase 31-02]: webhook connection.update/qrcode.updated faz fan-out por instance_name (Pitfall 1); GroupSynchronizer faz 1 fetch_groups fora do loop + N upserts/GRUPO-05/update! por irmã com o mesmo batch_started_at (D-05); regressão single-instance provada (fake.calls==1 sem irmãs); guard de não-conectado/:sync_error nunca propagado a irmãs (Pitfall 5); SEG-04 confirmado intacto com par de irmãos, 3 testes existentes byte-idênticos
 - [Phase 32]: 32-01: POST /api/v1/ai/divulgacoes direto, sem campo de confirmacao; scheduled_for ilegivel cai em 422 (D-08); arte/grupos resolvidos pela associacao do cliente com 404 generico (D-09)
+- [Phase 32]: 32-02: index ordena por scheduled_for asc com desempate por id; show/cancel agency-wide via Divulgacao.find (404 generico)
+- [Phase 32]: 32-02: cancel reusa Divulgacao#cancelar! sob with_lock, 200 sempre, model intocado
 
 ## Quick Tasks Completed
 
@@ -299,8 +302,8 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-11-07T14:41:53.631Z
-**Stopped at:** Completed 32-01-PLAN.md
+**Last session:** 2026-11-07T14:45:00.020Z
+**Stopped at:** Completed 32-02-PLAN.md
 **Resume file:** None
 
 ### Blockers
