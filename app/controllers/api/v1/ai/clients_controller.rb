@@ -24,4 +24,25 @@ class Api::V1::Ai::ClientsController < Api::V1::Ai::BaseController
       revised_count:
     })
   end
+
+  # Fase 32 (D-06, D-13): descoberta dos ids de grupo para o POST /api/v1/ai/divulgacoes.
+  # Le SO o cache local de grupos (nunca fala com o Evolution) e SO os ativos, pela mesma
+  # expressao e ordem do admin. A fase 31 deu a cada cliente a SUA linha de instancia (e
+  # os SEUS grupos), entao a lista continua isolada por cliente mesmo com conexao fisica
+  # compartilhada — nunca consultar pelo nome da conexao. Cliente sem instancia -> 200 com
+  # lista vazia (o POST correspondente falharia seguro em 422 "Selecione ao menos um
+  # grupo"). Os `id` devolvidos sao os valores de `whatsapp_group_ids` do POST.
+  def whatsapp_groups
+    client = Client.find(params[:id])
+
+    groups = client.whatsapp_instance&.whatsapp_groups&.where(active: true) || WhatsappGroup.none
+    groups = groups.order(Arel.sql("subject ASC NULLS LAST")).order(:remote_jid)
+
+    @pagy, @groups = pagy(groups, limit: per_page_param)
+
+    render_envelope(
+      data: Api::V1::Ai::WhatsappGroupSerializer.serialize_collection(@groups),
+      meta: { pagination: pagination_meta(@pagy) }
+    )
+  end
 end
