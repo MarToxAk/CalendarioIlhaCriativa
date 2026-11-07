@@ -115,6 +115,22 @@ class Api::V1::Ai::DivulgacoesControllerTest < ActionDispatch::IntegrationTest
     assert Divulgacao.find(response.parsed_body.dig("data", "id")).status_agendada?
   end
 
+  test "POST create cujo enfileiramento falha responde 503 e cancela a linha para o retry nao duplicar" do
+    failing_set = ->(*) { raise "fila indisponivel" }
+
+    Divulgacoes::DispatchJob.stub(:set, failing_set) do
+      assert_difference "Divulgacao.count", 1 do
+        post_divulgacao(valid_body)
+      end
+    end
+
+    assert_equal 503, response.status
+    assert_equal "enqueue_failed", response.parsed_body.dig("errors", 0, "code")
+    assert_nil response.parsed_body["data"]
+    assert Divulgacao.order(:id).last.status_cancelada?
+    assert_equal 0, Divulgacao.status_agendada.where(client: @client).count
+  end
+
   # --- 400: ids obrigatorios ausentes/malformados -----------------------------
 
   test "POST create sem client_id retorna 400 bad_request" do

@@ -16,6 +16,8 @@
 #   2026-11-05T14:00:00-03:00; "Z" tambem e normalizado para o fuso da
 #   aplicacao). Valor ilegivel, ausente ou no passado cai em 422 com a mensagem
 #   do model.
+# * Se o enfileiramento do job falhar apos gravar, a divulgacao e cancelada e a
+#   resposta e 503 enqueue_failed: nada fica agendado e um novo POST nao duplica.
 #
 # Escopo (D-09): arte e grupos sao SEMPRE resolvidos pela associacao do cliente
 # informado. Um id de outro cliente (ou grupo inativo) resulta no 404 generico
@@ -131,8 +133,23 @@ class Api::V1::Ai::DivulgacoesController < Api::V1::Ai::BaseController
     # D-08: as validacoes existentes do model viram RecordInvalid -> 422.
     divulgacao.save!
 
-    # Mesmo job do admin, SO depois de persistir (ENVIO-01).
-    Divulgacoes::DispatchJob.set(wait_until: divulgacao.scheduled_for).perform_later(divulgacao)
+    # Mesmo job do admin, SO depois de persistir (ENVIO-01). A fila de producao
+    # (Solid Queue) usa outro banco, entao uma transacao nao daria atomicidade:
+    # se o enfileiramento falhar, a linha agendada ficaria sem job e nunca seria
+    # enviada, e um retry cego do agente criaria duplicata. Compensa cancelando a
+    # linha (o DispatchJob ignora cancelada, entao e seguro mesmo se o job tiver
+    # sido enfileirado) e responde 503, para o retry nao duplicar nada.
+    begin
+      Divulgacoes::DispatchJob.set(wait_until: divulgacao.scheduled_for).perform_later(divulgacao)
+    rescue StandardError => e
+      Rails.logger.error("[ai/divulgacoes#create] falha ao enfileirar DispatchJob (divulgacao=#{divulgacao.id}): #{e.class}: #{e.message}")
+      cancel_unscheduled(divulgacao)
+      return render_error(
+        code: "enqueue_failed",
+        detail: "Não foi possível agendar o disparo; a divulgação foi cancelada. Tente criar novamente.",
+        status: :service_unavailable
+      )
+    end
 
     render_envelope(data: Api::V1::Ai::DivulgacaoSerializer.serialize(divulgacao), status: :created)
   end
@@ -179,6 +196,13 @@ class Api::V1::Ai::DivulgacoesController < Api::V1::Ai::BaseController
     Date.iso8601(params[key].to_s)
   rescue Date::Error
     raise InvalidFilter, "Formato de data inválido. Use YYYY-MM-DD."
+  end
+
+  # Melhor esforco: uma falha aqui (banco indisponivel) nao pode mascarar o 503.
+  def cancel_unscheduled(divulgacao)
+    divulgacao.cancelar!
+  rescue StandardError => e
+    Rails.logger.error("[ai/divulgacoes#create] divulgacao #{divulgacao.id} ficou agendada sem job e nao pode ser cancelada: #{e.class}: #{e.message}")
   end
 
   # Allowlist: formatos Hash/Array nos escalares sao descartados e o status
