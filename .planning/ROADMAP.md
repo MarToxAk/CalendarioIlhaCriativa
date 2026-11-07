@@ -369,7 +369,7 @@ API key `ak_` que já usa, reusando o model `Divulgacao`, suas validações e o 
 real como estão — nenhuma regra de negócio nova, isolamento SEG-01..04 preservado.
 **Requirements**: TBD (fase aditiva — sem REQ-ID novo; entrega as decisões D-01..D-13 do 32-CONTEXT.md)
 **Depends on:** Phase 31
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans executed
 
 **Wave 1**
 
@@ -382,7 +382,7 @@ real como estão — nenhuma regra de negócio nova, isolamento SEG-01..04 prese
 
 **Wave 3** *(bloqueado no 32-02 e 32-03)*
 
-- [ ] 32-04-PLAN.md — Testes de isolamento cross-client pelo caminho da API (mutation-sensitive, com cliente-irmão) + portão final da fase (rubocop, brakeman, 8 rotas, 5 harnesses runtime, escopo aditivo) (D-03, D-06, D-08, D-09)
+- [x] 32-04-PLAN.md — Testes de isolamento cross-client pelo caminho da API (mutation-sensitive, com cliente-irmão) + portão final da fase (rubocop, brakeman, 8 rotas, 5 harnesses runtime, escopo aditivo) (D-03, D-06, D-08, D-09)
 
 ---
 

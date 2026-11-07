@@ -5,17 +5,17 @@ milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 32
 current_phase_name: Divulgações na API de IA
 current_plan: 4
-status: executing
-stopped_at: Completed 32-03-PLAN.md
-last_updated: "2026-11-07T14:46:57.242Z"
+status: verifying
+stopped_at: Completed 32-04-PLAN.md
+last_updated: "2026-11-07T14:49:19.531Z"
 last_activity: 2026-11-07
 last_activity_desc: Phase 32 execution started
-state_head: 58498f30b788a637d0f239f644317ef660073030
+state_head: 521b2ae07cc182feae0f5ea82368c91e9054e5cd
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 30
-  completed_plans: 29
+  completed_plans: 30
   percent: 25
 ---
 
@@ -44,7 +44,7 @@ Phase: 32 (Divulgações na API de IA) — EXECUTING
 Current Plan: 4
 Total Plans in Phase: 4
 
-Status: Ready to execute
+Status: Phase complete — ready for verification
   para o CI; testes não executados localmente)
   Fases 25/26/29/30/31 do milestone v1.7 seguem com verification_deferred_human (ver "Deferred
   Verification" acima) — não bloqueiam a execução da fase 32.
@@ -232,6 +232,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 32 P01 | 12 min | 2 tasks | 4 files |
 | Phase 32 P02 | 15min | 3 tasks | 2 files |
 | Phase 32 P03 | 8min | 2 tasks | 3 files |
+| Phase 32 P04 | 10 min | 2 tasks | 1 files |
 
 ## Decisions
 
@@ -289,6 +290,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 32]: 32-02: index ordena por scheduled_for asc com desempate por id; show/cancel agency-wide via Divulgacao.find (404 generico)
 - [Phase 32]: 32-02: cancel reusa Divulgacao#cancelar! sob with_lock, 200 sempre, model intocado
 - [Phase 32]: 32-03: whatsapp_groups como acao no ClientsController; cliente sem instancia -> 200 lista vazia; Pagy 25/100 com ordem do admin
+- [Phase 32]: 32-04: testes de isolamento da API de IA anexados ao CrossClientIsolationTest; controle positivo 201 antes da tentativa forasteira 404 (mutation-sensitive)
 
 ## Quick Tasks Completed
 
@@ -304,8 +306,8 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-11-07T14:46:56.293Z
-**Stopped at:** Completed 32-03-PLAN.md
+**Last session:** 2026-11-07T14:49:18.576Z
+**Stopped at:** Completed 32-04-PLAN.md
 **Resume file:** None
 
 ### Blockers
