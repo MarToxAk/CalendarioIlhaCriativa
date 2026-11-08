@@ -390,10 +390,11 @@ real como estão — nenhuma regra de negócio nova, isolamento SEG-01..04 prese
 **Goal:** A IA envia o arquivo da arte (multipart) em `POST /api/v1/ai/artes`, para a arte entrar em aprovação já divulgável, sem que um humano precise subir o arquivo depois. Hoje o endpoint recusa `media_file` (400) e só aceita `external_url`, e uma arte com link externo é rejeitada no agendamento da divulgação.
 **Requirements**: TBD
 **Depends on:** Phase 32
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 33 to break down)
+- [ ] 33-01-PLAN.md — POST /api/v1/ai/artes aceita media_file multipart (tracer, guard 400, compensação 503 storage_unavailable) + testes de integração
+- [ ] 33-02-PLAN.md — docs/api-ia.md (upload, 503, limites) + gate final (rubocop, brakeman, suítes, escopo do diff) + human-check do proxy/S3
 
 ---
 
