@@ -268,4 +268,5 @@ O `id` é o valor a enviar em `whatsapp_group_ids`. Cliente sem WhatsApp conecta
   `video/quicktime`.
 - Mídia de divulgação: até 16 MB. Um arquivo entre 16 e 50 MB é aceito no upload da arte, mas recusado no
   agendamento da divulgação (422).
-- Uma resposta 413 sem o envelope JSON vem do proxy, não da API: avise o humano.
+- Um limite de tamanho de corpo no caminho até o app pode devolver 413 antes de a API responder. Se a resposta não
+  trouxer o envelope JSON, avise o humano.
