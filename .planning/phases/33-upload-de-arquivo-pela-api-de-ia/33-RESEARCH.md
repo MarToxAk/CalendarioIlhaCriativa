@@ -486,19 +486,19 @@ creds.define_singleton_method(:dig) { |*a| a == [ :api, :ai_key ] ? nil : super(
 | A4 | D-10 aceita texto puro com extensão `.jpg` (provado em teste); o humano deve saber que "verifica pelos bytes" só vale com assinatura reconhecível | Pitfall 3 | Usuário acredita em checagem mais forte do que existe; impacto baixo (WhatsApp/visualização falharia depois) |
 | A5 | Em produção, falha de S3 no `after_commit` se comporta como no stub (exceção propaga, arte persiste) | Pitfall 2 | Não testado contra S3 real; comportamento do Rails confirmado no código-fonte e no stub |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Tratar falha de storage (Pitfall 2) nesta fase ou só documentar?**
+1. **Tratar falha de storage (Pitfall 2) nesta fase ou só documentar?** (RESOLVED: implementado no plano 33-01, Task 2)
    - What we know: a falha deixa arte `pending` sem arquivo e devolve 500; reproduzida com stub; o rescue do Pattern 2 resolve com 503 e limpeza.
    - What's unclear: se o usuário aceita um novo `code` (`storage_unavailable`) e linha na tabela de status da doc (hoje só há `503 enqueue_failed`).
    - Recommendation: implementar o rescue (é robustez do controller, não regra de negócio), com 503 `storage_unavailable` e linha na tabela da seção 3 da doc, mais um teste com `stub`. Se o planner preferir não adicionar código, registrar o risco na doc.
 
-2. **Limite real do proxy em produção (Pitfall 5).**
+2. **Limite real do proxy em produção (Pitfall 5).** (RESOLVED: human-check no plano 33-02, Task 2)
    - What we know: nada no app barra 50 MB.
    - What's unclear: `client_max_body_size` efetivo do nginx-proxy-manager.
    - Recommendation: `checkpoint:human-verify` com POST de ~20 MB à URL pública após o deploy.
 
-3. **Validação cruzada `media_type` x tipo do arquivo.**
+3. **Validação cruzada `media_type` x tipo do arquivo.** (RESOLVED: fora de escopo, registrado como risco no plano 33-01)
    - What we know: provado que `media_type: "caption_only"` com arquivo anexado dá 201; `media_type: "image"` com vídeo também não é barrado.
    - What's unclear: se é desejável barrar.
    - Recommendation: fora de escopo ("sem mudar regra de negócio do model"); não alterar.
