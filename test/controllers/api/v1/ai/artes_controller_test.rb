@@ -199,6 +199,31 @@ class Api::V1::Ai::ArtesControllerTest < ActionDispatch::IntegrationTest
     assert_nil arte.external_url
   end
 
+  test "POST multipart com falha de storage responde 503 e não deixa arte órfã (T-33-05)" do
+    falha = ->(*_args, **_opts) { raise IOError, "s3 fora do ar" }
+
+    ActiveStorage::Blob.service.stub(:upload, falha) do
+      assert_no_difference [ "Arte.count", "ActiveStorage::Attachment.count" ] do
+        post "/api/v1/ai/artes",
+             params:  multipart_params(media_file: fixture_file_upload("sample.jpg", "image/jpeg")),
+             headers: @multipart_headers
+      end
+    end
+
+    assert_equal 503, response.status
+    body = response.parsed_body
+    assert_equal "storage_unavailable", body.dig("errors", 0, "code")
+    assert_nil body["data"]
+
+    # Retry com o storage normal: cria exatamente uma arte, sem duplicata.
+    assert_difference "Arte.count", 1 do
+      post "/api/v1/ai/artes",
+           params:  multipart_params(media_file: fixture_file_upload("sample.jpg", "image/jpeg")),
+           headers: @multipart_headers
+    end
+    assert_equal 201, response.status
+  end
+
   test "POST sem external_url retorna 422" do
     post "/api/v1/ai/artes",
          params: {
