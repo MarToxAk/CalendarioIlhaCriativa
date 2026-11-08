@@ -160,6 +160,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ### Roadmap Evolution
 
+- Phase 33 added: Upload de arquivo pela API de IA (multipart em POST /api/v1/ai/artes; docs/api-ia.md precisa ser atualizado junto)
 - Phase 07.1 inserted after Phase 7: Fix: media_source params + destroy feedback + SC3 UI (URGENT)
 - v1.2 roadmap defined 2026-06-02: Phase 8 (bug aprovação) + Phase 9 (faixa de resumo)
 - v1.3 roadmap defined 2026-06-03: Phase 10 (form polish) + Phase 11 (index polish) + Phase 12 (show + dashboard)

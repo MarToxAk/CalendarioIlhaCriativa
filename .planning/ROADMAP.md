@@ -23,6 +23,7 @@
 - [x] **Phase 28: Divulgação — Agendar sem Enviar** - Divulgação com item por grupo, validações cruzadas de cliente, bloqueio de link externo e de arquivo grande, preview e estimativa de duração — deliberadamente sem disparo (completed 2026-08-30)
 - [ ] **Phase 29: Motor de Envio** - Disparo agendado grupo a grupo com intervalo aleatório, idempotência à prova de retry/deploy, revalidação de aprovação e conexão, e cancelamento respeitado
 - [ ] **Phase 30: Acompanhamento ao Vivo + Hardening** - Progresso do disparo ao vivo, reenvio manual por grupo, histórico por cliente, testes negativos cross-client e retenção de jobs falhados
+- [ ] **Phase 33: Upload de arquivo pela API de IA** - A IA envia o arquivo da arte (multipart) pela API para a arte entrar em aprovação já divulgável
 
 <details>
 <summary>✅ v1.0 MVP (Fases 1–6 + 2.1 + 3.1) — SHIPPED 2026-05-27</summary>
@@ -383,6 +384,16 @@ real como estão — nenhuma regra de negócio nova, isolamento SEG-01..04 prese
 **Wave 3** *(bloqueado no 32-02 e 32-03)*
 
 - [x] 32-04-PLAN.md — Testes de isolamento cross-client pelo caminho da API (mutation-sensitive, com cliente-irmão) + portão final da fase (rubocop, brakeman, 8 rotas, 5 harnesses runtime, escopo aditivo) (D-03, D-06, D-08, D-09)
+
+### Phase 33: Upload de arquivo pela API de IA
+
+**Goal:** A IA envia o arquivo da arte (multipart) em `POST /api/v1/ai/artes`, para a arte entrar em aprovação já divulgável, sem que um humano precise subir o arquivo depois. Hoje o endpoint recusa `media_file` (400) e só aceita `external_url`, e uma arte com link externo é rejeitada no agendamento da divulgação.
+**Requirements**: TBD
+**Depends on:** Phase 32
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 33 to break down)
 
 ---
 
