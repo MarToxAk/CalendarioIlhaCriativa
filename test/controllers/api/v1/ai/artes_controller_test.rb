@@ -213,6 +213,7 @@ class Api::V1::Ai::ArtesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 503, response.status
     body = response.parsed_body
     assert_equal "storage_unavailable", body.dig("errors", 0, "code")
+    assert_includes body.dig("errors", 0, "detail"), "nada foi criado"
     assert_nil body["data"]
 
     # Retry com o storage normal: cria exatamente uma arte, sem duplicata.
@@ -222,6 +223,30 @@ class Api::V1::Ai::ArtesControllerTest < ActionDispatch::IntegrationTest
            headers: @multipart_headers
     end
     assert_equal 201, response.status
+  end
+
+  test "POST multipart com falha de storage e limpeza que falha não promete que nada foi criado (WR-02)" do
+    falha = ->(*_args, **_opts) { raise IOError, "s3 fora do ar" }
+
+    Arte.test_block_destroy = true
+    begin
+      ActiveStorage::Blob.service.stub(:upload, falha) do
+        assert_difference "Arte.count", 1 do
+          post "/api/v1/ai/artes",
+               params:  multipart_params(media_file: fixture_file_upload("sample.jpg", "image/jpeg")),
+               headers: @multipart_headers
+        end
+      end
+    ensure
+      Arte.test_block_destroy = false
+    end
+
+    assert_equal 503, response.status
+    error = response.parsed_body.dig("errors", 0)
+    assert_equal "storage_unavailable", error["code"]
+    refute_includes error["detail"], "nada foi criado"
+    assert_includes error["detail"], "pode ter ficado criada"
+    assert_includes error["detail"], "##{Arte.order(:id).last.id}"
   end
 
   test "POST multipart com falha só ao enfileirar job não vira 503 de storage (WR-01)" do

@@ -48,7 +48,7 @@ Em erro, `data` é `null` e `errors` traz objetos `{ "code", "detail", "field" }
 | 422 | `validation_error` | Regra de negócio falhou (ver `detail` e `field`) |
 | 429 | `too_many_requests` | Limite de 60 pedidos por minuto por chave. Aguarde e tente de novo |
 | 503 | `enqueue_failed` | O disparo não pôde ser enfileirado; a divulgação foi cancelada |
-| 503 | `storage_unavailable` | O arquivo da arte não pôde ser gravado; nada foi criado e é seguro tentar de novo |
+| 503 | `storage_unavailable` | O arquivo da arte não pôde ser gravado. Em geral nada foi criado e é seguro tentar de novo; se o `detail` disser que a arte pode ter ficado criada, não repita às cegas: avise o humano |
 
 **Paginação:** `?page=1&per_page=25` (padrão 25, máximo 100). A resposta traz em `meta.pagination`:
 `page`, `per_page`, `total_count`, `total_pages`. `page` inválido (`abc`, `0`, `-1`) é 400.
@@ -228,7 +228,9 @@ divulgada.
 - 422 `validation_error` com `field: "media_file"`: tipo ou tamanho inválido.
 - 400 `bad_request`: `media_file` que não é um arquivo (por exemplo, um texto dentro de um JSON). Envie o arquivo em
   `multipart/form-data`.
-- 503 `storage_unavailable`: o arquivo não pôde ser gravado. Nada foi criado, então é seguro tentar de novo.
+- 503 `storage_unavailable`: o arquivo não pôde ser gravado. Quando o `detail` diz "nada foi criado", é seguro tentar
+  de novo. Se o `detail` disser que a arte (com o id) pode ter ficado criada sem arquivo, a limpeza falhou: não repita
+  às cegas, avise o humano para conferir (e remover) essa arte, senão um novo POST duplica.
 
 > **Importante:** `external_url` sozinho continua aceito por compatibilidade, mas **arte com link externo não pode
 > ser divulgada** (422 no `POST /divulgacoes`, seção 5.1) até um humano subir o arquivo na arte pelo painel. Sempre que

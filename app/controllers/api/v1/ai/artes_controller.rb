@@ -8,8 +8,9 @@
 # - A arte nasce pending e o cliente aprova pelo link; não há atalho de aprovação (D-05).
 # - Tipo ou tamanho inválidos viram 422 com field "media_file" (D-08).
 # - media_file que não é arquivo (texto, Hash, signed id) vira 400 bad_request.
-# - Se o arquivo não puder ser gravado, a resposta é 503 storage_unavailable, a arte é
-#   removida e um novo POST não duplica.
+# - Se o arquivo não puder ser gravado, a resposta é 503 storage_unavailable e a arte é
+#   removida (um novo POST não duplica). Se a remoção também falhar, o 503 avisa que a arte
+#   pode ter ficado criada, em vez de prometer que nada foi criado.
 
 class Api::V1::Ai::ArtesController < Api::V1::Ai::BaseController
   # Falhas do envio dos bytes ao storage (Disk, S3/MinIO). Resolvidas por nome na hora do
@@ -74,10 +75,9 @@ class Api::V1::Ai::ArtesController < Api::V1::Ai::BaseController
       raise unless storage_failure?(e) && @arte.persisted? && @arte.media_file.attached?
 
       Rails.logger.error("[ai/artes#create] falha ao gravar arquivo da arte ##{@arte.id}: #{e.class} - #{e.message}")
-      discard_orphan_arte
       return render_error(
         code:   "storage_unavailable",
-        detail: "Não foi possível gravar o arquivo da arte; nada foi criado. Tente novamente.",
+        detail: storage_unavailable_detail(discarded: discard_orphan_arte),
         status: :service_unavailable
       )
     end
@@ -115,11 +115,28 @@ class Api::V1::Ai::ArtesController < Api::V1::Ai::BaseController
   end
 
   # Best-effort (precedente cancel_unscheduled da fase 32): uma falha ao apagar não pode
-  # mascarar o 503. O dependent: :purge_later do anexo limpa o blob depois.
+  # mascarar o 503. Devolve true só quando a arte foi de fato removida; o dependent:
+  # :purge_later do anexo limpa o blob depois. destroy devolve false (sem exceção) quando um
+  # before_destroy aborta.
   def discard_orphan_arte
-    @arte.destroy
+    return true if @arte.destroy
+
+    Rails.logger.error("[ai/artes#create] arte órfã ##{@arte.id} não removida (destroy retornou false)")
+    false
   rescue StandardError => e
     Rails.logger.error("[ai/artes#create] falha ao remover arte órfã ##{@arte.id}: #{e.class} - #{e.message}")
+    false
+  end
+
+  # Só promete "nada foi criado" quando a limpeza funcionou; senão a arte pode existir sem
+  # arquivo e repetir o POST duplicaria.
+  def storage_unavailable_detail(discarded:)
+    if discarded
+      "Não foi possível gravar o arquivo da arte; nada foi criado. Tente novamente."
+    else
+      "Não foi possível gravar o arquivo da arte e a arte ##{@arte.id} pode ter ficado criada sem arquivo. " \
+        "Confira as artes do cliente antes de tentar de novo."
+    end
   end
 
   def render_media_file_invalid
