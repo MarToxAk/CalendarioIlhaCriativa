@@ -25,7 +25,9 @@ Authorization: Bearer ak_...
 
 - A chave começa com `ak_` e é única para a agência toda (enxerga todos os clientes).
 - Sem chave, chave sem o prefixo `ak_` ou chave errada: `401 unauthorized`.
-- Envie `Content-Type: application/json` nos POST com corpo.
+- Envie `Content-Type: application/json` nos POST com corpo. A única exceção é o `POST /artes` com arquivo,
+  que usa `multipart/form-data` (seção 5.2): não defina esse header à mão, porque o cliente HTTP escolhe
+  o boundary sozinho.
 
 ## 3. Formato das respostas
 
@@ -39,13 +41,14 @@ Em erro, `data` é `null` e `errors` traz objetos `{ "code", "detail", "field" }
 
 | Status | `code` | Quando |
 |---|---|---|
-| 400 | `bad_request` | Parâmetro ausente, malformado ou filtro inválido |
+| 400 | `bad_request` | Parâmetro ausente, malformado ou filtro inválido; também `media_file` que não seja um arquivo enviado em multipart |
 | 401 | `unauthorized` | Chave ausente ou inválida |
 | 404 | `not_found` | Recurso inexistente, ou id de outro cliente |
 | 404 | `page_out_of_range` | `page` maior que o total de páginas |
 | 422 | `validation_error` | Regra de negócio falhou (ver `detail` e `field`) |
 | 429 | `too_many_requests` | Limite de 60 pedidos por minuto por chave. Aguarde e tente de novo |
 | 503 | `enqueue_failed` | O disparo não pôde ser enfileirado; a divulgação foi cancelada |
+| 503 | `storage_unavailable` | O arquivo da arte não pôde ser gravado. Em geral nada foi criado e é seguro tentar de novo; se o `detail` disser que a arte pode ter ficado criada, não repita às cegas: avise o humano |
 
 **Paginação:** `?page=1&per_page=25` (padrão 25, máximo 100). A resposta traz em `meta.pagination`:
 `page`, `per_page`, `total_count`, `total_pages`. `page` inválido (`abc`, `0`, `-1`) é 400.
@@ -54,6 +57,9 @@ Em erro, `data` é `null` e `errors` traz objetos `{ "code", "detail", "field" }
 `2026-11-20T14:00:00-03:00`.
 
 ## 4. Fluxo recomendado para divulgar uma arte
+
+Se a arte ainda não existe, crie-a com `POST /artes` enviando o arquivo (seção 5.2). Ela nasce `pending` e o
+cliente precisa aprová-la pelo link antes de aparecer no passo 1; não há atalho de aprovação para a IA.
 
 1. `GET /artes?from=...&to=...&client_id=...` — encontre a arte aprovada (só aprovadas aparecem).
 2. `GET /clients/:id/whatsapp_groups` — descubra os ids dos grupos do cliente.
@@ -182,14 +188,56 @@ Só devolve artes com status `approved`, em ordem crescente de `scheduled_on`. C
 
 #### `POST /artes` — criar uma arte
 
-Parâmetros: `client_id`, `scheduled_on`, `platform`, `media_type` e `external_url` são necessários;
-`title`, `caption` e `approval_deadline` são opcionais. Upload de arquivo **não é suportado**
-(`media_file` devolve 400): use `external_url` (começa com `http://` ou `https://`).
-A arte nasce `pending` e segue o fluxo normal de aprovação do cliente. Resposta 201 com a arte.
+| Parâmetro | Obrigatório | Descrição |
+|---|---|---|
+| `client_id` | **sim** | Cliente dono da arte |
+| `scheduled_on` | **sim** | Data da postagem, `YYYY-MM-DD` |
+| `platform` | **sim** | `instagram`, `facebook`, `linkedin` ou `whatsapp` |
+| `media_type` | **sim** | `image`, `video` ou `caption_only` |
+| `media_file` | **um dos dois** | O arquivo da arte, em `multipart/form-data` |
+| `external_url` | **um dos dois** | Link da mídia (começa com `http://` ou `https://`) |
+| `title`, `caption`, `approval_deadline` | não | Texto e prazo de aprovação |
 
-> **Importante:** uma arte criada pela API tem `external_url`, e **arte com link externo não pode ser divulgada**
-> (422 no `POST /divulgacoes`). Para divulgar, um humano precisa subir o arquivo na arte pelo painel
-> e o cliente precisa aprovar. Avise o humano disso depois de criar uma arte.
+Envie **exatamente um** entre `media_file` e `external_url`. Sem nenhum dos dois, inclusive para `caption_only`,
+a resposta é 422.
+
+**Regras do upload:**
+
+- Corpo `multipart/form-data`, com o arquivo no campo `media_file`.
+- Tipos aceitos: `image/jpeg`, `image/png`, `image/gif`, `video/mp4` e `video/quicktime`. O tipo é identificado
+  pelo conteúdo do arquivo, não só pela extensão.
+- Tamanho: menos de 50 MB.
+- Arquivo e `external_url` juntos: 422 *Use arquivo OU link externo, não ambos*.
+
+Exemplo:
+
+```bash
+curl -X POST "$BASE/api/v1/ai/artes" \
+  -H "Authorization: Bearer ak_..." \
+  -F client_id=7 -F scheduled_on=2026-11-20 -F platform=instagram -F media_type=image \
+  -F title="Promo de novembro" -F media_file=@arte.jpg
+```
+
+**Resposta 201:** a arte criada, com `status: "pending"`, `media_source_type: "upload"` e `media_url`. A `media_url`
+é um link assinado de curta duração: serve para conferir o arquivo agora e **não deve ser guardada** (o fluxo de
+divulgação usa o `arte_id`). O cliente aprova a arte pelo link; só depois ela aparece em `GET /artes` e pode ser
+divulgada.
+
+**Erros:**
+
+- 422 `validation_error` com `field: "media_file"`: tipo ou tamanho inválido.
+- 400 `bad_request`: `media_file` que não é um arquivo (por exemplo, um texto dentro de um JSON). Envie o arquivo em
+  `multipart/form-data`.
+- 503 `storage_unavailable`: o arquivo não pôde ser gravado. Quando o `detail` diz "nada foi criado", é seguro tentar
+  de novo. Se o `detail` disser que a arte (com o id) pode ter ficado criada sem arquivo, a limpeza falhou: não repita
+  às cegas, avise o humano para conferir (e remover) essa arte, senão um novo POST duplica.
+
+> **Importante:** `external_url` sozinho continua aceito por compatibilidade, mas **arte com link externo não pode
+> ser divulgada** (422 no `POST /divulgacoes`, seção 5.1) até um humano subir o arquivo na arte pelo painel. Sempre que
+> possível, envie o arquivo. Se criar uma arte só com link, avise o humano disso.
+
+> **Timeout:** o `POST /artes` não é idempotente. Se der timeout, não repita às cegas: a arte pode ter sido criada e,
+> enquanto estiver `pending`, ela não aparece em `GET /artes` (que só lista aprovadas). Avise o humano.
 
 ### 5.3 Clientes
 
@@ -216,4 +264,9 @@ O `id` é o valor a enviar em `whatsapp_group_ids`. Cliente sem WhatsApp conecta
 
 - 60 pedidos por minuto por chave (`429` além disso).
 - `per_page` máximo 100.
-- Mídia de divulgação: até 16 MB.
+- Arquivo da arte (`POST /artes`): menos de 50 MB, nos tipos `image/jpeg`, `image/png`, `image/gif`, `video/mp4` e
+  `video/quicktime`.
+- Mídia de divulgação: até 16 MB. Um arquivo entre 16 e 50 MB é aceito no upload da arte, mas recusado no
+  agendamento da divulgação (422).
+- Um limite de tamanho de corpo no caminho até o app pode devolver 413 antes de a API responder. Se a resposta não
+  trouxer o envelope JSON, avise o humano.

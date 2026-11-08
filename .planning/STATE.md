@@ -2,21 +2,21 @@
 gsd_state_version: "1.0"
 milestone: v1.7
 milestone_name: WhatsApp Auto-Post + Deploy
-current_phase: 32
-current_phase_name: Divulgações na API de IA
-current_plan: 4
+current_phase: 33
+current_phase_name: Upload de arquivo pela API de IA
+current_plan: 2
 status: verifying
-stopped_at: Completed 32-04-PLAN.md
-last_updated: "2026-11-07T14:49:19.531Z"
-last_activity: 2026-11-07
-last_activity_desc: Phase 32 execution started
-state_head: 521b2ae07cc182feae0f5ea82368c91e9054e5cd
+stopped_at: Completed 33-02-PLAN.md
+last_updated: "2026-11-08T15:45:36.723Z"
+last_activity: 2026-11-08
+last_activity_desc: Phase 33 execution started
+state_head: e4f71c93003102d12812b9b3821d8a2745c7bc91
 progress:
-  total_phases: 8
+  total_phases: 9
   completed_phases: 2
-  total_plans: 30
-  completed_plans: 30
-  percent: 25
+  total_plans: 32
+  completed_plans: 32
+  percent: 22
 ---
 
 # Project State
@@ -26,7 +26,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-29)
 
 **Core value:** O cliente consegue aprovar ou pedir alteração em cada arte sem precisar de conta — só com o link — e o admin vê tudo num só lugar.
-**Current focus:** Phase 32 — Divulgações na API de IA
+**Current focus:** Phase 33 — Upload de arquivo pela API de IA
 
 ## Deferred Verification
 
@@ -38,18 +38,19 @@ See: .planning/PROJECT.md (updated 2026-08-29)
 | 30 | verification_deferred_human | /gsd-verify-work 30 |
 | 31 | verification_deferred_human | /gsd-verify-work 31 |
 | 32 | verification_deferred_human | /gsd-verify-work 32 |
+| 33 | verification_deferred_human | /gsd-verify-work 33 |
 
 ## Current Position
 
-Phase: 32 (Divulgações na API de IA) — EXECUTING
-Current Plan: 4
-Total Plans in Phase: 4
+Phase: 33 (Upload de arquivo pela API de IA) — EXECUTING
+Current Plan: 2
+Total Plans in Phase: 2
 
 Status: Phase complete — ready for verification
   para o CI; testes não executados localmente)
   Fases 25/26/29/30/31 do milestone v1.7 seguem com verification_deferred_human (ver "Deferred
   Verification" acima) — não bloqueiam a execução da fase 32.
-Last activity: 2026-11-07 — Phase 32 execution started
+Last activity: 2026-11-08 — Phase 33 execution started
   "Desvincular WhatsApp" (ação #unlink desvincula localmente sem tocar Evolution; linha
   :unpaired = "sem instância"; re-provisão idempotente)
 
@@ -160,6 +161,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ### Roadmap Evolution
 
+- Phase 33 added: Upload de arquivo pela API de IA (multipart em POST /api/v1/ai/artes; docs/api-ia.md precisa ser atualizado junto)
 - Phase 07.1 inserted after Phase 7: Fix: media_source params + destroy feedback + SC3 UI (URGENT)
 - v1.2 roadmap defined 2026-06-02: Phase 8 (bug aprovação) + Phase 9 (faixa de resumo)
 - v1.3 roadmap defined 2026-06-03: Phase 10 (form polish) + Phase 11 (index polish) + Phase 12 (show + dashboard)
@@ -234,6 +236,8 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 32 P02 | 15min | 3 tasks | 2 files |
 | Phase 32 P03 | 8min | 2 tasks | 3 files |
 | Phase 32 P04 | 10 min | 2 tasks | 1 files |
+| Phase 33 P01 | 25 min | 3 tasks | 2 files |
+| Phase 33 P02 | 12 min | 2 tasks | 1 files |
 
 ## Decisions
 
@@ -292,6 +296,9 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 32]: 32-02: cancel reusa Divulgacao#cancelar! sob with_lock, 200 sempre, model intocado
 - [Phase 32]: 32-03: whatsapp_groups como acao no ClientsController; cliente sem instancia -> 200 lista vazia; Pagy 25/100 com ordem do admin
 - [Phase 32]: 32-04: testes de isolamento da API de IA anexados ao CrossClientIsolationTest; controle positivo 201 antes da tentativa forasteira 404 (mutation-sensitive)
+- [Phase 33]: Compensacao 503 storage_unavailable entra na fase 33 (rescue confinado a save!, arte orfa removida) — Active Storage envia em after_commit; sem compensacao o retry da IA duplicaria artes (WR-04 fase 32)
+- [Phase 33]: Guard 400 para media_file que nao e ActionDispatch::Http::UploadedFile (T-33-01) — String atribuida ao anexo e tratada como signed blob id: 500 ou reaproveitamento de blob alheio
+- [Phase 33]: 33-02: a documentacao da API de IA nao cita expiracao da media_url nem limite de body do proxy (ambos nao verificados); proxy/S3 real ficam como human-check de fim de fase
 
 ## Quick Tasks Completed
 
@@ -307,8 +314,8 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-11-07T14:49:18.576Z
-**Stopped at:** Completed 32-04-PLAN.md
+**Last session:** 2026-11-08T15:45:35.586Z
+**Stopped at:** Completed 33-02-PLAN.md
 **Resume file:** None
 
 ### Blockers
