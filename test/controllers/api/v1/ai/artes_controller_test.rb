@@ -224,6 +224,19 @@ class Api::V1::Ai::ArtesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 201, response.status
   end
 
+  test "POST multipart com falha só ao enfileirar job não vira 503 de storage (WR-01)" do
+    falha = ->(*_args, **_opts) { raise "fila fora do ar" }
+
+    ActiveStorage::AnalyzeJob.stub(:perform_later, falha) do
+      error = assert_raises(RuntimeError) do
+        post "/api/v1/ai/artes",
+             params:  multipart_params(media_file: fixture_file_upload("sample.jpg", "image/jpeg")),
+             headers: @multipart_headers
+      end
+      assert_equal "fila fora do ar", error.message
+    end
+  end
+
   test "POST multipart com arquivo e external_url retorna 422 (D-02)" do
     assert_rejected_without_effects do
       post "/api/v1/ai/artes",

@@ -12,6 +12,17 @@
 #   removida e um novo POST não duplica.
 
 class Api::V1::Ai::ArtesController < Api::V1::Ai::BaseController
+  # Falhas do envio dos bytes ao storage (Disk, S3/MinIO). Resolvidas por nome na hora do
+  # rescue: o aws-sdk só é carregado quando o serviço S3 é usado, e sem ele nenhum erro
+  # Aws pode ter sido levantado. Outros erros pós-commit (ex.: enfileirar job) não entram.
+  STORAGE_FAILURE_CLASSES = %w[
+    IOError
+    SystemCallError
+    ActiveStorage::IntegrityError
+    Aws::Errors::ServiceError
+    Seahorse::Client::NetworkingError
+  ].freeze
+
   def index
     # D-01/D-02: from e to são obrigatórios — 400 se ausentes
     raise ActionController::ParameterMissing.new("from e to são obrigatórios") unless params[:from].present? && params[:to].present?
@@ -58,8 +69,9 @@ class Api::V1::Ai::ArtesController < Api::V1::Ai::BaseController
       raise
     rescue StandardError => e
       # O Active Storage envia os bytes em after_commit: se o storage falha, a linha da arte
-      # (e do blob) já está gravada. Arte persistida + anexo = "gravou, mas não enviou".
-      raise unless @arte.persisted? && @arte.media_file.attached?
+      # (e do blob) já está gravada. Só uma falha de storage (STORAGE_FAILURE_CLASSES) com
+      # arte persistida + anexo vira 503; qualquer outro erro segue como 500.
+      raise unless storage_failure?(e) && @arte.persisted? && @arte.media_file.attached?
 
       Rails.logger.error("[ai/artes#create] falha ao gravar arquivo da arte ##{@arte.id}: #{e.class} - #{e.message}")
       discard_orphan_arte
@@ -93,6 +105,13 @@ class Api::V1::Ai::ArtesController < Api::V1::Ai::BaseController
     return false if value.nil? || value == ""
 
     !value.is_a?(ActionDispatch::Http::UploadedFile)
+  end
+
+  def storage_failure?(error)
+    STORAGE_FAILURE_CLASSES.any? do |name|
+      klass = name.safe_constantize
+      klass && error.is_a?(klass)
+    end
   end
 
   # Best-effort (precedente cancel_unscheduled da fase 32): uma falha ao apagar não pode
