@@ -5,17 +5,17 @@ milestone_name: WhatsApp Auto-Post + Deploy
 current_phase: 33
 current_phase_name: Upload de arquivo pela API de IA
 current_plan: 2
-status: executing
-stopped_at: Completed 33-01-PLAN.md
-last_updated: "2026-11-08T15:43:14.735Z"
+status: verifying
+stopped_at: Completed 33-02-PLAN.md
+last_updated: "2026-11-08T15:45:36.723Z"
 last_activity: 2026-11-08
 last_activity_desc: Phase 33 execution started
-state_head: a79ae93bf1b817db2aa52710a3cf900a86187d23
+state_head: e4f71c93003102d12812b9b3821d8a2745c7bc91
 progress:
   total_phases: 9
   completed_phases: 2
   total_plans: 32
-  completed_plans: 31
+  completed_plans: 32
   percent: 22
 ---
 
@@ -45,7 +45,7 @@ Phase: 33 (Upload de arquivo pela API de IA) — EXECUTING
 Current Plan: 2
 Total Plans in Phase: 2
 
-Status: Ready to execute
+Status: Phase complete — ready for verification
   para o CI; testes não executados localmente)
   Fases 25/26/29/30/31 do milestone v1.7 seguem com verification_deferred_human (ver "Deferred
   Verification" acima) — não bloqueiam a execução da fase 32.
@@ -236,6 +236,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 | Phase 32 P03 | 8min | 2 tasks | 3 files |
 | Phase 32 P04 | 10 min | 2 tasks | 1 files |
 | Phase 33 P01 | 25 min | 3 tasks | 2 files |
+| Phase 33 P02 | 12 min | 2 tasks | 1 files |
 
 ## Decisions
 
@@ -296,6 +297,7 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 - [Phase 32]: 32-04: testes de isolamento da API de IA anexados ao CrossClientIsolationTest; controle positivo 201 antes da tentativa forasteira 404 (mutation-sensitive)
 - [Phase 33]: Compensacao 503 storage_unavailable entra na fase 33 (rescue confinado a save!, arte orfa removida) — Active Storage envia em after_commit; sem compensacao o retry da IA duplicaria artes (WR-04 fase 32)
 - [Phase 33]: Guard 400 para media_file que nao e ActionDispatch::Http::UploadedFile (T-33-01) — String atribuida ao anexo e tratada como signed blob id: 500 ou reaproveitamento de blob alheio
+- [Phase 33]: 33-02: a documentacao da API de IA nao cita expiracao da media_url nem limite de body do proxy (ambos nao verificados); proxy/S3 real ficam como human-check de fim de fase
 
 ## Quick Tasks Completed
 
@@ -311,8 +313,8 @@ Phase 30: Acompanhamento ao Vivo + Hardening — Not started
 
 ## Session
 
-**Last session:** 2026-11-08T15:43:13.604Z
-**Stopped at:** Completed 33-01-PLAN.md
+**Last session:** 2026-11-08T15:45:35.586Z
+**Stopped at:** Completed 33-02-PLAN.md
 **Resume file:** None
 
 ### Blockers
