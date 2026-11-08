@@ -84,11 +84,15 @@ class Api::V1::Ai::ArtesController < Api::V1::Ai::BaseController
 
   # T-33-01: o Active Storage trata uma String atribuída ao anexo como signed blob id.
   # Sem este guard, uma String vira 500 (assinatura inválida) e um signed id válido
-  # reaproveitaria o blob de outra arte. Só um upload multipart real é aceito; valor em
-  # branco (media_file="") segue como ausente e cai na regra do model.
+  # reaproveitaria o blob de outra arte. Só um upload multipart real é aceito. Apenas
+  # ausente (nil) e media_file="" passam: são exatamente os valores que o Active Storage
+  # trata como "sem anexo" e que caem na regra do model. Qualquer outro valor que não seja
+  # upload (" ", false, número, lista, texto, signed id) vira 400, nunca 500.
   def media_file_param_invalid?
     value = params[:media_file]
-    value.present? && !value.is_a?(ActionDispatch::Http::UploadedFile)
+    return false if value.nil? || value == ""
+
+    !value.is_a?(ActionDispatch::Http::UploadedFile)
   end
 
   # Best-effort (precedente cancel_unscheduled da fase 32): uma falha ao apagar não pode

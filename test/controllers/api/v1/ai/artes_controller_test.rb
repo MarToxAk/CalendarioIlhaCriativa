@@ -318,6 +318,39 @@ class Api::V1::Ai::ArtesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "bad_request", response.parsed_body.dig("errors", 0, "code")
   end
 
+  test "POST com media_file só com espaço no formulário retorna 400, não 500 (CR-01)" do
+    assert_rejected_without_effects do
+      post "/api/v1/ai/artes",
+           params:  multipart_params(media_file: " "),
+           headers: @multipart_headers
+    end
+
+    assert_equal 400, response.status
+    assert_equal "bad_request", response.parsed_body.dig("errors", 0, "code")
+  end
+
+  test "POST com media_file false em JSON retorna 400, não 500 (CR-01)" do
+    assert_rejected_without_effects do
+      post "/api/v1/ai/artes",
+           params:  multipart_params(media_file: false).to_json,
+           headers: @auth_headers
+    end
+
+    assert_equal 400, response.status
+    assert_equal "bad_request", response.parsed_body.dig("errors", 0, "code")
+  end
+
+  test "POST com media_file como lista retorna 400 (CR-01)" do
+    assert_rejected_without_effects do
+      post "/api/v1/ai/artes",
+           params:  multipart_params(media_file: [ "abc" ]),
+           headers: @multipart_headers
+    end
+
+    assert_equal 400, response.status
+    assert_equal "bad_request", response.parsed_body.dig("errors", 0, "code")
+  end
+
   test "POST com signed id de blob existente retorna 400 e não anexa o blob (T-33-01)" do
     blob = ActiveStorage::Blob.create_and_upload!(
       io:           file_fixture("sample.jpg").open,
