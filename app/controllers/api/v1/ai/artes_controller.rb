@@ -8,6 +8,8 @@
 # - A arte nasce pending e o cliente aprova pelo link; não há atalho de aprovação (D-05).
 # - Tipo ou tamanho inválidos viram 422 com field "media_file" (D-08).
 # - media_file que não é arquivo (texto, Hash, signed id) vira 400 bad_request.
+# - Se o arquivo não puder ser gravado, a resposta é 503 storage_unavailable, a arte é
+#   removida e um novo POST não duplica.
 
 class Api::V1::Ai::ArtesController < Api::V1::Ai::BaseController
   def index
@@ -50,7 +52,24 @@ class Api::V1::Ai::ArtesController < Api::V1::Ai::BaseController
     return render_media_file_invalid if media_file_param_invalid?
 
     @arte = Arte.new(arte_params)
-    @arte.save!
+    begin
+      @arte.save!
+    rescue ActiveRecord::RecordInvalid
+      raise
+    rescue StandardError => e
+      # O Active Storage envia os bytes em after_commit: se o storage falha, a linha da arte
+      # (e do blob) já está gravada. Arte persistida + anexo = "gravou, mas não enviou".
+      raise unless @arte.persisted? && @arte.media_file.attached?
+
+      Rails.logger.error("[ai/artes#create] falha ao gravar arquivo da arte ##{@arte.id}: #{e.class} - #{e.message}")
+      discard_orphan_arte
+      return render_error(
+        code:   "storage_unavailable",
+        detail: "Não foi possível gravar o arquivo da arte; nada foi criado. Tente novamente.",
+        status: :service_unavailable
+      )
+    end
+
     render_envelope(data: Api::V1::Ai::ArteSerializer.serialize(@arte), status: :created)
   end
 
@@ -70,6 +89,14 @@ class Api::V1::Ai::ArtesController < Api::V1::Ai::BaseController
   def media_file_param_invalid?
     value = params[:media_file]
     value.present? && !value.is_a?(ActionDispatch::Http::UploadedFile)
+  end
+
+  # Best-effort (precedente cancel_unscheduled da fase 32): uma falha ao apagar não pode
+  # mascarar o 503. O dependent: :purge_later do anexo limpa o blob depois.
+  def discard_orphan_arte
+    @arte.destroy
+  rescue StandardError => e
+    Rails.logger.error("[ai/artes#create] falha ao remover arte órfã ##{@arte.id}: #{e.class} - #{e.message}")
   end
 
   def render_media_file_invalid
