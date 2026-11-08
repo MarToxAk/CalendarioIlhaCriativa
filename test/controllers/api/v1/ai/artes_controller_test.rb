@@ -13,6 +13,9 @@ class Api::V1::Ai::ArtesControllerTest < ActionDispatch::IntegrationTest
       "Authorization" => "Bearer #{AI_API_KEY}",
       "Content-Type"  => "application/json"
     }
+    # Sem Content-Type: o rack-test detecta o Rack::Test::UploadedFile em params e monta o
+    # multipart com boundary. Um Content-Type JSON junto deixaria o teste enganoso.
+    @multipart_headers = { "Authorization" => "Bearer #{AI_API_KEY}" }
     @client = Client.create!(name: "Cliente AI Teste", password: "SenhaIA123!", active: true)
   end
 
@@ -156,22 +159,44 @@ class Api::V1::Ai::ArtesControllerTest < ActionDispatch::IntegrationTest
                  "Esperado errors vazio, mas foi: #{body['errors'].inspect}"
   end
 
-  test "POST com media_file retorna 400" do
-    post "/api/v1/ai/artes",
-         params: {
-           title:        "Arte IA com Upload",
-           scheduled_on: Date.current.to_s,
-           platform:     "instagram",
-           media_type:   "image",
-           client_id:    @client.id,
-           media_file:   "blob_data_simulado"
-         }.to_json,
-         headers: @auth_headers
+  test "POST com media_file em texto (JSON) retorna 400" do
+    assert_no_difference "Arte.count" do
+      post "/api/v1/ai/artes",
+           params: {
+             title:        "Arte IA com Upload",
+             scheduled_on: Date.current.to_s,
+             platform:     "instagram",
+             media_type:   "image",
+             client_id:    @client.id,
+             media_file:   "blob_data_simulado"
+           }.to_json,
+           headers: @auth_headers
+    end
 
     assert_equal 400, response.status
     body = response.parsed_body
     assert_equal "bad_request", body.dig("errors", 0, "code"),
                  "Esperado code='bad_request', mas foi: #{body.dig('errors', 0, 'code').inspect}"
+  end
+
+  test "POST multipart com media_file retorna 201 com upload e media_url (D-01, D-05, D-07)" do
+    assert_difference "Arte.count", 1 do
+      post "/api/v1/ai/artes",
+           params:  multipart_params(media_file: fixture_file_upload("sample.jpg", "image/jpeg")),
+           headers: @multipart_headers
+    end
+
+    assert_equal 201, response.status
+    body = response.parsed_body
+    assert_equal "upload", body.dig("data", "media_source_type")
+    assert_equal "pending", body.dig("data", "status")
+    assert body.dig("data", "media_url").present?,
+           "Esperado data.media_url presente, mas foi: #{body['data'].inspect}"
+    assert_equal [], body["errors"]
+
+    arte = Arte.find(body.dig("data", "id"))
+    assert arte.media_file.attached?
+    assert_nil arte.external_url
   end
 
   test "POST sem external_url retorna 422" do
@@ -205,5 +230,17 @@ class Api::V1::Ai::ArtesControllerTest < ActionDispatch::IntegrationTest
          headers: { "Content-Type" => "application/json" }
 
     assert_equal 401, response.status
+  end
+
+  private
+
+  def multipart_params(extra = {})
+    {
+      title:        "Arte IA multipart",
+      scheduled_on: Date.current.to_s,
+      platform:     "instagram",
+      media_type:   "image",
+      client_id:    @client.id
+    }.merge(extra)
   end
 end
